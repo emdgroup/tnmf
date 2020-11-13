@@ -6,14 +6,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 from signals import generate_pulse_train, generate_pulse
-from TransformInvariantNMF import SparseNMF
+from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 from itertools import zip_longest
 
 
 @st.cache
-def compute_nmf(V, nmf_params):
+def compute_nmf(V, nmf_params, shift_invariant):
 	"""Streamlit caching of NMF fitting."""
-	nmf = SparseNMF(**nmf_params)
+	if shift_invariant:
+		nmf = ShiftInvariantNMF(**nmf_params)
+	else:
+		nmf = SparseNMF(**nmf_params)
 	nmf.fit(V)
 	return nmf
 
@@ -47,16 +50,21 @@ V = np.array([generate_pulse_train(shapes=shapes, pulse_length=pulse_length, n_p
 
 # define NMF parameters
 st.sidebar.markdown('# NMF settings')
+shift_invariant = st.sidebar.checkbox('Shift invariant', True)
 nmf_params = dict(
 	sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
 	n_iterations=st.sidebar.number_input('# Iterations', min_value=1, value=100),
 	refit_H=st.sidebar.checkbox('Refit activations without sparsity', True)
 )
-n_complete = len(shapes) * n_pulses
+if shift_invariant:
+	nmf_params['atom_size'] = st.sidebar.number_input('Atom size', min_value=0, max_value=V.shape[0], value=pulse_length)
+	n_complete = len(shapes)
+else:
+	n_complete = len(shapes) * n_pulses
 n_complete_str = f'complete ({n_complete} atoms)'
 dict_size = st.sidebar.radio('Dictionary size', [n_complete_str, 'manual'], 0)
 if dict_size == n_complete_str:
-	n_components = len(shapes) * n_pulses
+	n_components = n_complete
 else:
 	n_components = st.sidebar.number_input('# Dictionary elements', min_value=1, value=len(shapes) * n_pulses)
 nmf_params['n_components'] = n_components
@@ -65,7 +73,7 @@ nmf_params['n_components'] = n_components
 # -------------------- model fitting -------------------- #
 
 # fit the NMF model
-nmf = compute_nmf(V, nmf_params)
+nmf = compute_nmf(V, nmf_params, shift_invariant)
 
 
 # -------------------- visualization -------------------- #
@@ -110,8 +118,13 @@ st.pyplot(fig)
 # show activation pattern
 st.markdown('# Activation pattern')
 fig = plt.figure(figsize=(10, 5))
-plt.imshow(nmf.H[0], aspect='auto')
-plt.xlabel('signal number')
-plt.ylabel('atom number')
+if shift_invariant:
+	plt.imshow(nmf.H[:, :, s], aspect='auto')
+	plt.xlabel('atom number')
+	plt.ylabel('transformation number')
+else:
+	plt.imshow(nmf.H[0], aspect='auto')
+	plt.xlabel('signal number')
+	plt.ylabel('atom number')
 plt.colorbar()
 st.pyplot(fig)

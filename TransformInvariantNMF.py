@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from itertools import zip_longest
-from utils import normalize
+from utils import normalize, shift
 from typing import Optional
 plt.style.use('seaborn')
 
@@ -181,3 +181,17 @@ class SparseNMF(TransformInvariantNMF):
 	def generate_transforms(self):
 		"""No transformations are applied (achieved via a single identity transform)."""
 		return np.eye(self.n_dim)[None, :, :]
+
+
+class ShiftInvariantNMF(TransformInvariantNMF):
+	"""Class for shift-invariant non-negative matrix factorization of 1-D signals."""
+
+	def generate_transforms(self) -> np.array:
+		"""Generates all possible shift matrices for the signal dimension and given atom size."""
+		# assert that the dictionary elements are at most as large as the signal
+		assert self.atom_size <= self.n_dim
+
+		# create the transformation that places the dictionary element at the beginning, and then shift it
+		base_array = np.hstack([np.eye(self.atom_size), np.zeros([self.atom_size, self.n_dim - self.atom_size])])
+		T = np.array([shift(base_array, s).T for s in range(-self.atom_size + 1, self.n_dim)])
+		return T
