@@ -25,7 +25,7 @@ def normalize(arr: np.array, axis: int = 0) -> np.array:
 
 def shift(arr: np.array, step: int) -> np.array:
 	"""
-	Shifts a given 2-D array a given number of steps along the last axis, filling the empty places with zeros.
+	Shifts the given array a certain number of steps along the last axis, filling the empty places with zeros.
 
 	Parameters
 	----------

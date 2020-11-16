@@ -1,4 +1,5 @@
 matplotlib==3.3.3
 numpy==1.19.4
+opt-einsum==3.3.0
 scipy==1.5.4
 streamlit==0.71.0
