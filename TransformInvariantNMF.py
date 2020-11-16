@@ -4,6 +4,7 @@ Author: Adrian Sosic
 
 import numpy as np
 import matplotlib.pyplot as plt
+from opt_einsum import contract
 from abc import ABC, abstractmethod
 from itertools import zip_longest
 from utils import normalize, shift
@@ -31,9 +32,9 @@ class TransformInvariantNMF(ABC):
 		n_components : int
 			Dictionary size (= number of dictionary elements).
 		sparsity_H : float
-			Regularization parameter for the activation matrix.
+			Regularization parameter for the activation tensor.
 		refit_H : bool
-			If True, the activation matrix gets refitted using the learned dictionary to mitigate amplitude bias.
+			If True, the activation tensor gets refitted using the learned dictionary to mitigate amplitude bias.
 		n_iterations : int
 			Number of learning iterations.
 		eps : float
@@ -58,12 +59,8 @@ class TransformInvariantNMF(ABC):
 	@property
 	def R(self) -> np.array:
 		"""The reconstructed signal matrix."""
-		# TODO: vectorize
 		# TODO: avoid recomputation by using getter method
-		R = np.zeros_like(self.V)
-		for t in range(self.n_transforms):
-			R = R + self.T[t] @ self.W @ self.H[t]
-		return R
+		return contract('tdh,hm,tmn->dn', self.T, self.W, self.H, optimize='optimal')
 
 	@property
 	def n_dim(self) -> int:
@@ -86,7 +83,24 @@ class TransformInvariantNMF(ABC):
 		pass
 
 	def initialize(self, V):
-		"""Stores the signal matrix and initialize the factorization and transformation matrices."""
+		"""
+		Stores the signal matrix and initialize the factorization and transformation matrices.
+
+		Notation:
+		---------
+		d: number of input dimensions
+		n: number of input samples
+		m: number of basis vectors (dictionary size)
+		t: number of basis vector transforms (= 1 for standard NMF without transform invariance)
+		h: number of basis vector dimensions (= d for standard NMF without transform invariance)
+
+		Dimensions:
+		-----------
+		Signal matrix V: 		d x n
+		Transformation Tensor:  t x d x h
+		Dictionary Matrix W: 	h x m
+		Activation Tensor H: 	t x m x n
+		"""
 		self.V = np.asarray(V)
 		self.T = self.generate_transforms()
 		self.W = normalize(np.random.random([self.atom_size, self.n_components]))
@@ -111,7 +125,7 @@ class TransformInvariantNMF(ABC):
 
 	def update_H(self, sparsity: bool = True):
 		"""
-		Multiplicative update of the activation matrix.
+		Multiplicative update of the activation tensor.
 
 		Parameters
 		----------
@@ -122,20 +136,16 @@ class TransformInvariantNMF(ABC):
 		# get the current reconstruction matrix
 		R = self.R
 
-		# TODO: vectorize
 		# compute the gradients of the reconstruction error
-		numer = np.zeros_like(self.H)
-		denum = np.zeros_like(self.H)
-		for t in range(self.n_transforms):
-			TW = self.T[t] @ self.W
-			numer[t] = TW.T @ self.V
-			denum[t] = TW.T @ R
+		TW = contract('tdh,hm->tdm', self.T, self.W, optimize='optimal')
+		numer = contract('tdm,dn->tmn', TW, self.V, optimize='optimal')
+		denum = contract('tdm,dn->tmn', TW, R, optimize='optimal')
 
 		# add sparsity regularization
 		if sparsity:
 			denum = denum + self.sparsity
 
-		# update the activation matrix
+		# update the activation tensor
 		self.H = self.H * (numer / (denum + self.eps))
 
 	def update_W(self):
@@ -144,13 +154,9 @@ class TransformInvariantNMF(ABC):
 		# get the current reconstruction matrix
 		R = self.R
 
-		# TODO: vectorize
 		# compute the gradients of the reconstruction error
-		numer = np.zeros_like(self.W)
-		denum = np.zeros_like(self.W)
-		for t in range(self.n_transforms):
-			numer = numer + self.T[t].T @ self.V @ self.H[t].T
-			denum = denum + self.T[t].T @ R @ self.H[t].T
+		numer = contract('tdh,dn,tmn->hm', self.T, self.V, self.H, optimize='optimal')
+		denum = contract('tdh,dn,tmn->hm', self.T, R, self.H, optimize='optimal')
 
 		# update the dictionary matrix
 		self.W = normalize(self.W * (numer / (denum + self.eps)))
