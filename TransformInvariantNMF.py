@@ -47,20 +47,46 @@ class TransformInvariantNMF(ABC):
 		self.sparsity = sparsity_H
 		self.refit_H = refit_H
 
-		# signal, factorization, and transformation matrices
+		# signal, reconstruction, factorization, and transformation matrices
 		self.V = None
-		self.T = None
-		self.W = None
-		self.H = None
+		self._R = None
+		self._T = None
+		self._W = None
+		self._H = None
 
 		# constant to avoid division by zero
 		self.eps = eps
 
+		# caching flags
+		self._is_ready_R = False
+
 	@property
 	def R(self) -> np.array:
 		"""The reconstructed signal matrix."""
-		# TODO: avoid recomputation by using getter method
-		return contract('tdh,hm,tmn->dn', self.T, self.W, self.H, optimize='optimal')
+		if not self._is_ready_R:
+			self._R = self._reconstruct()
+			self._is_ready_R = True
+		return self._R
+
+	@property
+	def W(self) -> np.array:
+		"""The dictionary matrix."""
+		return self._W
+
+	@W.setter
+	def W(self, W: np.array):
+		self._W = W
+		self._is_ready_R = False
+
+	@property
+	def H(self) -> np.array:
+		"""The activation tensor."""
+		return self._H
+
+	@H.setter
+	def H(self, H: np.array):
+		self._H = H
+		self._is_ready_R = False
 
 	@property
 	def n_dim(self) -> int:
@@ -75,7 +101,11 @@ class TransformInvariantNMF(ABC):
 	@property
 	def n_transforms(self) -> int:
 		"""Number of dictionary transforms."""
-		return len(self.T)
+		return len(self._T)
+
+	def _reconstruct(self) -> np.array:
+		"""Reconstructs the signal matrix generically using transformation matrices."""
+		return contract('tdh,hm,tmn->dn', self._T, self.W, self.H, optimize='optimal')
 
 	def generate_transforms(self) -> np.array:
 		"""Generates all dictionary transforms for the given signal matrix."""
@@ -105,7 +135,7 @@ class TransformInvariantNMF(ABC):
 
 		# if explicit transformation matrices are used, create and store them
 		try:
-			self.T = self.generate_transforms()
+			self._T = self.generate_transforms()
 		except NotImplementedError:
 			pass
 
@@ -130,11 +160,11 @@ class TransformInvariantNMF(ABC):
 			for i in range(10):
 				self.update_H(sparsity=False)
 
-	def _reconstruction_gradient_H(self, R: np.array) -> np.array:
+	def _reconstruction_gradient_H(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
-		TW = contract('tdh,hm->tdm', self.T, self.W, optimize='optimal')
+		TW = contract('tdh,hm->tdm', self._T, self.W, optimize='optimal')
 		numer = contract('tdm,dn->tmn', TW, self.V, optimize='optimal')
-		denum = contract('tdm,dn->tmn', TW, R, optimize='optimal')
+		denum = contract('tdm,dn->tmn', TW, self.R, optimize='optimal')
 		return numer, denum
 
 	def update_H(self, sparsity: bool = True):
@@ -146,12 +176,8 @@ class TransformInvariantNMF(ABC):
 		sparsity : bool
 			If True, sparsity regularization is applied.
 		"""
-		# TODO: implement getter to avoid explicit precomputation
-		# get the current reconstruction matrix
-		R = self.R
-
 		# compute the gradients of the reconstruction error
-		numer, denum = self._reconstruction_gradient_H(R)
+		numer, denum = self._reconstruction_gradient_H()
 
 		# add sparsity regularization
 		if sparsity:
@@ -160,27 +186,23 @@ class TransformInvariantNMF(ABC):
 		# update the activation tensor
 		self.H = self.H * (numer / (denum + self.eps))
 
-	def _reconstruction_gradient_W(self, R: np.array) -> np.array:
+	def _reconstruction_gradient_W(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
-		numer = contract('tdh,dn,tmn->hm', self.T, self.V, self.H, optimize='optimal')
-		denum = contract('tdh,dn,tmn->hm', self.T, R, self.H, optimize='optimal')
+		numer = contract('tdh,dn,tmn->hm', self._T, self.V, self.H, optimize='optimal')
+		denum = contract('tdh,dn,tmn->hm', self._T, self.R, self.H, optimize='optimal')
 		return numer, denum
 
 	def update_W(self):
 		"""Multiplicative update of the dictionary matrix."""
-		# TODO: implement getter to avoid explicit precomputation
-		# get the current reconstruction matrix
-		R = self.R
-
 		# compute the gradients of the reconstruction error
-		numer, denum = self._reconstruction_gradient_W(R)
+		numer, denum = self._reconstruction_gradient_W()
 
 		# update the dictionary matrix
 		self.W = normalize(self.W * (numer / (denum + self.eps)))
 
 	def plot_dictionary(self):
 		"""Plots the learned dictionary elements."""
-		fig, axs = plt.subplots(nrows=int(np.ceil(self.W.shape[1]/3)), ncols=3)
+		fig, axs = plt.subplots(nrows=int(np.ceil(self.W.shape[1] / 3)), ncols=3)
 		for w, ax in zip_longest(self.W.T, axs.ravel()):
 			if w is not None:
 				ax.plot(w)
@@ -231,11 +253,8 @@ class ImplicitShiftInvariantNMF(TransformInvariantNMF):
 		# TODO: inherit docstring from superclass
 		return self.n_dim + self.atom_size - 1
 
-	@property
-	def R(self) -> np.array:
-		"""The reconstructed signal matrix."""
-		# TODO: inherit docstring from superclass
-		# TODO: avoid recomputation by using getter method
+	def _reconstruct(self) -> np.array:
+		"""Reconstructs the signal matrix via convolution."""
 		# TODO: vectorize
 		# TODO: computation via FFT
 		R = np.zeros([self.n_dim, self.n_signals])
@@ -244,7 +263,7 @@ class ImplicitShiftInvariantNMF(TransformInvariantNMF):
 							  for m in range(self.n_components)], axis=0)
 		return R
 
-	def _reconstruction_gradient_H(self, R: np.array) -> np.array:
+	def _reconstruction_gradient_H(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
 		# TODO: vectorize
@@ -254,10 +273,10 @@ class ImplicitShiftInvariantNMF(TransformInvariantNMF):
 		for n in range(self.n_signals):
 			for m in range(self.n_components):
 				numer[:, m, n] = np.correlate(self.V[:, n], self.W[:, m], mode='full')
-				denum[:, m, n] = np.correlate(R[:, n], self.W[:, m], mode='full')
+				denum[:, m, n] = np.correlate(self.R[:, n], self.W[:, m], mode='full')
 		return numer, denum
 
-	def _reconstruction_gradient_W(self, R: np.array) -> np.array:
+	def _reconstruction_gradient_W(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		# TODO: inherit docstring from superclass
 		# TODO: vectorize
@@ -267,7 +286,7 @@ class ImplicitShiftInvariantNMF(TransformInvariantNMF):
 		for m in range(self.n_components):
 			numer[:, m] = np.sum([np.correlate(self.V[:, n], self.H[:, m, n], mode='valid')
 								  for n in range(self.n_signals)], axis=0)
-			denum[:, m] = np.sum([np.correlate(R[:, n], self.H[:, m, n], mode='valid')
+			denum[:, m] = np.sum([np.correlate(self.R[:, n], self.H[:, m, n], mode='valid')
 								  for n in range(self.n_signals)], axis=0)
 		return numer, denum
 
