@@ -230,7 +230,22 @@ class SparseNMF(TransformInvariantNMF):
 		return np.eye(self.n_dim)[None, :, :]
 
 
-class ExplicitShiftInvariantNMF(TransformInvariantNMF):
+class BaseShiftInvariantNMF(TransformInvariantNMF):
+	"""Base class for shift-invariant non-negative matrix factorization of 1-D signals."""
+	pass
+
+
+class ShiftInvariantNMF(BaseShiftInvariantNMF, ABC):
+	"""Wrapper class for shift-invariant non-negative matrix factorization of 1-D signals."""
+
+	def __new__(cls, explicit_transforms: bool = False, **kwargs):
+		if explicit_transforms:
+			return ExplicitShiftInvariantNMF(**kwargs)
+		else:
+			return ImplicitShiftInvariantNMF(**kwargs)
+
+
+class ExplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	"""Class for shift-invariant non-negative matrix factorization of 1-D signals that computes the involved
 	transform operations explicitly via transformation matrices."""
 
@@ -245,7 +260,7 @@ class ExplicitShiftInvariantNMF(TransformInvariantNMF):
 		return T
 
 
-class ImplicitShiftInvariantNMF(TransformInvariantNMF):
+class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	"""Class for shift-invariant non-negative matrix factorization of 1-D signals that computes the involved
 	transform operations implicitly via correlation/convolution."""
 
@@ -291,13 +306,3 @@ class ImplicitShiftInvariantNMF(TransformInvariantNMF):
 			denum[:, m] = np.sum([np.correlate(self.R[:, n], self.H[:, m, n], mode='valid')
 								  for n in range(self.n_signals)], axis=0)
 		return numer, denum
-
-
-class ShiftInvariantNMF(ExplicitShiftInvariantNMF, ImplicitShiftInvariantNMF):
-	"""Wrapper class for shift-invariant non-negative matrix factorization of 1-D signals."""
-
-	def __new__(cls, explicit_transforms: bool = False, **kwargs):
-		if explicit_transforms:
-			return ExplicitShiftInvariantNMF(**kwargs)
-		else:
-			return ImplicitShiftInvariantNMF(**kwargs)
