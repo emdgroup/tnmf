@@ -4,6 +4,7 @@ Author: Adrian Sosic
 
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.linalg import norm
 from opt_einsum import contract
 from abc import ABC
 from itertools import zip_longest
@@ -151,6 +152,7 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
+			print(f"Iteration: {i}\tReconstruction error: {norm(self.V - self.R, 'fro')}")
 			self.update_H()
 			self.update_W()
 
