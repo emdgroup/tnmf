@@ -5,6 +5,7 @@ Author: Adrian Sosic
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
+from scipy.signal import convolve
 from opt_einsum import contract
 from abc import ABC
 from itertools import zip_longest
@@ -169,6 +170,29 @@ class TransformInvariantNMF(ABC):
 		denum = contract('tdm,dn->tmn', TW, self.R, optimize='optimal')
 		return numer, denum
 
+	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
+		"""
+		Computes the positive and the negative parts of the energy gradient w.r.t. the activation tensor.
+
+		Parameters
+		----------
+		sparsity : bool
+			If True, the output includes the gradient of the sparsity regularization.
+
+		Returns
+		-------
+		(numer, denum) : (np.array, np.array)
+			The gradient components.
+		"""
+		# compute the gradients of the reconstruction error
+		numer, denum = self._reconstruction_gradient_H()
+
+		# add sparsity regularization
+		if sparsity:
+			denum = denum + self.sparsity
+
+		return numer, denum
+
 	def update_H(self, sparsity: bool = True):
 		"""
 		Multiplicative update of the activation tensor.
@@ -178,12 +202,8 @@ class TransformInvariantNMF(ABC):
 		sparsity : bool
 			If True, sparsity regularization is applied.
 		"""
-		# compute the gradients of the reconstruction error
-		numer, denum = self._reconstruction_gradient_H()
-
-		# add sparsity regularization
-		if sparsity:
-			denum = denum + self.sparsity
+		# compute the gradient components
+		numer, denum = self._gradient_H(sparsity)
 
 		# update the activation tensor
 		self.H = self.H * (numer / (denum + self.eps))
@@ -232,7 +252,40 @@ class SparseNMF(TransformInvariantNMF):
 
 class BaseShiftInvariantNMF(TransformInvariantNMF):
 	"""Base class for shift-invariant non-negative matrix factorization of 1-D signals."""
-	pass
+
+	def __init__(self, inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs):
+		"""
+		Parameters
+		----------
+		inhibition_range : int
+			Number of neighboring activation elements in each direction that exert an inhibitory effect.
+			If 'None', the range is set to the minimal range that covers the size of a dictionary element.
+		"""
+		# set the basic parameters
+		super().__init__(**kwargs)
+		
+		# default inhibition range = minimal range to cover the atom size
+		if inhibition_range is None:
+			inhibition_range = int(np.ceil(self.atom_size / 2))
+
+		# store the inhibition parameters and construct the inhibition kernel
+		self.inhibition_range = inhibition_range
+		self.inhibition_strength = inhibition_strength
+		self.kernel = 1 - ((np.arange(-inhibition_range, inhibition_range + 1) / inhibition_range) ** 2)
+
+	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
+		"""Computes the positive and the negative parts of the energy gradient w.r.t. the activation tensor."""
+		# TODO: inherit docstring from superclass
+
+		# compute the gradient w.r.t. the reconstruction and sparsity energies
+		numer, denum = super()._gradient_H(sparsity)
+
+		# add the inhibition gradient component
+		if self.inhibition_range and self.inhibition_strength:
+			inhibition = convolve(self.H, self.kernel[:, None, None], mode='same') - self.H
+			denum = denum + self.inhibition_strength * inhibition
+
+		return numer, denum
 
 
 class ShiftInvariantNMF(BaseShiftInvariantNMF, ABC):
