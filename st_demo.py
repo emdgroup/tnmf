@@ -8,6 +8,7 @@ import streamlit as st
 from signals import generate_pulse_train, generate_pulse
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 from itertools import zip_longest
+from copy import deepcopy
 
 
 @st.cache
@@ -50,14 +51,21 @@ V = np.array([generate_pulse_train(shapes=shapes, pulse_length=pulse_length, n_p
 
 # define NMF parameters
 st.sidebar.markdown('# NMF settings')
-shift_invariant = st.sidebar.checkbox('Shift invariant', True)
 nmf_params = dict(
 	sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
 	n_iterations=st.sidebar.number_input('# Iterations', min_value=1, value=100),
 	refit_H=st.sidebar.checkbox('Refit activations without sparsity', True)
 )
+shift_invariant = st.sidebar.checkbox('Shift invariant', True)
 if shift_invariant:
 	nmf_params['atom_size'] = st.sidebar.number_input('Atom size', min_value=0, max_value=V.shape[0], value=pulse_length)
+	inhibition_str = f"Auto ({nmf_params['atom_size']})"
+	inhibition = st.sidebar.radio('Inhbition range', [inhibition_str, 'Manual'], 0)
+	if inhibition == inhibition_str:
+		nmf_params['inhibition_range'] = None
+	else:
+		nmf_params['inhibition_range'] = st.sidebar.number_input('Inhibition range', min_value=0, value=nmf_params['atom_size'])
+	nmf_params['inhibition_strength'] = st.sidebar.number_input('Inhibition strength', min_value=0.0, value=0.1)
 	n_complete = len(shapes)
 else:
 	n_complete = len(shapes) * n_pulses
@@ -73,7 +81,7 @@ nmf_params['n_components'] = n_components
 # -------------------- model fitting -------------------- #
 
 # fit the NMF model
-nmf = compute_nmf(V, nmf_params, shift_invariant)
+nmf = deepcopy(compute_nmf(V, nmf_params, shift_invariant))
 
 
 # -------------------- visualization -------------------- #
