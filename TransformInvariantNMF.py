@@ -163,7 +163,7 @@ class TransformInvariantNMF(ABC):
 			for i in range(10):
 				self.update_H(sparsity=False)
 
-	def _reconstruction_gradient_H(self) -> np.array:
+	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		TW = contract('tdh,hm->tdm', self._T, self.W, optimize='optimal')
 		numer = contract('tdm,dn->tmn', TW, self.V, optimize='optimal')
@@ -208,7 +208,7 @@ class TransformInvariantNMF(ABC):
 		# update the activation tensor
 		self.H = self.H * (numer / (denum + self.eps))
 
-	def _reconstruction_gradient_W(self) -> np.array:
+	def _reconstruction_gradient_W(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		numer = contract('tdh,dn,tmn->hm', self._T, self.V, self.H, optimize='optimal')
 		denum = contract('tdh,dn,tmn->hm', self._T, self.R, self.H, optimize='optimal')
@@ -245,7 +245,7 @@ class SparseNMF(TransformInvariantNMF):
 		self.atom_size = np.shape(X)[0]
 		super().initialize(X)
 
-	def generate_transforms(self):
+	def generate_transforms(self) -> np.array:
 		"""No transformations are applied (achieved via a single identity transform)."""
 		return np.eye(self.n_dim)[None, :, :]
 
