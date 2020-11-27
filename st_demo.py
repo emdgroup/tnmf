@@ -5,9 +5,10 @@ Author: Adrian Sosic
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-from signals import generate_pulse_train, generate_pulse
+from signals import generate_pulse_train
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
-from itertools import zip_longest
+from itertools import product, repeat
+from more_itertools import chunked
 from copy import deepcopy
 
 
@@ -25,7 +26,7 @@ def compute_nmf(V, nmf_params, shift_invariant):
 def plot_signal_matrix(V):
 	"""Plots a given signal matrix as image."""
 	fig = plt.figure(figsize=(5, 5))
-	plt.imshow(V, cmap='plasma', aspect='auto')
+	plt.imshow(np.reshape(V.transpose([1, 0, 2]), [-1, V.shape[2]]), cmap='plasma', aspect='auto')
 	plt.xlabel('signal number')
 	plt.ylabel('signal dimension')
 	plt.xticks([])
@@ -36,17 +37,22 @@ def plot_signal_matrix(V):
 # -------------------- settings -------------------- #
 
 # fix random seed
-np.random.seed(0)
+seed = st.sidebar.number_input('Random seed', value=42)
+np.random.seed(seed)
 
 # define signal parameters
 st.sidebar.markdown('# Signal settings')
 n_signals = st.sidebar.number_input('# Signals', min_value=1, value=100)
 n_pulses = st.sidebar.number_input('# Pulses', min_value=1, value=3)
-shapes = st.sidebar.multiselect('Pulse shapes', ['n', '-', '^', 'v', '_'], ['n', '-', '^', 'v', '_'])
+n_channels = st.sidebar.number_input('# Channels', min_value=1, value=3, max_value=5)
+shapes = ['n', '-', '^', 'v', '_']
+default_symbols = [shape * n_channels for shape in shapes]
+symbols = [''.join(chars) for chars in product(*repeat(shapes, n_channels))]
+symbols = st.sidebar.multiselect('Symbols', symbols, np.array(symbols)[np.random.randint(0, len(symbols), 5)])
 pulse_length = st.sidebar.number_input('Pulse length', min_value=1, value=20)
 
 # create signal matrix
-V = np.array([generate_pulse_train(shapes=shapes, pulse_length=pulse_length, n_pulses=n_pulses)
+V = np.array([generate_pulse_train(symbols=symbols, pulse_length=pulse_length, n_pulses=n_pulses)
 			  for _ in range(n_signals)]).T
 
 # define NMF parameters
@@ -66,15 +72,15 @@ if shift_invariant:
 	else:
 		nmf_params['inhibition_range'] = st.sidebar.number_input('Inhibition range', min_value=0, value=nmf_params['atom_size'])
 	nmf_params['inhibition_strength'] = st.sidebar.number_input('Inhibition strength', min_value=0.0, value=0.1)
-	n_complete = len(shapes)
+	n_complete = len(symbols)
 else:
-	n_complete = len(shapes) * n_pulses
+	n_complete = len(symbols) * n_pulses
 n_complete_str = f'complete ({n_complete} atoms)'
 dict_size = st.sidebar.radio('Dictionary size', [n_complete_str, 'manual'], 0)
 if dict_size == n_complete_str:
 	n_components = n_complete
 else:
-	n_components = st.sidebar.number_input('# Dictionary elements', min_value=1, value=len(shapes) * n_pulses)
+	n_components = st.sidebar.number_input('# Dictionary elements', min_value=1, value=len(symbols) * n_pulses)
 nmf_params['n_components'] = n_components
 
 
@@ -100,28 +106,32 @@ with col2:
 
 # show reconstruction of individual signals
 s = st.slider('Signal number', min_value=0, max_value=n_signals-1, value=0)
-fig = plt.figure()
-plt.plot(V[:, s], label='signal')
-plt.plot(nmf.R[:, s], label='reconstruction', color='tab:red')
+fig, axs = plt.subplots(nrows=nmf.n_channels, ncols=1)
+axs = np.atleast_1d(axs)
+for channel, ax in enumerate(axs):
+	ax.plot(V[:, channel, s], label='signal')
+	ax.plot(nmf.R[:, channel, s], label='reconstruction', color='tab:red')
 plt.legend()
 st.pyplot(fig)
 
 # show ground truth pulses
 st.markdown('# Ground truth signal pulses')
-fig, axs = plt.subplots(figsize=(10, 2), ncols=len(shapes))
-pulses = [generate_pulse(shape, length=pulse_length) for shape in shapes]
-for ax, pulse, shape in zip_longest(axs.ravel(), pulses, shapes):
-	if pulse is not None:
-		ax.plot(pulse)
-	if shape == '_':
-		ax.set_ylim([-0.05, 1])
-	ax.axis('off')
-st.pyplot(fig)
+W = np.array([generate_pulse_train([symbol], n_pulses=1, pulse_length=pulse_length) for symbol in symbols]).T
+figs = nmf.plot_dictionary(W)
+for row in chunked(figs, 3):
+	cols = st.beta_columns(3)
+	for fig, col in zip(row, cols):
+		with col:
+			st.pyplot(fig)
 
 # show dictionary
 st.markdown('# Learned dictionary')
-fig = nmf.plot_dictionary()
-st.pyplot(fig)
+figs = nmf.plot_dictionary()
+for row in chunked(figs, 3):
+	cols = st.beta_columns(3)
+	for fig, col in zip(row, cols):
+		with col:
+			st.pyplot(fig)
 
 # show activation pattern
 st.markdown('# Activation pattern')

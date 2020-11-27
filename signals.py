@@ -60,17 +60,17 @@ def generate_pulse(shape: str, length: int = 20) -> np.array:
 
 
 def generate_pulse_train(
-		shapes: Optional[List[str]] = None,
+		symbols: Optional[List[str]] = None,
 		pulse_length: int = 20,
 		n_pulses: int = 5) -> np.array:
 	"""
-	Generates a signal composed of a random sequence of pulses.
+	Generates a signal composed of a random sequence of multi-channel pulses.
 
 	Parameters
 	----------
-	shapes : (optional) List[str]
-		A list of pulse shapes (specified via strings) that are used as a dictionary to generate the signal.
-		If None, the following shapes are used: ['n', '-', '^', 'v', '_'].
+	symbols : (optional) List[str]
+		A list of symbols (=multi-channel pulse shapes) specified via strings that are used as a dictionary to generate
+		the signal. If None, the following three-channel symbols are used: ['nnn', '---', '^^^', 'vvv', '___'].
 	pulse_length : int
 		The length of each individual pulse.
 	n_pulses : int
@@ -78,15 +78,17 @@ def generate_pulse_train(
 
 	Returns
 	-------
-	The signal as a 1-D numpy array.
+	The signal as a 2-D numpy array, where the first dimension indexes the signal channel.
 	"""
 	# default pulse shapes
-	if shapes is None:
-		shapes = ['n', '-', '^', 'v', '_']
+	if symbols is None:
+		symbols = ['nnn', '---', '^^^', 'vvv', '___']
 
 	# generate a random sequence of pulses and synthesize the signal
-	sequence = np.random.choice(shapes, n_pulses)
-	signal = np.hstack([generate_pulse(shape, pulse_length) for shape in sequence])
+	sequence = np.random.choice(symbols, n_pulses)
+	signal = np.hstack([np.vstack([generate_pulse(shape, pulse_length)
+								   for shape in symbol])
+						for symbol in sequence])
 
 	return signal
 
@@ -98,10 +100,13 @@ if __name__ == '__main__':
 	# generate pulse signal
 	n_pulses = 6
 	pulse_length = 100
-	signal = generate_pulse_train(pulse_length=pulse_length, n_pulses=n_pulses)
+	symbols = ['v^v', 'n-n']
+	signal = generate_pulse_train(symbols=symbols, pulse_length=pulse_length, n_pulses=n_pulses)
 
 	# visualize the signal and highlight the individual pulses
-	for p in range(n_pulses):
-		x = range(p * pulse_length, p * pulse_length + pulse_length)
-		plt.plot(x, signal[x])
+	fig, axs = plt.subplots(nrows=signal.shape[0], ncols=1)
+	for channel, ax in enumerate(axs):
+		for p in range(n_pulses):
+			x = range(p * pulse_length, p * pulse_length + pulse_length)
+			ax.plot(x, signal[channel, x])
 	plt.show()

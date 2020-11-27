@@ -4,7 +4,6 @@ Author: Adrian Sosic
 
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.linalg import norm
 from scipy.signal import convolve
 from opt_einsum import contract
 from abc import ABC
@@ -98,6 +97,11 @@ class TransformInvariantNMF(ABC):
 	@property
 	def n_signals(self) -> int:
 		"""Number of input signals."""
+		return self.V.shape[2]
+	
+	@property
+	def n_channels(self) -> int:
+		"""Number of input channels."""
 		return self.V.shape[1]
 
 	@property
@@ -107,7 +111,7 @@ class TransformInvariantNMF(ABC):
 
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix generically using transformation matrices."""
-		return contract('tdh,hm,tmn->dn', self._T, self.W, self.H, optimize='optimal')
+		return contract('tdh,hcm,tmn->dcn', self._T, self.W, self.H, optimize='optimal')
 
 	def generate_transforms(self) -> np.array:
 		"""Generates all dictionary transforms for the given signal matrix."""
@@ -120,6 +124,7 @@ class TransformInvariantNMF(ABC):
 		Notation:
 		---------
 		d: number of input dimensions
+		c: number of input channels
 		n: number of input samples
 		m: number of basis vectors (dictionary size)
 		t: number of basis vector transforms (= 1 for standard NMF without transform invariance)
@@ -127,8 +132,8 @@ class TransformInvariantNMF(ABC):
 
 		Dimensions:
 		-----------
-		Signal matrix V: 		d x n
-		Dictionary Matrix W: 	h x m
+		Signal matrix V: 		d x c x n
+		Dictionary Matrix W: 	h x c x m
 		Activation Tensor H: 	t x m x n
 		Transformation Tensor:  t x d x h
 		"""
@@ -142,7 +147,8 @@ class TransformInvariantNMF(ABC):
 			pass
 
 		# initialize the factorization matrices
-		self.W = normalize(np.random.random([self.atom_size, self.n_components]))
+		# TODO: use clever scaling of tensors for initialization
+		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]))
 		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals])
 
 	def fit(self, V):
@@ -153,7 +159,7 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			print(f"Iteration: {i}\tReconstruction error: {norm(self.V - self.R, 'fro')}")
+			print(f"Iteration: {i}\tReconstruction error: {np.sqrt(np.sum((self.V - self.R) ** 2))}")
 			self.update_H()
 			self.update_W()
 
@@ -165,9 +171,9 @@ class TransformInvariantNMF(ABC):
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
-		TW = contract('tdh,hm->tdm', self._T, self.W, optimize='optimal')
-		numer = contract('tdm,dn->tmn', TW, self.V, optimize='optimal')
-		denum = contract('tdm,dn->tmn', TW, self.R, optimize='optimal')
+		TW = contract('tdh,hcm->tdcm', self._T, self.W, optimize='optimal')
+		numer = contract('tdcm,dcn->tmn', TW, self.V, optimize='optimal')
+		denum = contract('tdcm,dcn->tmn', TW, self.R, optimize='optimal')
 		return numer, denum
 
 	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
@@ -210,8 +216,8 @@ class TransformInvariantNMF(ABC):
 
 	def _reconstruction_gradient_W(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
-		numer = contract('tdh,dn,tmn->hm', self._T, self.V, self.H, optimize='optimal')
-		denum = contract('tdh,dn,tmn->hm', self._T, self.R, self.H, optimize='optimal')
+		numer = contract('tdh,dcn,tmn->hcm', self._T, self.V, self.H, optimize='optimal')
+		denum = contract('tdh,dcn,tmn->hcm', self._T, self.R, self.H, optimize='optimal')
 		return numer, denum
 
 	def update_W(self):
@@ -222,15 +228,30 @@ class TransformInvariantNMF(ABC):
 		# update the dictionary matrix
 		self.W = normalize(self.W * (numer / (denum + self.eps)))
 
-	def plot_dictionary(self):
-		"""Plots the learned dictionary elements."""
-		fig, axs = plt.subplots(nrows=int(np.ceil(self.W.shape[1] / 3)), ncols=3)
-		for w, ax in zip_longest(self.W.T, axs.ravel()):
-			if w is not None:
+	def plot_dictionary(self, W: Optional[np.array] = None):
+		"""
+		Plots a given dictionary.
+
+		Parameters
+		----------
+		W : (optional) np.array
+			The dictionary to be plotted. If 'None', the learned dictionary is plotted.
+
+		Returns
+		-------
+		A list of figures, each containing the plot of an individual dictionary component.
+		"""
+		W = self.W if W is None else W
+		figs = []
+		for m in range(W.shape[2]):
+			fig, axs = plt.subplots(nrows=W.shape[1], ncols=1)
+			for w, ax in zip(W[:, :, m].T, axs):
 				ax.plot(w)
-			ax.axis('off')
-		plt.tight_layout()
-		return fig
+				if np.allclose(w, 0):
+					ax.set_ylim([-0.05, 1])
+			plt.tight_layout()
+			figs.append(fig)
+		return figs
 
 
 class SparseNMF(TransformInvariantNMF):
@@ -327,10 +348,11 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		"""Reconstructs the signal matrix via convolution."""
 		# TODO: vectorize
 		# TODO: computation via FFT
-		R = np.zeros([self.n_dim, self.n_signals])
+		R = np.zeros([self.n_dim, self.n_channels, self.n_signals])
 		for n in range(self.n_signals):
-			R[:, n] = np.sum([np.convolve(self.H[:, m, n], self.W[:, m], mode='valid')
-							  for m in range(self.n_components)], axis=0)
+			for c in range(self.n_channels):
+				R[:, c, n] = np.sum([np.convolve(self.H[:, m, n], self.W[:, c, m], mode='valid')
+									 for m in range(self.n_components)], axis=0)
 		return R
 
 	def _reconstruction_gradient_H(self) -> np.array:
@@ -341,9 +363,10 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		numer = np.zeros([self.n_transforms, self.n_components, self.n_signals])
 		denum = np.zeros([self.n_transforms, self.n_components, self.n_signals])
 		for n in range(self.n_signals):
-			for m in range(self.n_components):
-				numer[:, m, n] = np.correlate(self.V[:, n], self.W[:, m], mode='full')
-				denum[:, m, n] = np.correlate(self.R[:, n], self.W[:, m], mode='full')
+			for c in range(self.n_channels):
+				for m in range(self.n_components):
+					numer[:, m, n] = numer[:, m, n] + np.correlate(self.V[:, c, n], self.W[:, c, m], mode='full')
+					denum[:, m, n] = denum[:, m, n] + np.correlate(self.R[:, c, n], self.W[:, c, m], mode='full')
 		return numer, denum
 
 	def _reconstruction_gradient_W(self) -> np.array:
@@ -351,11 +374,12 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		# TODO: inherit docstring from superclass
 		# TODO: vectorize
 		# TODO: computation via FFT
-		numer = np.zeros([self.atom_size, self.n_components])
-		denum = np.zeros([self.atom_size, self.n_components])
-		for m in range(self.n_components):
-			numer[:, m] = np.sum([np.correlate(self.V[:, n], self.H[:, m, n], mode='valid')
-								  for n in range(self.n_signals)], axis=0)
-			denum[:, m] = np.sum([np.correlate(self.R[:, n], self.H[:, m, n], mode='valid')
-								  for n in range(self.n_signals)], axis=0)
+		numer = np.zeros([self.atom_size, self.n_channels, self.n_components])
+		denum = np.zeros([self.atom_size, self.n_channels, self.n_components])
+		for c in range(self.n_channels):
+			for m in range(self.n_components):
+				numer[:, c, m] = np.sum([np.correlate(self.V[:, c, n], self.H[:, m, n], mode='valid')
+										 for n in range(self.n_signals)], axis=0)
+				denum[:, c, m] = np.sum([np.correlate(self.R[:, c, n], self.H[:, m, n], mode='valid')
+										 for n in range(self.n_signals)], axis=0)
 		return numer, denum
