@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
 from typing import Optional, List
+from itertools import product, repeat
+from more_itertools import chunked
 plt.style.use('seaborn')
 
 
@@ -93,15 +95,106 @@ def generate_pulse_train(
 	return signal
 
 
+def generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) -> np.array:
+	"""
+	Generates a square image patch showing a certain pattern of specified size and color.
+
+	Parameters
+	----------
+	pattern : 'x' | '+'
+		Pattern shown in the image patch.
+	size : int
+		Size of both dimensions of the image patch.
+	color : (optional) 'r' | 'g' | 'b' | 'y' | 'm' | 'c' | 'w'
+		Color of the pattern.
+
+	Returns
+	-------
+	If a 'color' is provided: the image patch as a 3-D numpy array, where the last dimension indexes the color channel.
+	If no 'color' is provided: the image patch as a 2-D numpy array.
+	"""
+
+	# generate the grayscale image
+	if pattern == 'x':
+		im = np.eye(size)
+		im[np.rot90(im).astype(bool)] = 1
+
+	elif pattern == '+':
+		im = np.zeros([size, size])
+		idx = np.array([np.floor((size-1)/2), np.ceil((size-1)/2)]).astype(int)
+		im[idx, :] = 1
+		im[:, idx] = 1
+
+	else:
+		raise ValueError('unknown shape')
+
+	# convert the grayscale image to RGB
+	if color:
+		im_rgb = np.zeros([size, size, 3])
+		color_dict = {'r': [0], 'g': [1], 'b': [2], 'y': [0, 1], 'm': [0, 2], 'c': [1, 2], 'w': [0, 1, 2]}
+		channels = color_dict[color]
+		im_rgb[:, :, channels] = np.tile(im[:, :, None], [1, 1, len(channels)])
+		im = im_rgb
+
+	return im
+
+
+def generate_block_image(
+		symbols: Optional[List[str]] = None,
+		symbol_size: int = 10,
+		n_symbols: int = 10) -> np.array:
+	"""
+	Generates an image composed of several image patches, each containing a single random pattern.
+
+	Parameters
+	----------
+	symbols : (optional) List[str]
+		A list of symbols used as a dictionary to generate the image. Each symbol is either a one-character or
+		two-character string, where the first character specifies the symbol shape and the optional second character
+		specifies the symbol color.
+	symbol_size : int
+		The size of both dimensions of each individual image patch.
+	n_symbols : int
+		The number of image patches to be stacked both horizontally and vertically.
+
+	Returns
+	-------
+	The image as a 2-D or 3-D numpy array, depending on whether or not the provided symbols contain color information.
+	If color is provided, the last dimension indexes the color channel.
+	"""
+	# default symbols
+	if symbols is None:
+		shapes = ['+', 'x']
+		colors = ['r', 'g', 'b', 'y', 'm', 'c', 'w']
+		symbols = [''.join(spec) for spec in product(shapes, colors)]
+
+	# generate a random sequence of patches
+	sequence = np.random.choice(symbols, n_symbols ** 2)
+
+	# separate shape and color information if colors are specified
+	try:
+		shapes, colors = zip(*sequence)
+	except ValueError:
+		shapes = sequence
+		colors = repeat(None)
+
+	# turn the sequence of symbols into a list patches and stack them into an image
+	patches = [generate_patch(shape, symbol_size, color).T for shape, color in zip(shapes, colors)]
+	image = np.block(list(chunked(patches, n_symbols))).T
+
+	return image
+
+
 if __name__ == '__main__':
 
-	# ---------- demo example ---------- #
+	# ---------- 1-D example ---------- #
 
-	# generate pulse signal
+	# specify pulse properties
 	n_pulses = 6
 	pulse_length = 100
-	symbols = ['v^v', 'n-n']
-	signal = generate_pulse_train(symbols=symbols, pulse_length=pulse_length, n_pulses=n_pulses)
+
+	# generate the pulse signal
+	signal = generate_pulse_train(symbols=None, pulse_length=pulse_length, n_pulses=n_pulses)
 
 	# visualize the signal and highlight the individual pulses
 	fig, axs = plt.subplots(nrows=signal.shape[0], ncols=1)
@@ -110,3 +203,13 @@ if __name__ == '__main__':
 			x = range(p * pulse_length, p * pulse_length + pulse_length)
 			ax.plot(x, signal[channel, x])
 	plt.show()
+
+	# ---------- 2-D example ---------- #
+
+	# specify image patch properties
+	symbol_size = 11
+	n_symbols = 10
+
+	# generate and visualize the image
+	im = generate_block_image(symbols=None, symbol_size=symbol_size, n_symbols=n_symbols)
+	plt.imshow(im), plt.axis('off'), plt.grid(False), plt.tight_layout(), plt.show()
