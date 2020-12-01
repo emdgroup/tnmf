@@ -4,13 +4,16 @@ Author: Adrian Sosic
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import convolve
+from scipy.signal import convolve, correlate
+from scipy.ndimage import convolve1d
 from opt_einsum import contract
 from abc import ABC
-from itertools import zip_longest
 from utils import normalize, shift
-from typing import Optional
+from typing import Optional, Tuple
 plt.style.use('seaborn')
+
+# TODO: replace 'matrix' with 'tensor' in docstrings
+# TODO: indicate 'override' in subclasses
 
 
 class TransformInvariantNMF(ABC):
@@ -97,12 +100,12 @@ class TransformInvariantNMF(ABC):
 	@property
 	def n_signals(self) -> int:
 		"""Number of input signals."""
-		return self.V.shape[2]
+		return self.V.shape[-1]
 	
 	@property
 	def n_channels(self) -> int:
 		"""Number of input channels."""
-		return self.V.shape[1]
+		return self.V.shape[-2]
 
 	@property
 	def n_transforms(self) -> int:
@@ -147,6 +150,10 @@ class TransformInvariantNMF(ABC):
 			pass
 
 		# initialize the factorization matrices
+		self._init_factorization_matrices()
+
+	def _init_factorization_matrices(self):
+		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: use clever scaling of tensors for initialization
 		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]))
 		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals])
@@ -272,7 +279,7 @@ class SparseNMF(TransformInvariantNMF):
 
 
 class BaseShiftInvariantNMF(TransformInvariantNMF):
-	"""Base class for shift-invariant non-negative matrix factorization of 1-D signals."""
+	"""Base class for shift-invariant non-negative matrix factorization."""
 
 	def __init__(self, inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs):
 		"""
@@ -294,6 +301,28 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		self.inhibition_strength = inhibition_strength
 		self.kernel = 1 - ((np.arange(-inhibition_range, inhibition_range + 1) / inhibition_range) ** 2)
 
+	@property
+	def n_dim(self) -> Tuple[int]:
+		"""Number of input dimensions."""
+		return tuple(self.V.shape[:-2])
+
+	@property
+	def n_transforms(self) -> Tuple[int]:
+		"""Number of dictionary transforms."""
+		# TODO: inherit docstring from superclass
+		return tuple(np.array(self.n_dim) + self.atom_size - 1)
+
+	@property
+	def n_shift_dimensions(self):
+		"""The number of shift invariant input dimensions."""
+		return self.V.ndim - 2
+
+	def _init_factorization_matrices(self):
+		"""Initializes the activation matrix and dictionary matrix."""
+		# TODO: inherit docstring from superclass
+		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]))
+		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals])
+
 	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
 		"""Computes the positive and the negative parts of the energy gradient w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
@@ -303,14 +332,17 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 
 		# add the inhibition gradient component
 		if self.inhibition_range and self.inhibition_strength:
-			inhibition = convolve(self.H, self.kernel[:, None, None], mode='same') - self.H
+			inhibition = self.H.copy()
+			for dim in range(self.n_shift_dimensions):
+				inhibition = convolve1d(inhibition, self.kernel, axis=dim, mode='constant', cval=0.0)
+			inhibition = inhibition - self.H
 			denum = denum + self.inhibition_strength * inhibition
 
 		return numer, denum
 
 
 class ShiftInvariantNMF(BaseShiftInvariantNMF, ABC):
-	"""Wrapper class for shift-invariant non-negative matrix factorization of 1-D signals."""
+	"""Wrapper class for shift-invariant non-negative matrix factorization."""
 
 	def __new__(cls, explicit_transforms: bool = False, **kwargs):
 		if explicit_transforms:
@@ -320,8 +352,14 @@ class ShiftInvariantNMF(BaseShiftInvariantNMF, ABC):
 
 
 class ExplicitShiftInvariantNMF(BaseShiftInvariantNMF):
-	"""Class for shift-invariant non-negative matrix factorization of 1-D signals that computes the involved
-	transform operations explicitly via transformation matrices."""
+	"""Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
+	explicitly via transformation matrices."""
+
+	def initialize(self, V):
+		if V.ndim > 3:
+			raise ValueError("'ExplicitShiftInvariantNMF' currently supports (multi-channel) 1-D signals only. "
+							 "For higher-dimensional signals, use 'ImplicitShiftInvariantNMF'.")
+		super().__init__(V)
 
 	def generate_transforms(self) -> np.array:
 		"""Generates all possible shift matrices for the signal dimension and given atom size."""
@@ -335,23 +373,18 @@ class ExplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 
 
 class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
-	"""Class for shift-invariant non-negative matrix factorization of 1-D signals that computes the involved
-	transform operations implicitly via correlation/convolution."""
-
-	@property
-	def n_transforms(self) -> int:
-		"""Number of dictionary transforms."""
-		# TODO: inherit docstring from superclass
-		return self.n_dim + self.atom_size - 1
+	"""Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
+	implicitly via correlation/convolution."""
 
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix via convolution."""
 		# TODO: vectorize
 		# TODO: computation via FFT
-		R = np.zeros([self.n_dim, self.n_channels, self.n_signals])
+		# TODO: numpy convolve runs faster than scipy convolve
+		R = np.zeros([*self.n_dim, self.n_channels, self.n_signals])
 		for n in range(self.n_signals):
 			for c in range(self.n_channels):
-				R[:, c, n] = np.sum([np.convolve(self.H[:, m, n], self.W[:, c, m], mode='valid')
+				R[..., c, n] = np.sum([convolve(self.H[..., m, n], self.W[..., c, m], mode='valid', method='direct')
 									 for m in range(self.n_components)], axis=0)
 		return R
 
@@ -360,13 +393,14 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		# TODO: inherit docstring from superclass
 		# TODO: vectorize
 		# TODO: computation via FFT
-		numer = np.zeros([self.n_transforms, self.n_components, self.n_signals])
-		denum = np.zeros([self.n_transforms, self.n_components, self.n_signals])
+		# TODO: numpy correlate runs faster than scipy correlate
+		numer = np.zeros([*self.n_transforms, self.n_components, self.n_signals])
+		denum = np.zeros([*self.n_transforms, self.n_components, self.n_signals])
 		for n in range(self.n_signals):
 			for c in range(self.n_channels):
 				for m in range(self.n_components):
-					numer[:, m, n] = numer[:, m, n] + np.correlate(self.V[:, c, n], self.W[:, c, m], mode='full')
-					denum[:, m, n] = denum[:, m, n] + np.correlate(self.R[:, c, n], self.W[:, c, m], mode='full')
+					numer[..., m, n] = numer[..., m, n] + correlate(self.V[..., c, n], self.W[..., c, m], mode='full', method='direct')
+					denum[..., m, n] = denum[..., m, n] + correlate(self.R[..., c, n], self.W[..., c, m], mode='full', method='direct')
 		return numer, denum
 
 	def _reconstruction_gradient_W(self) -> np.array:
@@ -374,12 +408,13 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		# TODO: inherit docstring from superclass
 		# TODO: vectorize
 		# TODO: computation via FFT
-		numer = np.zeros([self.atom_size, self.n_channels, self.n_components])
-		denum = np.zeros([self.atom_size, self.n_channels, self.n_components])
+		# TODO: numpy correlate runs faster than scipy correlate
+		numer = np.zeros([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components])
+		denum = np.zeros([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components])
 		for c in range(self.n_channels):
 			for m in range(self.n_components):
-				numer[:, c, m] = np.sum([np.correlate(self.V[:, c, n], self.H[:, m, n], mode='valid')
-										 for n in range(self.n_signals)], axis=0)
-				denum[:, c, m] = np.sum([np.correlate(self.R[:, c, n], self.H[:, m, n], mode='valid')
-										 for n in range(self.n_signals)], axis=0)
+				numer[..., c, m] = np.sum([correlate(self.V[..., c, n], self.H[..., m, n], mode='valid', method='direct')
+										   for n in range(self.n_signals)], axis=0)
+				denum[..., c, m] = np.sum([correlate(self.R[..., c, n], self.H[..., m, n], mode='valid', method='direct')
+										   for n in range(self.n_signals)], axis=0)
 		return numer, denum
