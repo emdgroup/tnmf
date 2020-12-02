@@ -235,31 +235,6 @@ class TransformInvariantNMF(ABC):
 		# update the dictionary matrix
 		self.W = normalize(self.W * (numer / (denum + self.eps)))
 
-	def plot_dictionary(self, W: Optional[np.array] = None):
-		"""
-		Plots a given dictionary.
-
-		Parameters
-		----------
-		W : (optional) np.array
-			The dictionary to be plotted. If 'None', the learned dictionary is plotted.
-
-		Returns
-		-------
-		A list of figures, each containing the plot of an individual dictionary component.
-		"""
-		W = self.W if W is None else W
-		figs = []
-		for m in range(W.shape[2]):
-			fig, axs = plt.subplots(nrows=W.shape[1], ncols=1)
-			for w, ax in zip(W[:, :, m].T, axs):
-				ax.plot(w)
-				if np.allclose(w, 0):
-					ax.set_ylim([-0.05, 1])
-			plt.tight_layout()
-			figs.append(fig)
-		return figs
-
 
 class SparseNMF(TransformInvariantNMF):
 	"""Class for sparse non-negative matrix factorization (special case of a transform invariant NMF with a single

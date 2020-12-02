@@ -64,7 +64,7 @@ def generate_pulse(shape: str, length: int = 20) -> np.array:
 def generate_pulse_train(
 		symbols: Optional[List[str]] = None,
 		pulse_length: int = 20,
-		n_pulses: int = 5) -> np.array:
+		n_pulses: int = 5) -> (np.array, np.array):
 	"""
 	Generates a signal composed of a random sequence of multi-channel pulses.
 
@@ -80,19 +80,22 @@ def generate_pulse_train(
 
 	Returns
 	-------
-	The signal as a 2-D numpy array, where the first dimension indexes the signal channel.
+	(signal, W) : (np.array, np.array)
+		- A 2-D array of shape (n_pulses * pulse_length, n_channels) containing the signal.
+		- A 3-D array of shape (pulse_length, n_channels, len(symbols)) containing the pulse shape dictionary.
 	"""
 	# default pulse shapes
 	if symbols is None:
 		symbols = ['nnn', '---', '^^^', 'vvv', '___']
 
-	# generate a random sequence of pulses and synthesize the signal
-	sequence = np.random.choice(symbols, n_pulses)
-	signal = np.hstack([np.vstack([generate_pulse(shape, pulse_length)
-								   for shape in symbol])
-						for symbol in sequence])
+	# generate all pulse shapes
+	W = np.dstack([np.vstack([generate_pulse(shape, pulse_length) for shape in symbol]).T for symbol in symbols])
 
-	return signal
+	# generate a random sequence of pulse indices and synthesize the signal
+	sequence = np.random.choice(range(len(symbols)), n_pulses)
+	signal = np.vstack([W[:, :, symbol_idx] for symbol_idx in sequence])
+
+	return signal, W
 
 
 def generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) -> np.array:
@@ -106,25 +109,22 @@ def generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) ->
 	size : int
 		Size of both dimensions of the image patch.
 	color : (optional) 'r' | 'g' | 'b' | 'y' | 'm' | 'c' | 'w'
-		Color of the pattern.
+		Color of the pattern. If 'None', the generated image patch will be grayscale.
 
 	Returns
 	-------
-	If a 'color' is provided: the image patch as a 3-D numpy array, where the last dimension indexes the color channel.
-	If no 'color' is provided: the image patch as a 2-D numpy array.
+	The image patch as a 3-D array, where the last dimension indexes the color channel.
 	"""
 
 	# generate the grayscale image
 	if pattern == 'x':
 		im = np.eye(size)
 		im[np.rot90(im).astype(bool)] = 1
-
 	elif pattern == '+':
 		im = np.zeros([size, size])
 		idx = np.array([np.floor((size-1)/2), np.ceil((size-1)/2)]).astype(int)
 		im[idx, :] = 1
 		im[:, idx] = 1
-
 	else:
 		raise ValueError('unknown shape')
 
@@ -134,15 +134,16 @@ def generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) ->
 		color_dict = {'r': [0], 'g': [1], 'b': [2], 'y': [0, 1], 'm': [0, 2], 'c': [1, 2], 'w': [0, 1, 2]}
 		channels = color_dict[color]
 		im_rgb[:, :, channels] = np.tile(im[:, :, None], [1, 1, len(channels)])
-		im = im_rgb
+	else:
+		im_rgb = im[:, :, None]
 
-	return im
+	return im_rgb
 
 
 def generate_block_image(
 		symbols: Optional[List[str]] = None,
 		symbol_size: int = 10,
-		n_symbols: int = 10) -> np.array:
+		n_symbols: int = 10) -> (np.array, np.array):
 	"""
 	Generates an image composed of several image patches, each containing a single random pattern.
 
@@ -159,8 +160,9 @@ def generate_block_image(
 
 	Returns
 	-------
-	The image as a 2-D or 3-D numpy array, depending on whether or not the provided symbols contain color information.
-	If color is provided, the last dimension indexes the color channel.
+	(image, W) : (np.array, np.array)
+		- A 3-D array of shape (n_symbols * symbol_size, n_symbols * symbol_size, 3) containing the image.
+		- A 3-D array of shape (symbols_size, symbol_size, 3) containing the image patch dictionary.
 	"""
 	# default symbols
 	if symbols is None:
@@ -168,21 +170,24 @@ def generate_block_image(
 		colors = ['r', 'g', 'b', 'y', 'm', 'c', 'w']
 		symbols = [''.join(spec) for spec in product(shapes, colors)]
 
-	# generate a random sequence of patches
-	sequence = np.random.choice(symbols, n_symbols ** 2)
-
 	# separate shape and color information if colors are specified
 	try:
-		shapes, colors = zip(*sequence)
+		shapes, colors = zip(*symbols)
 	except ValueError:
-		shapes = sequence
+		shapes = symbols
 		colors = repeat(None)
 
-	# turn the sequence of symbols into a list patches and stack them into an image
-	patches = [generate_patch(shape, symbol_size, color).T for shape, color in zip(shapes, colors)]
-	image = np.block(list(chunked(patches, n_symbols))).T
+	# generate a random sequence of patches indices
+	sequence = np.random.choice(range(len(symbols)), n_symbols ** 2)
 
-	return image
+	# generate all patch types
+	W = np.stack([generate_patch(shape, symbol_size, color) for shape, color in zip(shapes, colors)], axis=-1)
+
+	# turn the sequence of patch indices into a sequence patches and stack them into an image
+	patches = [W[..., idx].transpose(2, 0, 1) for idx in sequence]
+	image = np.block(list(chunked(patches, n_symbols))).transpose(1, 2, 0)
+
+	return image, W
 
 
 if __name__ == '__main__':
@@ -194,14 +199,14 @@ if __name__ == '__main__':
 	pulse_length = 100
 
 	# generate the pulse signal
-	signal = generate_pulse_train(symbols=None, pulse_length=pulse_length, n_pulses=n_pulses)
+	signal, _ = generate_pulse_train(symbols=None, pulse_length=pulse_length, n_pulses=n_pulses)
 
 	# visualize the signal and highlight the individual pulses
-	fig, axs = plt.subplots(nrows=signal.shape[0], ncols=1)
+	fig, axs = plt.subplots(nrows=signal.shape[1], ncols=1)
 	for channel, ax in enumerate(axs):
 		for p in range(n_pulses):
 			x = range(p * pulse_length, p * pulse_length + pulse_length)
-			ax.plot(x, signal[channel, x])
+			ax.plot(x, signal[x, channel])
 	plt.show()
 
 	# ---------- 2-D example ---------- #
@@ -211,5 +216,5 @@ if __name__ == '__main__':
 	n_symbols = 10
 
 	# generate and visualize the image
-	im = generate_block_image(symbols=None, symbol_size=symbol_size, n_symbols=n_symbols)
+	im, _ = generate_block_image(symbols=None, symbol_size=symbol_size, n_symbols=n_symbols)
 	plt.imshow(im), plt.axis('off'), plt.grid(False), plt.tight_layout(), plt.show()
