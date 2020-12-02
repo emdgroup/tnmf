@@ -125,6 +125,10 @@ def generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) ->
 		idx = np.array([np.floor((size-1)/2), np.ceil((size-1)/2)]).astype(int)
 		im[idx, :] = 1
 		im[:, idx] = 1
+	elif pattern == 's':
+		fill_width = int(size/3)
+		square_width = size - 2 * fill_width
+		im = np.pad(np.ones([square_width, square_width]), fill_width)
 	else:
 		raise ValueError('unknown shape')
 
@@ -166,7 +170,7 @@ def generate_block_image(
 	"""
 	# default symbols
 	if symbols is None:
-		shapes = ['+', 'x']
+		shapes = ['+', 'x', 's']
 		colors = ['r', 'g', 'b', 'y', 'm', 'c', 'w']
 		symbols = [''.join(spec) for spec in product(shapes, colors)]
 

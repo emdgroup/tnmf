@@ -56,7 +56,7 @@ def st_define_signal_params(signal_type):
 			symbol_size=st.sidebar.number_input('# Patch size', min_value=1, value=10),
 		)
 
-		shapes = ['+', 'x']
+		shapes = ['+', 'x', 's']
 		colors = ['r', 'g', 'b', 'y', 'm', 'c', 'w'] if signal_params['n_channels'] == 3 else ['']
 		symbols = [''.join(spec) for spec in product(shapes, colors)]
 
