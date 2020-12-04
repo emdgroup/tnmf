@@ -4,6 +4,7 @@ Author: Adrian Sosic
 
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
 from scipy.signal import convolve, correlate
 from scipy.ndimage import convolve1d
 from opt_einsum import contract
@@ -26,7 +27,8 @@ class TransformInvariantNMF(ABC):
 			sparsity_H: float = 0.1,
 			refit_H: bool = True,
 			n_iterations: int = 100,
-			eps: float = 1e-9
+			eps: float = 1e-9,
+			logger: logging.Logger = None,
 	):
 		"""
 		Parameters
@@ -43,6 +45,8 @@ class TransformInvariantNMF(ABC):
 			Number of learning iterations.
 		eps : float
 			Small constant to avoid division by zero.
+		logger : logging.Logger
+			logging.Logger instance used for intermediate output
 		"""
 		# store parameters
 		self.atom_size = atom_size
@@ -63,6 +67,9 @@ class TransformInvariantNMF(ABC):
 
 		# caching flags
 		self._is_ready_R = False
+
+		# logger - use default if nothing else is given
+		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
 
 	@property
 	def R(self) -> np.array:
@@ -166,7 +173,7 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			print(f"Iteration: {i}\tReconstruction error: {np.sqrt(np.sum((self.V - self.R) ** 2))}")
+			self._logger.info(f"Iteration: {i}\tReconstruction error: {np.sqrt(np.sum((self.V - self.R) ** 2))}")
 			self.update_H()
 			self.update_W()
 
