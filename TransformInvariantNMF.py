@@ -191,6 +191,8 @@ class TransformInvariantNMF(ABC):
 		assert self.H.dtype == self.V.dtype
 		assert self.W.dtype == self.V.dtype
 
+		self._logger.info("NMF finished.")
+
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		TW = contract('tdh,hcm->tdcm', self._T, self.W, optimize='optimal')
