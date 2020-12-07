@@ -65,6 +65,9 @@ class TransformInvariantNMF(ABC):
 		# caching flags
 		self._is_ready_R = False
 
+		# axis over which the dictionary matrix gets normalized
+		self._normalization_dims = 0
+
 	@property
 	def R(self) -> np.array:
 		"""The reconstructed signal matrix."""
@@ -156,7 +159,7 @@ class TransformInvariantNMF(ABC):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: use clever scaling of tensors for initialization
-		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]))
+		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]), axis=self._normalization_dims)
 		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals])
 
 	def fit(self, V):
@@ -234,8 +237,7 @@ class TransformInvariantNMF(ABC):
 		numer, denum = self._reconstruction_gradient_W()
 
 		# update the dictionary matrix
-		# FIXME: normalization of all shift dimensions
-		self.W = normalize(self.W * (numer / (denum + self.eps)))
+		self.W = normalize(self.W * (numer / (denum + self.eps)), axis=self._normalization_dims)
 
 
 class SparseNMF(TransformInvariantNMF):
@@ -296,6 +298,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 
 	def initialize(self, V):
 		super().initialize(V)
+		self._normalization_dims = tuple(range(self.n_shift_dimensions))
 		self._init_cache()
 
 	def _init_cache(self):
@@ -331,7 +334,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: inherit docstring from superclass
-		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]))
+		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]), axis=self._normalization_dims)
 		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals])
 
 	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
