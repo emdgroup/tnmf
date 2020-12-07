@@ -104,7 +104,7 @@ def load_images(path: str, pattern: str, max_images: int = 0,
     # cut all images to fit the smallest image
     images = [image[:rows, :cols, :] for image in images]
 
-    images = np.asarray(images)
+    images = np.asarray(images, dtype=dtype)
 
     # roll image index to the last dimension because this is how the NMF needs its data
     images = np.moveaxis(images, 0, -1)
@@ -114,6 +114,7 @@ def load_images(path: str, pattern: str, max_images: int = 0,
     assert (images.shape[0] == rows and images.shape[1] == cols)
     assert (images.shape[2] in (1, 3))
     assert (images.shape[3] in (count, 3 * count))
+    assert (images.dtype == dtype)
 
     return images, (rows, cols)
 
