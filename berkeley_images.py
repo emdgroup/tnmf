@@ -83,7 +83,7 @@ def load_images(path: str, pattern: str, max_images: int = 0,
     images = []
     rows, cols = 10000, 10000
 
-    logging.info(f"Loading files from {path} with pattern {pattern} in color mode {color_mode}")
+    logging.info(f'Loading files from "{path}" with pattern "{pattern}" in color mode "{color_mode}"')
 
     count = 0
     for count, filename in enumerate(glob.glob(os.path.join(os.getcwd(), path, pattern))):
@@ -133,18 +133,19 @@ def compute_nmf(V, nmf_params):
     return nmf
 
 
-def st_compare_single_signals(nmf, signal_number):
+def st_compare_single_signals(nmf, signal_number, samples_per_image):
     st.markdown('# Signal reconstruction')
 
     col1, col2 = st.beta_columns(2)
     with col1:
         fig = plt.figure()
-        plt.imshow(nmf.V[..., signal_number])
+        plt.imshow(np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]))
         plt.grid(False)
         st.pyplot(fig)
     with col2:
         fig = plt.figure()
-        plt.imshow(np.clip(nmf.R[..., signal_number], 0., 1.))
+        plt.imshow(np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:
+                                                 (signal_number + 1) * samples_per_image]), 0., 1.))
         plt.grid(False)
         st.pyplot(fig)
 
@@ -169,14 +170,17 @@ def st_show_dictionary(W, num_columns=10):
             with col:
                 st.pyplot(fig)
 
+    return figs
 
-def st_plot_activations(H, nmf_params, signal_number):
+
+def st_plot_activations(H, nmf_params, signal_number, samples_per_image):
     st.markdown('# Activation pattern')
 
     m = st.slider('Dictionary atom', min_value=0, max_value=H.shape[-2] - 1)
     fig = plt.figure(figsize=(10, 5))
     if nmf_params['shift_invariant']:
-        plt.imshow(H[..., m, signal_number], aspect='auto')
+        plt.imshow(np.squeeze(H[..., m, signal_number * samples_per_image:(signal_number + 1) * samples_per_image]),
+                   aspect='auto')
     else:
         plt.imshow(H[0], aspect='auto')
     plt.colorbar()
@@ -205,14 +209,17 @@ if __name__ == '__main__':
     # -------------------- visualization -------------------- #
 
     # select signal to be visualized
-    signal_number = 0 if nmf.n_signals == 1 else st.slider('Image number', min_value=0, max_value=nmf.n_signals - 1,
-                                                           value=0)
+    samples_per_image = 3 if color_mode == 'colors (identical basis)' else 1
+
+    max_value = nmf.n_signals // samples_per_image - 1
+
+    signal_number = 0 if nmf.n_signals == 1 else st.slider('Image number', min_value=0, max_value=max_value, value=0)
 
     # show reconstruction of individual signals
-    st_compare_single_signals(nmf, signal_number)
+    st_compare_single_signals(nmf, signal_number, samples_per_image)
 
     # show learned dictionary
     st_show_dictionary(nmf.W)
 
     # show activation pattern
-    st_plot_activations(nmf.H, nmf_params, signal_number)
+    st_plot_activations(nmf.H, nmf_params, signal_number, samples_per_image)
