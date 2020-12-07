@@ -83,6 +83,8 @@ def load_images(path: str, pattern: str, max_images: int = 0,
     images = []
     rows, cols = 10000, 10000
 
+    logging.info(f"Loading files from {path} with pattern {pattern} in color mode {color_mode}")
+
     count = 0
     for count, filename in enumerate(glob.glob(os.path.join(os.getcwd(), path, pattern))):
         # limit number of images
@@ -128,7 +130,6 @@ def compute_nmf(V, nmf_params):
     else:
         nmf = SparseNMF(**nmf_params)
     nmf.fit(V)
-    logging.info('NMF finished')
     return nmf
 
 
