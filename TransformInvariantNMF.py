@@ -177,7 +177,8 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			self._logger.info(f"Iteration: {i}\tReconstruction error: {np.sqrt(np.sum((self.V - self.R) ** 2))}")
+			self._logger.info(f"Iteration: {i}\t"
+							  f"Reconstruction error: {np.linalg.norm((self.V - self.R).reshape(-1), ord=2)}")
 			self.update_H()
 			self.update_W()
 
