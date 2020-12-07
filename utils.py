@@ -3,9 +3,10 @@ Author: Adrian Sosic
 """
 
 import numpy as np
+from typing import Union, Tuple
 
 
-def normalize(arr: np.array, axis: int = 0) -> np.array:
+def normalize(arr: np.array, axis: Union[int, Tuple[int]] = 0) -> np.array:
 	"""
 	Normalizes a given array such that the sum of its values along the specified axis sum to one.
 
@@ -13,8 +14,8 @@ def normalize(arr: np.array, axis: int = 0) -> np.array:
 	----------
 	arr : np.array
 		The array to be normalized.
-	axis : int
-		The axis along which the array shall be normalized.
+	axis : int or tuple of int
+		The axis (or axes) along which the array shall be normalized.
 
 	Returns
 	-------

@@ -5,9 +5,10 @@ Author: Adrian Sosic
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
-from scipy.signal import convolve, correlate
+from numpy.lib.stride_tricks import as_strided
 from scipy.ndimage import convolve1d
 from opt_einsum import contract
+from itertools import product
 from abc import ABC
 from utils import normalize, shift
 from typing import Optional, Tuple
@@ -70,6 +71,9 @@ class TransformInvariantNMF(ABC):
 
 		# logger - use default if nothing else is given
 		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
+
+		# axis over which the dictionary matrix gets normalized
+		self._normalization_dims = 0
 
 	@property
 	def R(self) -> np.array:
@@ -162,7 +166,7 @@ class TransformInvariantNMF(ABC):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: use clever scaling of tensors for initialization
-		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]))
+		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]), axis=self._normalization_dims)
 		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals])
 
 	def fit(self, V):
@@ -240,7 +244,7 @@ class TransformInvariantNMF(ABC):
 		numer, denum = self._reconstruction_gradient_W()
 
 		# update the dictionary matrix
-		self.W = normalize(self.W * (numer / (denum + self.eps)))
+		self.W = normalize(self.W * (numer / (denum + self.eps)), axis=self._normalization_dims)
 
 
 class SparseNMF(TransformInvariantNMF):
@@ -299,10 +303,45 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		"""The number of shift invariant input dimensions."""
 		return self.V.ndim - 2
 
+	def initialize(self, V):
+		super().initialize(V)
+		self._normalization_dims = tuple(range(self.n_shift_dimensions))
+		self._init_cache()
+
+	def _init_cache(self):
+		"""Caches several fitting related variables."""
+		cache = {}
+
+		# zero-padding of the signal matrix for full-size correlation
+		cache['pad_width'] = (*self.n_shift_dimensions*((self.atom_size-1,)*2,), (0,0), (0,0))
+		cache['V_padded'] = np.pad(self.V, pad_width=cache['pad_width'])
+
+		# dimension labels of the data and reconstruction matrices
+		cache['V_labels'] = ['d' + str(i) for i in range(self.n_shift_dimensions)] + ['c', 'n']
+		cache['W_labels'] = ['a' + str(i) for i in range(self.n_shift_dimensions)] + ['c', 'm']
+		cache['H_labels'] = ['d' + str(i) for i in range(self.n_shift_dimensions)] + ['m', 'n']
+
+		# dimension info for striding in gradient_H computation
+		cache['X_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.H.shape[:-2] + self.V.shape[-2:]
+		cache['X_strided_W_strides'] = cache['V_padded'].strides[:self.n_shift_dimensions] + cache['V_padded'].strides
+		cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], range(self.n_shift_dimensions))] + ['c', 'n']
+
+		# dimension info for striding in gradient_W computation
+		cache['H_strided_V_shape'] = self.V.shape[:self.n_shift_dimensions] + (self.atom_size,) * self.n_shift_dimensions + self.H.shape[-2:]
+		cache['H_strided_V_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
+		cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], range(self.n_shift_dimensions))] + ['m', 'n']
+
+		# dimension info for striding in reconstruction computation
+		cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[-2:]
+		cache['H_strided_W_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
+		cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], range(self.n_shift_dimensions))] + ['m', 'n']
+
+		self._cache = cache
+
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: inherit docstring from superclass
-		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]))
+		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]), axis=self._normalization_dims)
 		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals])
 
 	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
@@ -360,43 +399,28 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix via convolution."""
-		# TODO: vectorize
 		# TODO: computation via FFT
-		# TODO: numpy convolve runs faster than scipy convolve
-		R = np.zeros([*self.n_dim, self.n_channels, self.n_signals])
-		for n in range(self.n_signals):
-			for c in range(self.n_channels):
-				R[..., c, n] = np.sum([convolve(self.H[..., m, n], self.W[..., c, m], mode='valid', method='direct')
-									 for m in range(self.n_components)], axis=0)
+		H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
+		R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, range(self.n_shift_dimensions)), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		return R
 
 	def _reconstruction_gradient_H(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
-		# TODO: vectorize
 		# TODO: computation via FFT
-		# TODO: numpy correlate runs faster than scipy correlate
-		numer = np.zeros([*self.n_transforms, self.n_components, self.n_signals])
-		denum = np.zeros([*self.n_transforms, self.n_components, self.n_signals])
-		for n in range(self.n_signals):
-			for c in range(self.n_channels):
-				for m in range(self.n_components):
-					numer[..., m, n] = numer[..., m, n] + correlate(self.V[..., c, n], self.W[..., c, m], mode='full', method='direct')
-					denum[..., m, n] = denum[..., m, n] + correlate(self.R[..., c, n], self.W[..., c, m], mode='full', method='direct')
+		V_padded = self._cache['V_padded']
+		R_padded = np.pad(self.R, pad_width=self._cache['pad_width'])
+		V_strided = as_strided(V_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
+		R_strided = as_strided(R_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
+		numer = contract(self.W, self._cache['W_labels'], V_strided, self._cache['X_strided_W_labels'], self._cache['H_labels'], optimize='optimal')
+		denum = contract(self.W, self._cache['W_labels'], R_strided, self._cache['X_strided_W_labels'], self._cache['H_labels'], optimize='optimal')
 		return numer, denum
 
 	def _reconstruction_gradient_W(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		# TODO: inherit docstring from superclass
-		# TODO: vectorize
 		# TODO: computation via FFT
-		# TODO: numpy correlate runs faster than scipy correlate
-		numer = np.zeros([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components])
-		denum = np.zeros([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components])
-		for c in range(self.n_channels):
-			for m in range(self.n_components):
-				numer[..., c, m] = np.sum([correlate(self.V[..., c, n], self.H[..., m, n], mode='valid', method='direct')
-										   for n in range(self.n_signals)], axis=0)
-				denum[..., c, m] = np.sum([correlate(self.R[..., c, n], self.H[..., m, n], mode='valid', method='direct')
-										   for n in range(self.n_signals)], axis=0)
+		H_strided = as_strided(self.H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
+		numer = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.V, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=range(self.n_shift_dimensions))
+		denum = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.R, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=range(self.n_shift_dimensions))
 		return numer, denum
