@@ -210,9 +210,6 @@ if __name__ == '__main__':
     # show reconstruction of individual signals
     st_compare_single_signals(nmf, signal_number)
 
-    import pdb
-    pdb.set_trace()
-
     # show learned dictionary
     st_show_dictionary(nmf.W, color_mode)
 
