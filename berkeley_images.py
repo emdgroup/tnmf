@@ -133,37 +133,41 @@ def compute_nmf(V, nmf_params):
     return nmf
 
 
-def st_compare_single_signals(nmf, signal_number, samples_per_image):
+def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
+    figs = []
+    for data in [np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]),
+                 np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]), 0., 1.)]:
+        fig = plt.figure()
+        plt.imshow(data)
+        plt.grid(False)
+        figs.append(fig)
+
+    return figs
+
+
+def st_show_signal_reconstruction(figs):
     st.markdown('## Comparison to original signal')
 
-    col1, col2 = st.beta_columns(2)
-    with col1:
+    cols = st.beta_columns(2)
+    for fig, col in zip(figs, cols):
+        col.pyplot(fig, clear_figure=True)
+
+
+def plot_dictionary(W):
+    figs = []
+    for m in range(W.shape[-1]):
         fig = plt.figure()
-        plt.imshow(np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]))
+        plt.imshow(W[..., m])
         plt.grid(False)
-        st.pyplot(fig, clear_figure=True)
-    with col2:
-        fig = plt.figure()
-        plt.imshow(np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:
-                                                 (signal_number + 1) * samples_per_image]), 0., 1.))
-        plt.grid(False)
-        st.pyplot(fig, clear_figure=True)
+        plt.axis('off')
+        plt.tight_layout()
+        figs.append(fig)
+    return figs
 
 
-def st_show_dictionary(W, num_columns=10):
-    def plot_dictionary(W):
-        figs = []
-        for m in range(W.shape[-1]):
-            fig = plt.figure()
-            plt.imshow(W[..., m])
-            plt.grid(False)
-            plt.axis('off')
-            plt.tight_layout()
-            figs.append(fig)
-        return figs
-
+def st_show_dictionary(figs, num_columns=10):
     st.markdown(f'# Learned dictionary: {color_mode}')
-    figs = plot_dictionary(W)
+
     for row in chunked(figs, num_columns):
         cols = st.beta_columns(num_columns)
         for fig, col in zip(row, cols):
@@ -173,26 +177,40 @@ def st_show_dictionary(W, num_columns=10):
     return figs
 
 
-def st_plot_activations(H, nmf_params, dictionary_figs, signal_number, samples_per_image):
-    st.markdown('## Activation pattern')
-
+def plot_activations(H, nmf_params, dictionary_figs, signal_number, samples_per_image):
     assert(H.shape[-2] == len(dictionary_figs))
 
     cm = ['Greys'] if samples_per_image == 1 else ['Reds', 'Greens', 'Blues']
 
+    figs = []
     for atom in range(H.shape[-2]):
-        cols = st.beta_columns([1] + samples_per_image*[8])
-        cols[0].pyplot(dictionary_figs[atom], clear_figure=True)
+        atom_figs = [dictionary_figs[atom]]
 
         for channel in range(samples_per_image):
             fig = plt.figure(figsize=(10, 5))
             if nmf_params['shift_invariant']:
-                plt.imshow(np.squeeze(H[..., atom, signal_number * samples_per_image + channel]), aspect='auto', cmap=cm[channel])
+                plt.imshow(np.squeeze(H[..., atom, signal_number * samples_per_image + channel]), aspect='auto',
+                           cmap=cm[channel])
             else:
                 plt.imshow(H[0], aspect='auto')
             plt.colorbar()
             plt.grid(False)
-            cols[1+channel].pyplot(fig, clear_figure=True)
+            atom_figs.append(fig)
+
+        figs.append(atom_figs)
+
+    return figs
+
+
+def st_show_activations(figs):
+    st.markdown('## Activations')
+
+    col_def = [1] + [8] * (len(figs[0]) - 1)
+
+    for atom_figs in figs:
+        cols = st.beta_columns(col_def)
+        for fig, col in zip(atom_figs, cols):
+            col.pyplot(fig, clear_figure=True)
 
 
 if __name__ == '__main__':
@@ -216,7 +234,8 @@ if __name__ == '__main__':
     # -------------------- visualization -------------------- #
 
     # show learned dictionary
-    dictionary_figs = st_show_dictionary(nmf.W)
+    dictionary_figs = plot_dictionary(nmf.W)
+    st_show_dictionary(dictionary_figs)
 
     st.markdown('# Signal reconstruction')
 
@@ -228,7 +247,9 @@ if __name__ == '__main__':
     signal_number = 0 if nmf.n_signals == 1 else st.slider('Image number', min_value=0, max_value=max_value, value=0)
 
     # show reconstruction of individual signals
-    st_compare_single_signals(nmf, signal_number, samples_per_image)
+    signal_figs = plot_signal_reconstruction(nmf, signal_number, samples_per_image)
+    st_show_signal_reconstruction(signal_figs)
 
     # show activation pattern
-    st_plot_activations(nmf.H, nmf_params, dictionary_figs, signal_number, samples_per_image)
+    activation_figs = plot_activations(nmf.H, nmf_params, dictionary_figs, signal_number, samples_per_image)
+    st_show_activations(activation_figs)
