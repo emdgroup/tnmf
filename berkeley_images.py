@@ -134,20 +134,20 @@ def compute_nmf(V, nmf_params):
 
 
 def st_compare_single_signals(nmf, signal_number, samples_per_image):
-    st.markdown('# Signal reconstruction')
+    st.markdown('## Comparison to original signal')
 
     col1, col2 = st.beta_columns(2)
     with col1:
         fig = plt.figure()
         plt.imshow(np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]))
         plt.grid(False)
-        st.pyplot(fig)
+        st.pyplot(fig, clear_figure=True)
     with col2:
         fig = plt.figure()
         plt.imshow(np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:
                                                  (signal_number + 1) * samples_per_image]), 0., 1.))
         plt.grid(False)
-        st.pyplot(fig)
+        st.pyplot(fig, clear_figure=True)
 
 
 def st_show_dictionary(W, num_columns=10):
@@ -168,24 +168,31 @@ def st_show_dictionary(W, num_columns=10):
         cols = st.beta_columns(num_columns)
         for fig, col in zip(row, cols):
             with col:
-                st.pyplot(fig)
+                st.pyplot(fig, clear_figure=False)
 
     return figs
 
 
-def st_plot_activations(H, nmf_params, signal_number, samples_per_image):
-    st.markdown('# Activation pattern')
+def st_plot_activations(H, nmf_params, dictionary_figs, signal_number, samples_per_image):
+    st.markdown('## Activation pattern')
 
-    m = st.slider('Dictionary atom', min_value=0, max_value=H.shape[-2] - 1)
-    fig = plt.figure(figsize=(10, 5))
-    if nmf_params['shift_invariant']:
-        plt.imshow(np.squeeze(H[..., m, signal_number * samples_per_image:(signal_number + 1) * samples_per_image]),
-                   aspect='auto')
-    else:
-        plt.imshow(H[0], aspect='auto')
-    plt.colorbar()
-    plt.grid(False)
-    st.pyplot(fig)
+    assert(H.shape[-2] == len(dictionary_figs))
+
+    cm = ['Greys'] if samples_per_image == 1 else ['Reds', 'Greens', 'Blues']
+
+    for atom in range(H.shape[-2]):
+        cols = st.beta_columns([1] + samples_per_image*[8])
+        cols[0].pyplot(dictionary_figs[atom], clear_figure=True)
+
+        for channel in range(samples_per_image):
+            fig = plt.figure(figsize=(10, 5))
+            if nmf_params['shift_invariant']:
+                plt.imshow(np.squeeze(H[..., atom, signal_number * samples_per_image + channel]), aspect='auto', cmap=cm[channel])
+            else:
+                plt.imshow(H[0], aspect='auto')
+            plt.colorbar()
+            plt.grid(False)
+            cols[1+channel].pyplot(fig, clear_figure=True)
 
 
 if __name__ == '__main__':
@@ -208,6 +215,11 @@ if __name__ == '__main__':
 
     # -------------------- visualization -------------------- #
 
+    # show learned dictionary
+    dictionary_figs = st_show_dictionary(nmf.W)
+
+    st.markdown('# Signal reconstruction')
+
     # select signal to be visualized
     samples_per_image = 3 if color_mode == 'colors (identical basis)' else 1
 
@@ -218,8 +230,5 @@ if __name__ == '__main__':
     # show reconstruction of individual signals
     st_compare_single_signals(nmf, signal_number, samples_per_image)
 
-    # show learned dictionary
-    st_show_dictionary(nmf.W)
-
     # show activation pattern
-    st_plot_activations(nmf.H, nmf_params, signal_number, samples_per_image)
+    st_plot_activations(nmf.H, nmf_params, dictionary_figs, signal_number, samples_per_image)
