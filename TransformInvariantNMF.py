@@ -187,6 +187,7 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# refit the activations using the learned dictionary
 		if self.refit_H:
+			self._logger.info("Refitting activation.")
 			for i in range(10):
 				self.update_H(sparsity=False)
 
