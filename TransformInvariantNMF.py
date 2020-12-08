@@ -424,6 +424,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		super().__init__(**kwargs)
 		self._use_fft = use_fft
 
+		self._logger.info(f'Using the {"FFT" if self._use_fft else "non-FFT"} implementation.')
+
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix via (fft-)convolution."""
 		# TODO: switch original/frequency domains only on demand via setter/getters
