@@ -42,6 +42,7 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
     # -------------------- general settings -------------------- #
 
     nmf_params = dict(
+        use_fft=st.sidebar.checkbox('Use FFT', True),
         shift_invariant=st.sidebar.checkbox('Shift invariant', True),
         sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
         n_iterations=st.sidebar.number_input('# Iterations', min_value=1, value=5),
@@ -232,6 +233,8 @@ if __name__ == '__main__':
     images, image_shape = load_images(d, f, max_images, color_mode)
 
     nmf_params = st_define_nmf_params(image_shape)
+
+    logging.info(f'NMF params: {nmf_params}')
 
     # -------------------- model fitting -------------------- #
 
