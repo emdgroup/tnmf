@@ -77,7 +77,6 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
     return nmf_params
 
 
-@st.cache
 def load_images(path: str, pattern: str, max_images: int = 0,
                 color_mode: int = 'grey', dtype=np.float32) -> (np.ndarray, tuple):
     images = []
@@ -150,7 +149,7 @@ def st_show_signal_reconstruction(figs):
 
     cols = st.beta_columns(2)
     for fig, col in zip(figs, cols):
-        col.pyplot(fig, clear_figure=True)
+        col.pyplot(fig)
 
 
 def plot_dictionary(W):
@@ -210,7 +209,15 @@ def st_show_activations(figs):
     for atom_figs in figs:
         cols = st.beta_columns(col_def)
         for fig, col in zip(atom_figs, cols):
-            col.pyplot(fig, clear_figure=True)
+            col.pyplot(fig)
+
+
+def close_figs(figs):
+    for fig in figs:
+        if isinstance(fig, list):
+            close_figs(fig)
+        else:
+            plt.close(fig)
 
 
 if __name__ == '__main__':
@@ -249,7 +256,9 @@ if __name__ == '__main__':
     # show reconstruction of individual signals
     signal_figs = plot_signal_reconstruction(nmf, signal_number, samples_per_image)
     st_show_signal_reconstruction(signal_figs)
+    close_figs(signal_figs)
 
     # show activation pattern
     activation_figs = plot_activations(nmf.H, nmf_params, dictionary_figs, signal_number, samples_per_image)
     st_show_activations(activation_figs)
+    close_figs(activation_figs)
