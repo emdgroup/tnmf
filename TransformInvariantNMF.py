@@ -171,7 +171,7 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			print(f"Iteration: {i}\tReconstruction error: {np.sqrt(np.sum((self.V - self.R) ** 2))}")
+			print(f"Iteration: {i}\tReconstruction error: {self.reconstruction_error()}")
 			self.update_H()
 			self.update_W()
 
@@ -180,6 +180,10 @@ class TransformInvariantNMF(ABC):
 		if self.refit_H:
 			for i in range(10):
 				self.update_H(sparsity=False)
+
+	def reconstruction_error(self) -> float:
+		"""Squared error between the input and its reconstruction."""
+		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
