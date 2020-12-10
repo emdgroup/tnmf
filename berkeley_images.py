@@ -213,6 +213,42 @@ def st_show_activations(figs):
             col.pyplot(fig)
 
 
+def plot_partial_reconstruction(nmf, nmf_params, dictionary_figs, signal_number, samples_per_image):
+    assert(nmf.n_components == len(dictionary_figs))
+
+    cm = ['Greys'] if samples_per_image == 1 else ['Reds', 'Greens', 'Blues']
+
+    figs = []
+    for atom in range(nmf.n_components):
+        atom_figs = [dictionary_figs[atom]]
+
+        for channel in range(samples_per_image):
+            fig = plt.figure(figsize=(10, 5))
+            if nmf_params['shift_invariant']:
+                H_partial = nmf.partial_reconstruct([atom, ], [signal_number * samples_per_image + channel, ])
+                plt.imshow(np.squeeze(H_partial), aspect='auto', cmap=cm[channel])
+            else:
+                raise NotImplementedError
+            plt.colorbar()
+            plt.grid(False)
+            atom_figs.append(fig)
+
+        figs.append(atom_figs)
+
+    return figs
+
+
+def st_show_partial_reconstruction(figs):
+    st.markdown('## Partial Reconstructions')
+
+    col_def = [1] + [8] * (len(figs[0]) - 1)
+
+    for atom_figs in figs:
+        cols = st.beta_columns(col_def)
+        for fig, col in zip(atom_figs, cols):
+            col.pyplot(fig)
+
+
 def close_figs(figs):
     for fig in figs:
         if isinstance(fig, list):
@@ -265,3 +301,8 @@ if __name__ == '__main__':
     activation_figs = plot_activations(nmf.H, nmf_params, dictionary_figs, signal_number, samples_per_image)
     st_show_activations(activation_figs)
     close_figs(activation_figs)
+
+    # show partial reconstructions
+    # reconstruction_figs = plot_partial_reconstruction(nmf, nmf_params, dictionary_figs, signal_number, samples_per_image)
+    # st_show_partial_reconstruction(reconstruction_figs)
+    # close_figs(reconstruction_figs)
