@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import logging
 from numpy.lib.stride_tricks import as_strided
-from scipy.fft import fftn, ifftn, next_fast_len
+from scipy.fft import rfftn, irfftn, next_fast_len
 from scipy.ndimage import convolve1d
 from opt_einsum import contract
 from itertools import product
@@ -183,8 +183,7 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			self._logger.info(f"Iteration: {i}\t"
-							  f"Reconstruction error: {np.linalg.norm((self.V - self.R).reshape(-1), ord=2)}")
+			self._logger.info(f"Iteration: {i}\tReconstruction error: {self.reconstruction_error()}")
 			self.update_H()
 			self.update_W()
 
@@ -199,6 +198,10 @@ class TransformInvariantNMF(ABC):
 		assert self.W.dtype == self.V.dtype
 
 		self._logger.info("NMF finished.")
+
+	def reconstruction_error(self) -> float:
+		"""Squared error between the input and its reconstruction."""
+		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
@@ -322,7 +325,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		return tuple(range(self.n_shift_dimensions))
 
 	def initialize(self, V):
-		# TODO: write getter for _normalization_dims
+		assert np.isreal(V).all()
 		super().initialize(V)
 		self._normalization_dims = self.shift_dimensions
 		self._init_cache()
@@ -331,36 +334,67 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		"""Caches several fitting related variables."""
 		cache = {}
 
-		# if self._use_fft:
-		if True:
-			# TODO: verify that these are the optimal fft shapes
-			cache['fft_shape_full'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1]
-			cache['fft_shape_valid'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
+		if self._use_fft:
+			# fft shape and functions
+			cache['fft_shape'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
+			cache['fft_fun'] = lambda x: rfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
+			cache['ifft_fun'] = lambda x: irfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
 
-		if True:
+			# transformed input
+			cache['V_fft'] = cache['fft_fun'](self.V)
+
+			# fft details: reconstruction
+			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
+			cache[('W', 'H')] = {
+				'contraction_string': '...cm,...mn->...cn',
+				'slices': slices
+			}
+
+			# fft details: gradient H computation
+			upper_idx = self.H.shape[:self.n_shift_dimensions]
+			slices = tuple(slice(upper) for upper in upper_idx)
+			cache[('V', 'W')] = {
+				'contraction_string': '...cn,...cm->...mn',
+				'slices': slices
+			}
+			cache[('R', 'W')] = cache[('V', 'W')]
+
+			# fft details: gradient W computation
+			lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
+			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
+			cache[('V', 'H')] = {
+				'contraction_string': '...cn,...mn->...cm',
+				'slices': slices
+			}
+			cache[('R', 'H')] = cache[('V', 'H')]
+
+		else:
 			# zero-padding of the signal matrix for full-size correlation
 			cache['pad_width'] = (*self.n_shift_dimensions*((self.atom_size-1,)*2,), (0,0), (0,0))
 			cache['V_padded'] = np.pad(self.V, pad_width=cache['pad_width'])
 
 			# dimension labels of the data and reconstruction matrices
-			cache['V_labels'] = ['d' + str(i) for i in range(self.n_shift_dimensions)] + ['c', 'n']
-			cache['W_labels'] = ['a' + str(i) for i in range(self.n_shift_dimensions)] + ['c', 'm']
-			cache['H_labels'] = ['d' + str(i) for i in range(self.n_shift_dimensions)] + ['m', 'n']
+			cache['V_labels'] = ['d' + str(i) for i in self.shift_dimensions] + ['c', 'n']
+			cache['W_labels'] = ['a' + str(i) for i in self.shift_dimensions] + ['c', 'm']
+			cache['H_labels'] = ['d' + str(i) for i in self.shift_dimensions] + ['m', 'n']
 
 			# dimension info for striding in gradient_H computation
 			cache['X_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.H.shape[:-2] + self.V.shape[-2:]
 			cache['X_strided_W_strides'] = cache['V_padded'].strides[:self.n_shift_dimensions] + cache['V_padded'].strides
-			cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], range(self.n_shift_dimensions))] + ['c', 'n']
+			cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['c', 'n']
 
 			# dimension info for striding in gradient_W computation
 			cache['H_strided_V_shape'] = self.V.shape[:self.n_shift_dimensions] + (self.atom_size,) * self.n_shift_dimensions + self.H.shape[-2:]
 			cache['H_strided_V_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
-			cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], range(self.n_shift_dimensions))] + ['m', 'n']
+			cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], self.shift_dimensions)] + ['m', 'n']
 
 			# dimension info for striding in reconstruction computation
 			cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[-2:]
 			cache['H_strided_W_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
-			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], range(self.n_shift_dimensions))] + ['m', 'n']
+			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['m', 'n']
 
 		self._cache = cache
 
@@ -380,7 +414,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		# add the inhibition gradient component
 		if self.inhibition_range and self.inhibition_strength:
 			inhibition = self.H.copy()
-			for dim in range(self.n_shift_dimensions):
+			for dim in self.shift_dimensions:
 				inhibition = convolve1d(inhibition, self.kernel, axis=dim, mode='constant', cval=0.0)
 			inhibition = inhibition - self.H
 			denum = denum + self.inhibition_strength * inhibition
@@ -424,47 +458,63 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	"""Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
 	implicitly via correlation/convolution."""
 
+	# TODO: switch original/frequency domains only on demand via setter/getters
+
 	def __init__(self, use_fft=True, **kwargs):
 		super().__init__(**kwargs)
 		self._use_fft = use_fft
-
 		self._logger.debug(f'Using the {"FFT" if self._use_fft else "non-FFT"} implementation.')
+
+	@property
+	def V_fft(self):
+		return self._cache['V_fft']
+
+	@property
+	def R_fft(self):
+		return self._cache['fft_fun'](self.R)
+
+	@property
+	def W_fft(self):
+		return self._cache['fft_fun'](self.W)
+
+	@property
+	def W_reversed_fft(self):
+		return self._cache['fft_fun'](np.flip(self.W, axis=self.shift_dimensions))
+
+	@property
+	def H_fft(self):
+		return self._cache['fft_fun'](self.H)
+
+	@property
+	def H_reversed_fft(self):
+		return self._cache['fft_fun'](np.flip(self.H, axis=self.shift_dimensions))
+
+	def _fft_convolve(self, arr1, arr2, flip_second=False):
+		arr1_fft = getattr(self, arr1 + '_fft')
+		if flip_second:
+			arr2_fft = getattr(self, arr2 + '_reversed_fft')
+		else:
+			arr2_fft = getattr(self, arr2 + '_fft')
+		result_fft = contract(self._cache[(arr1, arr2)]['contraction_string'], arr1_fft, arr2_fft)
+		result_pad = self._cache['ifft_fun'](result_fft)
+		result = result_pad[self._cache[(arr1, arr2)]['slices']]
+		return result
 
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix via (fft-)convolution."""
-		# TODO: switch original/frequency domains only on demand via setter/getters
 		if self._use_fft:
-			H_fft = fftn(self.H, axes=self.shift_dimensions, s=self._cache['fft_shape_full'])
-			W_fft = fftn(self.W, axes=self.shift_dimensions, s=self._cache['fft_shape_full'])
-			R_fft = contract('...cm,...mn->...cn', W_fft, H_fft)
-			R_pad = np.real(ifftn(R_fft, axes=self.shift_dimensions))
-			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
-			R = R_pad[slices]
+			R = self._fft_convolve('W', 'H')
 		else:
 			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
-			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, range(self.n_shift_dimensions)), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
+			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		return R
 
 	def _reconstruction_gradient_H(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
-		# TODO: switch original/frequency domains only on demand via setter/getters
 		if self._use_fft:
-
-			def fft_convolve(X):
-				X_fft = fftn(X, axes=self.shift_dimensions, s=self._cache['fft_shape_full'], workers=-1)
-				W_fft = fftn(np.flip(self.W, range(self.n_shift_dimensions)), axes=self.shift_dimensions, s=self._cache['fft_shape_full'], workers=-1)
-				result_fft = contract('...cn,...cm->...mn', X_fft, W_fft, optimize='optimal')
-				result_pad = np.real(ifftn(result_fft, axes=self.shift_dimensions, workers=-1))
-				upper_idx = self.H.shape[:self.n_shift_dimensions]
-				slices = tuple(slice(upper) for upper in upper_idx)
-				result = result_pad[slices]
-				return result
-
-			numer = fft_convolve(self.V)
-			denum = fft_convolve(self.R)
+			numer = self._fft_convolve('V', 'W', flip_second=True)
+			denum = self._fft_convolve('R', 'W', flip_second=True)
 		else:
 			V_padded = self._cache['V_padded']
 			R_padded = np.pad(self.R, pad_width=self._cache['pad_width'])
@@ -477,24 +527,11 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	def _reconstruction_gradient_W(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		# TODO: inherit docstring from superclass
-		# TODO: computation via FFT
 		if self._use_fft:
-
-			def fft_convolve(X):
-				X_fft = fftn(X, axes=self.shift_dimensions, s=self._cache['fft_shape_valid'], workers=-1)
-				H_fft = fftn(np.flip(self.H, range(self.n_shift_dimensions)), axes=self.shift_dimensions, s=self._cache['fft_shape_valid'], workers=-1)
-				result_fft = contract('...cn,...mn->...cm', X_fft, H_fft, optimize='optimal')
-				result_pad = np.real(ifftn(result_fft, axes=self.shift_dimensions, workers=-1))
-				lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
-				upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-				slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
-				result = result_pad[slices]
-				return result
-
-			numer = fft_convolve(self.V)
-			denum = fft_convolve(self.R)
+			numer = self._fft_convolve('V', 'H', flip_second=True)
+			denum = self._fft_convolve('R', 'H', flip_second=True)
 		else:
 			H_strided = as_strided(self.H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
-			numer = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.V, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=range(self.n_shift_dimensions))
-			denum = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.R, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=range(self.n_shift_dimensions))
+			numer = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.V, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
+			denum = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.R, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
 		return numer, denum
