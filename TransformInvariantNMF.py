@@ -2,9 +2,9 @@
 Author: Adrian Sosic
 """
 
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
-import logging
 from numpy.lib.stride_tricks import as_strided
 from scipy.fft import rfftn, irfftn, next_fast_len
 from scipy.ndimage import convolve1d
@@ -74,12 +74,12 @@ class TransformInvariantNMF(ABC):
 		# caching flags
 		self._is_ready_R = False
 
+		# axis over which the dictionary matrix gets normalized
+		self._normalization_dims = 0
+
 		# logger - use default if nothing else is given
 		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
 		self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
-
-		# axis over which the dictionary matrix gets normalized
-		self._normalization_dims = 0
 
 	@property
 	def R(self) -> np.array:
@@ -190,7 +190,7 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# refit the activations using the learned dictionary
 		if self.refit_H:
-			self._logger.info("Refitting activation.")
+			self._logger.info("Refitting activations.")
 			for i in range(10):
 				self.update_H(sparsity=False)
 
