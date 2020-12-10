@@ -95,7 +95,8 @@ def st_define_nmf_params(signal_type, signal_params):
 		shift_invariant=st.sidebar.checkbox('Shift invariant', True),
 		sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
 		n_iterations=st.sidebar.number_input('# Iterations', min_value=1, value=100),
-		refit_H=st.sidebar.checkbox('Refit activations without sparsity', True)
+		refit_H=st.sidebar.checkbox('Refit activations without sparsity', True),
+		verbose=2
 	)
 
 	# -------------------- dictionary size  -------------------- #

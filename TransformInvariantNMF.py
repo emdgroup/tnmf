@@ -2,9 +2,11 @@
 Author: Adrian Sosic
 """
 
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.lib.stride_tricks import as_strided
+import logging
 from scipy.fft import rfftn, irfftn, next_fast_len
 from scipy.ndimage import convolve1d
 from opt_einsum import contract
@@ -28,7 +30,9 @@ class TransformInvariantNMF(ABC):
 			sparsity_H: float = 0.1,
 			refit_H: bool = True,
 			n_iterations: int = 100,
-			eps: float = 1e-9
+			eps: float = 1e-9,
+			logger: logging.Logger = None,
+			verbose: int = 0,
 	):
 		"""
 		Parameters
@@ -45,6 +49,10 @@ class TransformInvariantNMF(ABC):
 			Number of learning iterations.
 		eps : float
 			Small constant to avoid division by zero.
+		logger : logging.Logger
+			logging.Logger instance used for intermediate output
+		verbose : int
+			Verbosity level: 0 - show only errors, 1 - include warnings, 2 - include info, 3 - include debug messages
 		"""
 		# store parameters
 		self.atom_size = atom_size
@@ -68,6 +76,10 @@ class TransformInvariantNMF(ABC):
 
 		# axis over which the dictionary matrix gets normalized
 		self._normalization_dims = 0
+
+		# logger - use default if nothing else is given
+		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
+		self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
 
 	@property
 	def R(self) -> np.array:
@@ -171,15 +183,18 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			print(f"Iteration: {i}\tReconstruction error: {self.reconstruction_error()}")
+			self._logger.info(f"Iteration: {i}\tReconstruction error: {self.reconstruction_error()}")
 			self.update_H()
 			self.update_W()
 
 		# TODO: define stopping criterion
 		# refit the activations using the learned dictionary
 		if self.refit_H:
+			self._logger.info("Refitting activations.")
 			for i in range(10):
 				self.update_H(sparsity=False)
+
+		self._logger.info("NMF finished.")
 
 	def reconstruction_error(self) -> float:
 		"""Squared error between the input and its reconstruction."""
@@ -444,6 +459,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	def __init__(self, use_fft=True, **kwargs):
 		super().__init__(**kwargs)
 		self._use_fft = use_fft
+		self._logger.debug(f'Using the {"FFT" if self._use_fft else "non-FFT"} implementation.')
 
 	@property
 	def V_fft(self):
