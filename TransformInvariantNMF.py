@@ -328,75 +328,6 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		assert np.isreal(V).all()
 		super().initialize(V)
 		self._normalization_dims = self.shift_dimensions
-		self._init_cache()
-
-	def _init_cache(self):
-		"""Caches several fitting related variables."""
-		cache = {}
-
-		if self._use_fft:
-			# fft shape and functions
-			cache['fft_shape'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
-			cache['fft_fun'] = lambda x: rfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
-			cache['ifft_fun'] = lambda x: irfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
-
-			# transformed input
-			cache['V_fft'] = cache['fft_fun'](self.V)
-
-			# fft details: reconstruction
-			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
-			cache[('W', 'H')] = {
-				'contraction_string': '...cm,...mn->...cn',
-				'slices': slices
-			}
-
-			# fft details: gradient H computation
-			upper_idx = self.H.shape[:self.n_shift_dimensions]
-			slices = tuple(slice(upper) for upper in upper_idx)
-			cache[('V', 'W')] = {
-				'contraction_string': '...cn,...cm->...mn',
-				'slices': slices
-			}
-			cache[('R', 'W')] = cache[('V', 'W')]
-
-			# fft details: gradient W computation
-			lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
-			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
-			cache[('V', 'H')] = {
-				'contraction_string': '...cn,...mn->...cm',
-				'slices': slices
-			}
-			cache[('R', 'H')] = cache[('V', 'H')]
-
-		else:
-			# zero-padding of the signal matrix for full-size correlation
-			cache['pad_width'] = (*self.n_shift_dimensions*((self.atom_size-1,)*2,), (0,0), (0,0))
-			cache['V_padded'] = np.pad(self.V, pad_width=cache['pad_width'])
-
-			# dimension labels of the data and reconstruction matrices
-			cache['V_labels'] = ['d' + str(i) for i in self.shift_dimensions] + ['c', 'n']
-			cache['W_labels'] = ['a' + str(i) for i in self.shift_dimensions] + ['c', 'm']
-			cache['H_labels'] = ['d' + str(i) for i in self.shift_dimensions] + ['m', 'n']
-
-			# dimension info for striding in gradient_H computation
-			cache['X_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.H.shape[:-2] + self.V.shape[-2:]
-			cache['X_strided_W_strides'] = cache['V_padded'].strides[:self.n_shift_dimensions] + cache['V_padded'].strides
-			cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['c', 'n']
-
-			# dimension info for striding in gradient_W computation
-			cache['H_strided_V_shape'] = self.V.shape[:self.n_shift_dimensions] + (self.atom_size,) * self.n_shift_dimensions + self.H.shape[-2:]
-			cache['H_strided_V_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
-			cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], self.shift_dimensions)] + ['m', 'n']
-
-			# dimension info for striding in reconstruction computation
-			cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[-2:]
-			cache['H_strided_W_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
-			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['m', 'n']
-
-		self._cache = cache
 
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
@@ -464,6 +395,84 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		super().__init__(**kwargs)
 		self._use_fft = use_fft
 		self._logger.debug(f'Using the {"FFT" if self._use_fft else "non-FFT"} implementation.')
+		self._cache = {}
+
+	def initialize(self, V):
+		super().initialize(V)
+		self._init_cache()
+
+	def _init_cache(self):
+		"""Caches several fitting related variables."""
+		cache = {}
+
+		if self._use_fft:
+			# fft shape and functions
+			cache['fft_shape'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
+			cache['fft_fun'] = lambda x: rfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
+			cache['ifft_fun'] = lambda x: irfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
+
+			# transformed input
+			cache['V_fft'] = cache['fft_fun'](self.V)
+
+			# fft details: reconstruction
+			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
+			cache[('W', 'H')] = {
+				'contraction_string': '...cm,...mn->...cn',
+				'slices': slices
+			}
+
+			# fft details: gradient H computation
+			upper_idx = self.H.shape[:self.n_shift_dimensions]
+			slices = tuple(slice(upper) for upper in upper_idx)
+			cache[('V', 'W')] = {
+				'contraction_string': '...cn,...cm->...mn',
+				'slices': slices
+			}
+			cache[('R', 'W')] = cache[('V', 'W')]
+
+			# fft details: gradient W computation
+			lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
+			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
+			cache[('V', 'H')] = {
+				'contraction_string': '...cn,...mn->...cm',
+				'slices': slices
+			}
+			cache[('R', 'H')] = cache[('V', 'H')]
+		else:
+			# zero-padding of the signal matrix for full-size correlation
+			cache['pad_width'] = (*self.n_shift_dimensions * ((self.atom_size - 1,) * 2,), (0, 0), (0, 0))
+			cache['V_padded'] = np.pad(self.V, pad_width=cache['pad_width'])
+
+			# dimension labels of the data and reconstruction matrices
+			cache['V_labels'] = ['d' + str(i) for i in self.shift_dimensions] + ['c', 'n']
+			cache['W_labels'] = ['a' + str(i) for i in self.shift_dimensions] + ['c', 'm']
+			cache['H_labels'] = ['d' + str(i) for i in self.shift_dimensions] + ['m', 'n']
+
+			# dimension info for striding in gradient_H computation
+			cache['X_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.H.shape[:-2] + self.V.shape[
+																										   -2:]
+			cache['X_strided_W_strides'] = cache['V_padded'].strides[:self.n_shift_dimensions] + cache[
+				'V_padded'].strides
+			cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['c',
+																												 'n']
+
+			# dimension info for striding in gradient_W computation
+			cache['H_strided_V_shape'] = self.V.shape[:self.n_shift_dimensions] + (
+			self.atom_size,) * self.n_shift_dimensions + self.H.shape[-2:]
+			cache['H_strided_V_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
+			cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], self.shift_dimensions)] + ['m',
+																												 'n']
+
+			# dimension info for striding in reconstruction computation
+			cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[
+																										   -2:]
+			cache['H_strided_W_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
+			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['m',
+																												 'n']
+		self._cache = cache
 
 	@property
 	def V_fft(self):
