@@ -32,6 +32,7 @@ class TransformInvariantNMF(ABC):
 			n_iterations: int = 100,
 			eps: float = 1e-9,
 			logger: logging.Logger = None,
+			verbose: int = 0,
 	):
 		"""
 		Parameters
@@ -50,6 +51,8 @@ class TransformInvariantNMF(ABC):
 			Small constant to avoid division by zero.
 		logger : logging.Logger
 			logging.Logger instance used for intermediate output
+		verbose : int
+			Verbosity level: 0 - show only errors, 1 - include warnings, 2 - include info, 3 - include debug messages
 		"""
 		# store parameters
 		self.atom_size = atom_size
@@ -73,6 +76,7 @@ class TransformInvariantNMF(ABC):
 
 		# logger - use default if nothing else is given
 		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
+		self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
 
 		# axis over which the dictionary matrix gets normalized
 		self._normalization_dims = 0
@@ -424,7 +428,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		super().__init__(**kwargs)
 		self._use_fft = use_fft
 
-		self._logger.info(f'Using the {"FFT" if self._use_fft else "non-FFT"} implementation.')
+		self._logger.debug(f'Using the {"FFT" if self._use_fft else "non-FFT"} implementation.')
 
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix via (fft-)convolution."""
