@@ -172,8 +172,8 @@ class TransformInvariantNMF(ABC):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: use clever scaling of tensors for initialization
-		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]), axis=self._normalization_dims)
-		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals])
+		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
+		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
 	def fit(self, V):
 		"""Learns an NMF representation of a given signal matrix."""
@@ -193,6 +193,9 @@ class TransformInvariantNMF(ABC):
 			self._logger.info("Refitting activations.")
 			for i in range(10):
 				self.update_H(sparsity=False)
+
+		assert self.H.dtype == self.V.dtype
+		assert self.W.dtype == self.V.dtype
 
 		self._logger.info("NMF finished.")
 
@@ -274,7 +277,7 @@ class SparseNMF(TransformInvariantNMF):
 
 	def generate_transforms(self) -> np.array:
 		"""No transformations are applied (achieved via a single identity transform)."""
-		return np.eye(self.n_dim)[None, :, :]
+		return np.eye(self.n_dim, dtype=self.V.dtype)[None, :, :]
 
 
 class BaseShiftInvariantNMF(TransformInvariantNMF):
@@ -398,8 +401,8 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: inherit docstring from superclass
-		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]), axis=self._normalization_dims)
-		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals])
+		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
+		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
 	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
 		"""Computes the positive and the negative parts of the energy gradient w.r.t. the activation tensor."""
@@ -445,8 +448,9 @@ class ExplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		assert self.atom_size <= self.n_dim
 
 		# create the transformation that places the dictionary element at the beginning, and then shift it
-		base_array = np.hstack([np.eye(self.atom_size), np.zeros([self.atom_size, self.n_dim - self.atom_size])])
-		T = np.array([shift(base_array, s).T for s in range(-self.atom_size + 1, self.n_dim)])
+		base_array = np.hstack([np.eye(self.atom_size, dtype=self.V.dtype),
+								np.zeros([self.atom_size, self.n_dim - self.atom_size], dtype=self.V.dtype)])
+		T = np.array([shift(base_array, s).T for s in range(-self.atom_size + 1, self.n_dim)], dtype=self.V.dtype)
 		return T
 
 
