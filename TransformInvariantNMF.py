@@ -20,6 +20,77 @@ plt.style.use('seaborn')
 # TODO: refactor fft code parts into functions
 
 
+class CachingFFT(object):
+	"""
+	Wrapper class for conveniently caching and switching back and forth
+	between fields in coordinate space and fourier space
+	"""
+
+	def __init__(self, field_name: str, logger: logging.Logger = None):
+		self._c = None  # field in coordinate space
+		self._f = None  # field in fourier space
+		self._f_reversed = None  # time-reversed field in fourier space
+		self._fft_axes = None
+		self._fft_shape = None
+		self._fft_workers = -1
+		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
+		self._field_name = field_name
+
+	def set_fft_params(self, fft_axes, fft_shape):
+		self._fft_axes = fft_axes
+		self._fft_shape = fft_shape
+
+	def _invalidate(self):
+		self._c = None
+		self._f = None
+		self._f_reversed = None
+
+	def has_c(self) -> bool:
+		return self._c is not None
+
+	@property
+	def c(self) -> np.array:
+		"""Getter for field in coordinate space"""
+		if self._c is None:
+			self._logger.debug(f'Computing {self._field_name}(x) = FFT^-1[ {self._field_name}(f) ]')
+			assert self._f is not None
+			self._c = irfftn(self._f, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
+		return self._c
+
+	@c.setter
+	def c(self, c: np.array):
+		"""Setter for field in coordinate space"""
+		self._logger.debug(f'{"Setting" if c is not None else "Clearing"} {self._field_name}(x)')
+		self._invalidate()
+		self._c = c
+
+	@property
+	def f(self) -> np.array:
+		"""Getter for field in fourier space"""
+		if self._f is None:
+			self._logger.debug(f'Computing {self._field_name}(f) = FFT[ {self._field_name}(x) ]')
+			assert self._c is not None
+			self._f = rfftn(self._c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
+		return self._f
+
+	@f.setter
+	def f(self, f: np.array):
+		"""Setter for field in fourier space"""
+		self._logger.debug(f'{"Setting" if f is not None else "Clearing"} {self._field_name}(f)')
+		self._invalidate()
+		self._f = f
+
+	@property
+	def f_reversed(self) -> np.array:
+		"""Getter for time-reversed field in fourier space, intentionally no setter for now"""
+		if self._f_reversed is None:
+			self._logger.debug(f'Computing {self._field_name}_rev(f) = FFT[ {self._field_name}(-x) ]')
+			assert self._c is not None
+			c_reversed = np.flip(self._c, axis=self._fft_axes)
+			self._f_reversed = rfftn(c_reversed, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
+		return self._f_reversed
+
+
 class TransformInvariantNMF(ABC):
 	"""Abstract base class for transform-invariant non-negative matrix factorization."""
 
@@ -61,53 +132,59 @@ class TransformInvariantNMF(ABC):
 		self.sparsity = sparsity_H
 		self.refit_H = refit_H
 
-		# signal, reconstruction, factorization, and transformation matrices
-		self.V = None
-		self._R = None
-		self._T = None
-		self._W = None
-		self._H = None
-
-		# constant to avoid division by zero
-		self.eps = eps
-
-		# caching flags
-		self._is_ready_R = False
-
-		# axis over which the dictionary matrix gets normalized
-		self._normalization_dims = 0
-
 		# logger - use default if nothing else is given
 		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
 		self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
 
+		# signal, reconstruction, factorization, and transformation matrices
+		self._V = CachingFFT('V', self._logger)
+		self._R = CachingFFT('R', self._logger)
+		self._T = None
+		self._W = CachingFFT('W', self._logger)
+		self._H = CachingFFT('H', self._logger)
+
+		# constant to avoid division by zero
+		self.eps = eps
+
+		# axis over which the dictionary matrix gets normalized
+		self._normalization_dims = 0
+
+	@property
+	def V(self) -> np.array:
+		"""The signal matrix, set only via fit() """
+		return self._V.c
+
 	@property
 	def R(self) -> np.array:
 		"""The reconstructed signal matrix."""
-		if not self._is_ready_R:
-			self._R = self._reconstruct()
-			self._is_ready_R = True
-		return self._R
+		if not self._R.has_c():
+			self._logger.debug('Reconstructing R')
+			self._R.c = self._reconstruct()
+		return self._R.c
+
+	@R.setter
+	def R(self, R: np.array):
+		self._R.c = R
 
 	@property
 	def W(self) -> np.array:
 		"""The dictionary matrix."""
-		return self._W
+		return self._W.c
 
 	@W.setter
 	def W(self, W: np.array):
-		self._W = W
-		self._is_ready_R = False
+		self._W.c = W
+		self.R = None
 
 	@property
 	def H(self) -> np.array:
 		"""The activation tensor."""
-		return self._H
+		return self._H.c
 
 	@H.setter
 	def H(self, H: np.array):
-		self._H = H
-		self._is_ready_R = False
+		self._H.c = H
+		self.R = None
 
 	@property
 	def n_dim(self) -> int:
@@ -158,7 +235,7 @@ class TransformInvariantNMF(ABC):
 		Transformation Tensor:  t x d x h
 		"""
 		# store the signal matrix
-		self.V = np.asarray(V)
+		self._V.c = np.asarray(V)
 
 		# if explicit transformation matrices are used, create and store them
 		try:
@@ -407,12 +484,17 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 
 		if self._use_fft:
 			# fft shape and functions
-			cache['fft_shape'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
-			cache['fft_fun'] = lambda x: rfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
-			cache['ifft_fun'] = lambda x: irfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
+			fft_axes = self.shift_dimensions
+			fft_shape = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
 
-			# transformed input
-			cache['V_fft'] = cache['fft_fun'](self.V)
+			# TODO: remove
+			cache['fft_fun'] = lambda x: rfftn(x, axes=fft_axes, s=fft_shape, workers=-1)
+			cache['ifft_fun'] = lambda x: irfftn(x, axes=fft_axes, s=fft_shape, workers=-1)
+
+			self._V.set_fft_params(fft_axes, fft_shape)
+			self._R.set_fft_params(fft_axes, fft_shape)
+			self._W.set_fft_params(fft_axes, fft_shape)
+			self._H.set_fft_params(fft_axes, fft_shape)
 
 			# fft details: reconstruction
 			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
@@ -452,53 +534,54 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			cache['H_labels'] = ['d' + str(i) for i in self.shift_dimensions] + ['m', 'n']
 
 			# dimension info for striding in gradient_H computation
-			cache['X_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.H.shape[:-2] + self.V.shape[
-																										   -2:]
-			cache['X_strided_W_strides'] = cache['V_padded'].strides[:self.n_shift_dimensions] + cache[
-				'V_padded'].strides
-			cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['c',
-																												 'n']
+			cache['X_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.H.shape[:-2] + self.V.shape[-2:]
+			cache['X_strided_W_strides'] = cache['V_padded'].strides[:self.n_shift_dimensions] + cache['V_padded'].strides
+			cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['c', 'n']
 
 			# dimension info for striding in gradient_W computation
-			cache['H_strided_V_shape'] = self.V.shape[:self.n_shift_dimensions] + (
-			self.atom_size,) * self.n_shift_dimensions + self.H.shape[-2:]
+			cache['H_strided_V_shape'] = self.V.shape[:self.n_shift_dimensions] + (self.atom_size,) * self.n_shift_dimensions + self.H.shape[-2:]
 			cache['H_strided_V_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
-			cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], self.shift_dimensions)] + ['m',
-																												 'n']
+			cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], self.shift_dimensions)] + ['m', 'n']
 
 			# dimension info for striding in reconstruction computation
-			cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[
-																										   -2:]
+			cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[-2:]
 			cache['H_strided_W_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
-			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['m',
-																												 'n']
+			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['m', 'n']
 		self._cache = cache
 
 	@property
 	def V_fft(self):
-		return self._cache['V_fft']
+		assert self._use_fft
+		return self._V.f
 
 	@property
 	def R_fft(self):
+		assert self._use_fft
 		return self._cache['fft_fun'](self.R)
+		return self._R.f
 
 	@property
 	def W_fft(self):
-		return self._cache['fft_fun'](self.W)
+		assert self._use_fft
+		return self._W.f
 
 	@property
 	def W_reversed_fft(self):
-		return self._cache['fft_fun'](np.flip(self.W, axis=self.shift_dimensions))
+		assert self._use_fft
+		return self._W.f_reversed
 
 	@property
 	def H_fft(self):
-		return self._cache['fft_fun'](self.H)
+		assert self._use_fft
+		return self._H.f
 
 	@property
 	def H_reversed_fft(self):
-		return self._cache['fft_fun'](np.flip(self.H, axis=self.shift_dimensions))
+		assert self._use_fft
+		return self._H.f_reversed
 
 	def _fft_convolve(self, arr1, arr2, flip_second=False):
+		self._logger.debug(f'fft_convolve({arr1}, {arr2}, flip_second={flip_second})')
 		arr1_fft = getattr(self, arr1 + '_fft')
 		if flip_second:
 			arr2_fft = getattr(self, arr2 + '_reversed_fft')
