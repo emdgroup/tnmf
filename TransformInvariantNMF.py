@@ -488,7 +488,6 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			fft_shape = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
 
 			# TODO: remove
-			cache['fft_fun'] = lambda x: rfftn(x, axes=fft_axes, s=fft_shape, workers=-1)
 			cache['ifft_fun'] = lambda x: irfftn(x, axes=fft_axes, s=fft_shape, workers=-1)
 
 			self._V.set_fft_params(fft_axes, fft_shape)
@@ -499,27 +498,24 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			# fft details: reconstruction
 			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
 			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
 			cache['params_reconstruct'] = {
 				'contraction_string': '...cm,...mn->...cn',
-				'slices': slices,
+				'slices': tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
 			}
 
 			# fft details: gradient H computation
 			upper_idx = self.H.shape[:self.n_shift_dimensions]
-			slices = tuple(slice(upper) for upper in upper_idx)
 			cache['params_reconstruction_gradient_H'] = {
 				'contraction_string': '...cn,...cm->...mn',
-				'slices': slices,
+				'slices': tuple(slice(upper) for upper in upper_idx),
 			}
 
 			# fft details: gradient W computation
 			lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
 			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
 			cache['params_reconstruction_gradient_W'] = {
 				'contraction_string': '...cn,...mn->...cm',
-				'slices': slices,
+				'slices': tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
 			}
 		else:
 			# zero-padding of the signal matrix for full-size correlation
