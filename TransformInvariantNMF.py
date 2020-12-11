@@ -501,7 +501,6 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
 			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
 			cache['params_reconstruct'] = {
-				'flip_second': False,
 				'contraction_string': '...cm,...mn->...cn',
 				'slices': slices,
 			}
@@ -510,7 +509,6 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			upper_idx = self.H.shape[:self.n_shift_dimensions]
 			slices = tuple(slice(upper) for upper in upper_idx)
 			cache['params_reconstruction_gradient_H'] = {
-				'flip_second': True,
 				'contraction_string': '...cn,...cm->...mn',
 				'slices': slices,
 			}
@@ -520,7 +518,6 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
 			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
 			cache['params_reconstruction_gradient_W'] = {
-				'flip_second': True,
 				'contraction_string': '...cn,...mn->...cm',
 				'slices': slices,
 			}
@@ -582,13 +579,10 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		assert self._use_fft
 		return self._H.f_reversed
 
-	def _fft_convolve(self, arr1, arr2, flip_second, contraction_string, slices):
-		self._logger.debug(f'fft_convolve( {arr1}, {arr2}, flip_second={flip_second}, contraction_string={contraction_string}, slices={slices} )')
+	def _fft_convolve(self, arr1, arr2, contraction_string, slices):
+		self._logger.debug(f'fft_convolve( {arr1}, {arr2}, contraction_string={contraction_string}, slices={slices} )')
 		arr1_fft = getattr(self, arr1 + '_fft')
-		if flip_second:
-			arr2_fft = getattr(self, arr2 + '_reversed_fft')
-		else:
-			arr2_fft = getattr(self, arr2 + '_fft')
+		arr2_fft = getattr(self, arr2 + '_fft')
 		result_fft = contract(contraction_string, arr1_fft, arr2_fft)
 		result_pad = self._cache['ifft_fun'](result_fft)
 		result = result_pad[slices]
@@ -607,8 +601,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
 		if self._use_fft:
-			numer = self._fft_convolve('V', 'W', **self._cache['params_reconstruction_gradient_H'])
-			denum = self._fft_convolve('R', 'W', **self._cache['params_reconstruction_gradient_H'])
+			numer = self._fft_convolve('V', 'W_reversed', **self._cache['params_reconstruction_gradient_H'])
+			denum = self._fft_convolve('R', 'W_reversed', **self._cache['params_reconstruction_gradient_H'])
 		else:
 			V_padded = self._cache['V_padded']
 			R_padded = np.pad(self.R, pad_width=self._cache['pad_width'])
@@ -622,8 +616,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		# TODO: inherit docstring from superclass
 		if self._use_fft:
-			numer = self._fft_convolve('V', 'H', **self._cache['params_reconstruction_gradient_W'])
-			denum = self._fft_convolve('R', 'H', **self._cache['params_reconstruction_gradient_W'])
+			numer = self._fft_convolve('V', 'H_reversed', **self._cache['params_reconstruction_gradient_W'])
+			denum = self._fft_convolve('R', 'H_reversed', **self._cache['params_reconstruction_gradient_W'])
 		else:
 			H_strided = as_strided(self.H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
 			numer = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.V, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
