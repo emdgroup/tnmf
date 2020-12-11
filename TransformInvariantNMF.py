@@ -270,6 +270,7 @@ class TransformInvariantNMF(ABC):
 			self._logger.info("Refitting activations.")
 			for i in range(10):
 				self.update_H(sparsity=False)
+			self._logger.info(f"After refitting: \tReconstruction error: {self.reconstruction_error()}")
 
 		assert self.H.dtype == self.V.dtype
 		assert self.W.dtype == self.V.dtype
