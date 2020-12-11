@@ -557,7 +557,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	@property
 	def R_fft(self):
 		assert self._use_fft
-		return self._cache['fft_fun'](self.R)
+		# make sure that R.c is up-to-date
+		_ = self.R
 		return self._R.f
 
 	@property
