@@ -46,14 +46,19 @@ class CachingFFT(object):
 		self._f_reversed = None
 
 	def has_c(self) -> bool:
+		"""Check if the field in coordinate space has already been computed"""
 		return self._c is not None
+
+	def has_f(self) -> bool:
+		"""Check if the field in fourier space has already been computed"""
+		return self._f is not None
 
 	@property
 	def c(self) -> np.array:
 		"""Getter for field in coordinate space"""
 		if self._c is None:
 			self._logger.debug(f'Computing {self._field_name}(x) = FFT^-1[ {self._field_name}(f) ]')
-			assert self._f is not None
+			assert self.has_f
 			self._c = irfftn(self._f, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
 		return self._c
 
@@ -69,7 +74,7 @@ class CachingFFT(object):
 		"""Getter for field in fourier space"""
 		if self._f is None:
 			self._logger.debug(f'Computing {self._field_name}(f) = FFT[ {self._field_name}(x) ]')
-			assert self._c is not None
+			assert self.has_c()
 			self._f = rfftn(self._c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
 		return self._f
 
@@ -85,7 +90,7 @@ class CachingFFT(object):
 		"""Getter for time-reversed field in fourier space, intentionally no setter for now"""
 		if self._f_reversed is None:
 			self._logger.debug(f'Computing {self._field_name}_rev(f) = FFT[ {self._field_name}(-x) ]')
-			assert self._c is not None
+			assert self.has_c()
 			c_reversed = np.flip(self._c, axis=self._fft_axes)
 			self._f_reversed = rfftn(c_reversed, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
 		return self._f_reversed
