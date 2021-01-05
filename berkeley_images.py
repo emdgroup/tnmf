@@ -37,12 +37,13 @@ def st_define_dataset_params() -> (str, str, int, int):
 
 
 def st_define_nmf_params(image_shape: tuple) -> dict:
+
     st.sidebar.markdown('# NMF settings')
 
     # -------------------- general settings -------------------- #
 
     nmf_params = dict(
-        verbose=st.sidebar.slider('Verbose', min_value=0, max_value=3, value=3),
+        verbose=st.sidebar.slider('Verbose', min_value=0, max_value=3, value=2),
         use_fft=st.sidebar.checkbox('Use FFT', True),
         shift_invariant=st.sidebar.checkbox('Shift invariant', True),
         sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
@@ -263,6 +264,8 @@ if __name__ == '__main__':
 
     st.sidebar.markdown('# General settings')
 
+    auto_update = st.sidebar.checkbox('Auto-Update', False)
+    force_refresh = st.sidebar.button('Refresh')
     seed = st.sidebar.number_input('Random seed', value=42)
     np.random.seed(seed)
 
@@ -272,6 +275,10 @@ if __name__ == '__main__':
     nmf_params = st_define_nmf_params(image_shape)
 
     logging.info(f'NMF params: {nmf_params}')
+
+    if not (auto_update or force_refresh):
+        st.info('Auto-Update disabled')
+        st.stop()
 
     # -------------------- model fitting -------------------- #
 
