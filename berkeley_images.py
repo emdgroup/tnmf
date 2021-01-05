@@ -7,7 +7,6 @@ import glob
 import imageio
 from copy import deepcopy
 import logging
-from more_itertools import chunked
 
 import streamlit as st
 import numpy as np
@@ -136,106 +135,101 @@ def compute_nmf(V, nmf_params):
 
 
 def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
-    figs = []
-    for data in [np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]),
-                 np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]), 0., 1.)]:
-        fig = plt.figure()
-        plt.imshow(data)
-        plt.grid(False)
-        figs.append(fig)
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
+    for iplot, ax in enumerate(axes):
+        if iplot == 0:
+            data = np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image])
+        else:
+            data = np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]), 0., 1.)
 
-    return figs
+        ax.imshow(data)
+        ax.grid(False)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_frame_on(False)
+
+    return fig
 
 
 def st_show_signal_reconstruction(figs):
     st.markdown('## Comparison to original signal')
-
-    cols = st.beta_columns(2)
-    for fig, col in zip(figs, cols):
-        col.pyplot(fig)
+    st.pyplot(figs)
 
 
-def plot_dictionary(W):
-    figs = []
-    for m in range(W.shape[-1]):
-        fig = plt.figure()
-        plt.imshow(W[..., m])
-        plt.grid(False)
-        plt.axis('off')
-        plt.tight_layout()
-        figs.append(fig)
-    return figs
+def plot_dictionary(W, num_columns=10):
+    nrows = (W.shape[-1] + num_columns - 1) // num_columns
+    fig, axes = plt.subplots(nrows=nrows, ncols=num_columns)
+
+    for m, ax in zip(range(W.shape[-1]), axes):
+        ax.imshow(W[..., m])
+        ax.set_title(f'{m}')
+        ax.grid(False)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_frame_on(False)
+
+    plt.tight_layout()
+    return fig
 
 
-def st_show_dictionary(figs, num_columns=10):
+def st_show_dictionary(fig):
     st.markdown(f'# Learned dictionary: {color_mode}')
-
-    for row in chunked(figs, num_columns):
-        cols = st.beta_columns(num_columns)
-        for fig, col in zip(row, cols):
-            with col:
-                st.pyplot(fig, clear_figure=False)
-
-    return figs
+    st.pyplot(fig, clear_figure=False)
 
 
-def plot_activations(H, nmf_params, dictionary_figs, signal_number, samples_per_image):
-    assert(H.shape[-2] == len(dictionary_figs))
+def plot_activations(H, nmf_params, signal_number, samples_per_image):
 
     cm = ['Greys'] if samples_per_image == 1 else ['Reds', 'Greens', 'Blues']
 
     figs = []
     for atom in range(H.shape[-2]):
-        atom_figs = [dictionary_figs[atom]]
+        fig, axes = plt.subplots(nrows=1, ncols=samples_per_image, squeeze=False, figsize=(samples_per_image*10, 5))
 
-        for channel in range(samples_per_image):
-            fig = plt.figure(figsize=(10, 5))
+        for channel, ax in zip(range(samples_per_image), axes.flatten()):
             if nmf_params['shift_invariant']:
-                plt.imshow(np.squeeze(H[..., atom, signal_number * samples_per_image + channel]), aspect='auto',
-                           cmap=cm[channel])
+                im = ax.imshow(np.squeeze(H[..., atom, signal_number * samples_per_image + channel]), aspect='equal',
+                               cmap=cm[channel])
             else:
-                plt.imshow(H[0], aspect='auto')
-            plt.colorbar()
-            plt.grid(False)
-            atom_figs.append(fig)
+                im = ax.imshow(H[0], aspect='equal')
+            ax.set_title(f'atom {atom}, channel {channel}')
+            ax.grid(False)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            plt.colorbar(im, ax=ax)
 
-        figs.append(atom_figs)
+        plt.tight_layout()
+        figs.append(fig)
 
     return figs
 
 
 def st_show_activations(figs):
     st.markdown('## Activations')
-
-    col_def = [1] + [8] * (len(figs[0]) - 1)
-
-    for atom_figs in figs:
-        cols = st.beta_columns(col_def)
-        for fig, col in zip(atom_figs, cols):
-            col.pyplot(fig)
+    for fig in figs:
+        st.pyplot(fig)
 
 
-def plot_partial_reconstruction(nmf, nmf_params, dictionary_figs, signal_number, samples_per_image):
-    assert(nmf.n_components == len(dictionary_figs))
-
+def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image):
+    # TODO: should be possible to merge this with plot_activations()
     cm = ['Greys'] if samples_per_image == 1 else ['Reds', 'Greens', 'Blues']
 
     figs = []
     for atom in range(nmf.n_components):
-        atom_figs = [dictionary_figs[atom]]
+        fig, axes = plt.subplots(nrows=1, ncols=samples_per_image, squeeze=False, figsize=(samples_per_image*10, 5))
 
-        for channel in range(samples_per_image):
-            fig = plt.figure(figsize=(10, 5))
+        for channel, ax in zip(range(samples_per_image), axes.flatten()):
             if nmf_params['shift_invariant']:
                 H_partial = nmf.partial_reconstruct([atom, ], [signal_number * samples_per_image + channel, ])
-                plt.imshow(np.squeeze(H_partial), aspect='auto', cmap=cm[channel])
+                im = ax.imshow(np.squeeze(H_partial), aspect='equal', cmap=cm[channel])
             else:
                 raise NotImplementedError
-            plt.colorbar()
-            plt.grid(False)
-            atom_figs.append(fig)
+            ax.set_title(f'atom {atom}, channel {channel}')
+            ax.grid(False)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            plt.colorbar(im, ax=ax)
 
-        figs.append(atom_figs)
+        figs.append(fig)
 
     return figs
 
@@ -252,11 +246,11 @@ def st_show_partial_reconstruction(figs):
 
 
 def close_figs(figs):
-    for fig in figs:
-        if isinstance(fig, list):
+    if isinstance(figs, list):
+        for fig in figs:
             close_figs(fig)
-        else:
-            plt.close(fig)
+    else:
+        plt.close(figs)
 
 
 if __name__ == '__main__':
@@ -288,8 +282,9 @@ if __name__ == '__main__':
     # -------------------- visualization -------------------- #
 
     # show learned dictionary
-    dictionary_figs = plot_dictionary(nmf.W)
-    st_show_dictionary(dictionary_figs)
+    dictionary_fig = plot_dictionary(nmf.W)
+    st_show_dictionary(dictionary_fig)
+    close_figs(dictionary_fig)
 
     st.markdown('# Signal reconstruction')
 
@@ -306,11 +301,11 @@ if __name__ == '__main__':
     close_figs(signal_figs)
 
     # show activation pattern
-    activation_figs = plot_activations(nmf.H, nmf_params, dictionary_figs, signal_number, samples_per_image)
+    activation_figs = plot_activations(nmf.H, nmf_params, signal_number, samples_per_image)
     st_show_activations(activation_figs)
     close_figs(activation_figs)
 
     # show partial reconstructions
-    # reconstruction_figs = plot_partial_reconstruction(nmf, nmf_params, dictionary_figs, signal_number, samples_per_image)
+    # reconstruction_figs = plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image)
     # st_show_partial_reconstruction(reconstruction_figs)
     # close_figs(reconstruction_figs)
