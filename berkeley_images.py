@@ -135,7 +135,7 @@ def compute_nmf(V, nmf_params):
 
 
 def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8), subplot_kw=dict(xticks=[], yticks=[], frame_on=False))
     for iplot, ax in enumerate(axes):
         if iplot == 0:
             data = np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image])
@@ -144,9 +144,6 @@ def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
 
         ax.imshow(data)
         ax.grid(False)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_frame_on(False)
 
     return fig
 
@@ -158,15 +155,13 @@ def st_show_signal_reconstruction(figs):
 
 def plot_dictionary(W, num_columns=10):
     nrows = (W.shape[-1] + num_columns - 1) // num_columns
-    fig, axes = plt.subplots(nrows=nrows, ncols=num_columns)
+    fig = plt.figure(figsize=(num_columns, nrows))
 
-    for m, ax in zip(range(W.shape[-1]), axes):
+    for m in range(W.shape[-1]):
+        ax = fig.add_subplot(nrows, num_columns, m+1, xticks=[], yticks=[])
         ax.imshow(W[..., m])
         ax.set_title(f'{m}')
         ax.grid(False)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_frame_on(False)
 
     plt.tight_layout()
     return fig
@@ -183,7 +178,8 @@ def plot_activations(H, nmf_params, signal_number, samples_per_image):
 
     figs = []
     for atom in range(H.shape[-2]):
-        fig, axes = plt.subplots(nrows=1, ncols=samples_per_image, squeeze=False, figsize=(samples_per_image*10, 5))
+        fig, axes = plt.subplots(nrows=1, ncols=samples_per_image, squeeze=False, figsize=(samples_per_image*10, 5),
+                                 subplot_kw=dict(xticks=[], yticks=[], frame_on=False))
 
         for channel, ax in zip(range(samples_per_image), axes.flatten()):
             if nmf_params['shift_invariant']:
@@ -192,9 +188,6 @@ def plot_activations(H, nmf_params, signal_number, samples_per_image):
             else:
                 im = ax.imshow(H[0], aspect='equal')
             ax.set_title(f'atom {atom}, channel {channel}')
-            ax.grid(False)
-            ax.set_xticks([])
-            ax.set_yticks([])
             plt.colorbar(im, ax=ax)
 
         plt.tight_layout()
