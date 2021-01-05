@@ -18,6 +18,7 @@ plt.style.use('seaborn')
 # TODO: replace 'matrix' with 'tensor' in docstrings
 # TODO: indicate 'override' in subclasses
 # TODO: refactor fft code parts into functions
+# TODO: precompute and re-use contract()-paths, see https://optimized-einsum.readthedocs.io/en/stable/reusing_paths.html
 
 
 class CachingFFT(object):
