@@ -80,7 +80,7 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
 
 
 def load_images(path: str, pattern: str, max_images: int = 0,
-                color_mode: int = 'grey', dtype=np.float32) -> (np.ndarray, tuple):
+                color_mode: str = 'grey', dtype=np.float32) -> (np.ndarray, tuple):
     images = []
     rows, cols = 10000, 10000
 
@@ -212,7 +212,7 @@ def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_imag
 
         for channel, ax in zip(range(samples_per_image), axes.flatten()):
             if nmf_params['shift_invariant']:
-                H_partial = nmf.partial_reconstruct([atom, ], [signal_number * samples_per_image + channel, ])
+                H_partial = nmf.partial_reconstruct(signal_number * samples_per_image + channel, 0, atom)
                 im = ax.imshow(np.squeeze(H_partial), aspect='equal', cmap=cm[channel])
             else:
                 raise NotImplementedError
@@ -230,12 +230,8 @@ def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_imag
 def st_show_partial_reconstruction(figs):
     st.markdown('## Partial Reconstructions')
 
-    col_def = [1] + [8] * (len(figs[0]) - 1)
-
-    for atom_figs in figs:
-        cols = st.beta_columns(col_def)
-        for fig, col in zip(atom_figs, cols):
-            col.pyplot(fig)
+    for fig in figs:
+        st.pyplot(fig)
 
 
 def close_figs(figs):
@@ -299,6 +295,6 @@ if __name__ == '__main__':
     close_figs(activation_figs)
 
     # show partial reconstructions
-    # reconstruction_figs = plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image)
-    # st_show_partial_reconstruction(reconstruction_figs)
-    # close_figs(reconstruction_figs)
+    reconstruction_figs = plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image)
+    st_show_partial_reconstruction(reconstruction_figs)
+    close_figs(reconstruction_figs)

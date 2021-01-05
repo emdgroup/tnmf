@@ -600,6 +600,23 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		return R
 
+	def partial_reconstruct(self, sample: int, channel: int, atom: int) -> np.array:
+		"""Reconstructs the signal matrix via (fft-)convolution."""
+
+		# TODO: this is just a hacky copy of self._fft_convolve and should be generalized / merged
+		# R = self._fft_convolve('W', 'H', **self._cache['params_reconstruct'])
+
+		assert self._use_fft
+
+		contraction_string = self._cache['params_reconstruct']['contraction_string']
+		slices = self._cache['params_reconstruct']['slices']
+		arr1_fft = self.W_fft[..., channel:channel+1, atom:atom+1]
+		arr2_fft = self.H_fft[..., atom:atom+1, sample:sample+1]
+		result_fft = contract(contraction_string, arr1_fft, arr2_fft)
+		result_pad = self._cache['ifft_fun'](result_fft)
+		result = result_pad[slices]
+		return result
+
 	def _reconstruction_gradient_H(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
