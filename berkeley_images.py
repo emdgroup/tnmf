@@ -213,7 +213,7 @@ def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_imag
         for channel, ax in zip(range(samples_per_image), axes.flatten()):
             if nmf_params['shift_invariant']:
                 H_partial = nmf.partial_reconstruct(signal_number * samples_per_image + channel, 0, atom)
-                im = ax.imshow(np.squeeze(H_partial), aspect='equal', cmap=cm[channel])
+                im = ax.imshow(np.squeeze(H_partial), aspect='equal', cmap=cm[channel], vmin=0., vmax=1.)
             else:
                 raise NotImplementedError
             ax.set_title(f'atom {atom}, channel {channel}')
