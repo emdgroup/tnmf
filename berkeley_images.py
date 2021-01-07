@@ -145,7 +145,7 @@ def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
         ax.imshow(data)
         ax.grid(False)
 
-    return fig
+    return [fig]
 
 
 def st_show_signal_reconstruction(figs):
@@ -153,18 +153,19 @@ def st_show_signal_reconstruction(figs):
     st.pyplot(figs)
 
 
-def plot_dictionary(W, num_columns=10):
+def plot_dictionary(W, num_columns=5):
     nrows = (W.shape[-1] + num_columns - 1) // num_columns
-    fig = plt.figure(figsize=(num_columns, nrows))
+    fig = plt.figure(figsize=(2*num_columns, 2*nrows))
 
     for m in range(W.shape[-1]):
         ax = fig.add_subplot(nrows, num_columns, m+1, xticks=[], yticks=[])
-        ax.imshow(W[..., m])
+        im = ax.imshow(W[..., m])
         ax.set_title(f'{m}')
         ax.grid(False)
+        plt.colorbar(im, ax=ax)
 
     plt.tight_layout()
-    return fig
+    return [fig]
 
 
 def st_show_dictionary(fig):
