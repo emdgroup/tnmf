@@ -3,7 +3,7 @@ Author: Mathias Winkel
 """
 
 from berkeley_images import load_images, plot_signal_reconstruction, plot_dictionary, \
-    plot_activations, plot_partial_reconstruction
+    plot_activations, plot_partial_reconstruction, COLOR_SELECTIONS, close_figs
 
 from copy import deepcopy
 import logging
@@ -13,14 +13,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 
-COLOR_SELECTIONS = {
-    'grey': lambda img: [np.dot(img[..., :3], [0.2989, 0.5870, 0.1140])[:, :, np.newaxis]],
-    'red': lambda img: [img[..., 0:1]],
-    'green': lambda img: [img[..., 1:2]],
-    'blue': lambda img: [img[..., 2:3]],
-    'color basis': lambda img: [img],
-    'colors (identical basis)': lambda img: [img[..., 0:1], img[..., 1:2], img[..., 2:3]],
-}
 
 COLOR_SELECTIONS_KEYS = list(COLOR_SELECTIONS.keys())
 
@@ -89,14 +81,6 @@ def compute_nmf(V, nmf_params):
         nmf = SparseNMF(**nmf_params)
     nmf.fit(V)
     return nmf
-
-
-def close_figs(figs):
-    if isinstance(figs, list):
-        for fig in figs:
-            close_figs(fig)
-    else:
-        plt.close(figs)
 
 
 def st_plot(title, figs):

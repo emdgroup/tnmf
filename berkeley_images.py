@@ -5,10 +5,8 @@ Author: Mathias Winkel
 import os
 import glob
 import imageio
-from copy import deepcopy
 import logging
 
-import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
@@ -21,62 +19,6 @@ COLOR_SELECTIONS = {
     'color basis': lambda img: [img],
     'colors (identical basis)': lambda img: [img[..., 0:1], img[..., 1:2], img[..., 2:3]],
 }
-
-COLOR_SELECTIONS_KEYS = list(COLOR_SELECTIONS.keys())
-
-
-def st_define_dataset_params() -> (str, str, int, int):
-    st.sidebar.markdown('# Image Dataset')
-    d = st.sidebar.text_input('File path', value=r'BSR_bsds500/BSR/BSDS500/data/images/train')
-    f = st.sidebar.text_input('File filter', value='*.jpg')
-    m = st.sidebar.number_input('Max images', min_value=0, value=5)
-    c = st.sidebar.radio('Channel(s)', COLOR_SELECTIONS_KEYS, 0)
-
-    return d, f, m, c
-
-
-def st_define_nmf_params(image_shape: tuple) -> dict:
-
-    st.sidebar.markdown('# NMF settings')
-
-    # -------------------- general settings -------------------- #
-
-    nmf_params = dict(
-        verbose=st.sidebar.slider('Verbose', min_value=0, max_value=3, value=2),
-        use_fft=st.sidebar.checkbox('Use FFT', True),
-        shift_invariant=st.sidebar.checkbox('Shift invariant', True),
-        sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
-        n_iterations=st.sidebar.number_input('# Iterations', min_value=1, value=5),
-        refit_H=st.sidebar.checkbox('Refit activations without sparsity', True)
-    )
-
-    # -------------------- dictionary size  -------------------- #
-
-    n_components = st.sidebar.number_input('# Dictionary elements', min_value=1, value=10)
-
-    nmf_params.update(dict(
-        n_components=n_components,
-    ))
-
-    # -------------------- settings for shift invariance -------------------- #
-
-    if nmf_params['shift_invariant']:
-
-        st.sidebar.markdown('### Shift invariance settings')
-        atom_size = st.sidebar.number_input('Atom size', min_value=0, max_value=min(*image_shape), value=5)
-        inhibition = st.sidebar.radio('Inhibition range', ['Auto', 'Manual'], 0)
-        if inhibition == 'Auto':
-            inhibition_range = None
-        else:
-            inhibition_range = st.sidebar.number_input('Inhibition range', min_value=0, value=atom_size)
-
-        nmf_params.update(dict(
-            atom_size=atom_size,
-            inhibition_range=inhibition_range,
-            inhibition_strength=st.sidebar.number_input('Inhibition strength', min_value=0.0, value=0.1)
-        ))
-
-    return nmf_params
 
 
 def load_images(path: str, pattern: str, max_images: int = 0,
@@ -122,7 +64,6 @@ def load_images(path: str, pattern: str, max_images: int = 0,
     return images, (rows, cols)
 
 
-@st.cache
 def compute_nmf(V, nmf_params):
     """Streamlit caching of NMF fitting."""
     nmf_params = nmf_params.copy()
@@ -148,11 +89,6 @@ def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
     return [fig]
 
 
-def st_show_signal_reconstruction(figs):
-    st.markdown('## Comparison to original signal')
-    st.pyplot(figs)
-
-
 def plot_dictionary(W, num_columns=5):
     nrows = (W.shape[-1] + num_columns - 1) // num_columns
     fig = plt.figure(figsize=(2*num_columns, 2*nrows))
@@ -166,11 +102,6 @@ def plot_dictionary(W, num_columns=5):
 
     plt.tight_layout()
     return [fig]
-
-
-def st_show_dictionary(fig):
-    st.markdown(f'# Learned dictionary: {color_mode}')
-    st.pyplot(fig, clear_figure=False)
 
 
 def plot_activations(H, nmf_params, signal_number, samples_per_image):
@@ -195,12 +126,6 @@ def plot_activations(H, nmf_params, signal_number, samples_per_image):
         figs.append(fig)
 
     return figs
-
-
-def st_show_activations(figs):
-    st.markdown('## Activations')
-    for fig in figs:
-        st.pyplot(fig)
 
 
 def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image):
@@ -228,13 +153,6 @@ def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_imag
     return figs
 
 
-def st_show_partial_reconstruction(figs):
-    st.markdown('## Partial Reconstructions')
-
-    for fig in figs:
-        st.pyplot(fig)
-
-
 def close_figs(figs):
     if isinstance(figs, list):
         for fig in figs:
@@ -243,59 +161,59 @@ def close_figs(figs):
         plt.close(figs)
 
 
+def st_plot(title, figs):
+    for ifig, fig in enumerate(figs):
+        filename = f'{title}_{ifig}.png'
+        fig.savefig(filename)
+    close_figs(figs)
+
+
 if __name__ == '__main__':
     # -------------------- settings -------------------- #
 
-    st.sidebar.markdown('# General settings')
+    np.random.seed(42)
 
-    auto_update = st.sidebar.checkbox('Auto-Update', False)
-    force_refresh = st.sidebar.button('Refresh')
-    seed = st.sidebar.number_input('Random seed', value=42)
-    np.random.seed(seed)
+    d = r'BSR_bsds500/BSR/BSDS500/data/images/train'
+    f = '*.jpg'
+    max_images = 5
+    color_mode = 'colors (identical basis)'
 
-    d, f, max_images, color_mode = st_define_dataset_params()
     images, image_shape = load_images(d, f, max_images, color_mode)
 
-    nmf_params = st_define_nmf_params(image_shape)
+    nmf_params = {
+        'verbose': 2,
+        'use_fft': True,
+        'shift_invariant': True,
+        'sparsity_H': 0.1,
+        'n_iterations': 5,
+        'refit_H': True,
+        'n_components': 10,
+        'atom_size': 5,
+        'inhibition_range': None,
+        'inhibition_strength': 0.1,
+    }
 
     logging.info(f'NMF params: {nmf_params}')
-
-    if not (auto_update or force_refresh):
-        st.info('Auto-Update disabled')
-        st.stop()
 
     # -------------------- model fitting -------------------- #
 
     # fit the NMF model
-    nmf = deepcopy(compute_nmf(images, nmf_params))
+    nmf = compute_nmf(images, nmf_params)
 
     # -------------------- visualization -------------------- #
 
-    # show learned dictionary
-    dictionary_fig = plot_dictionary(nmf.W)
-    st_show_dictionary(dictionary_fig)
-    close_figs(dictionary_fig)
-
-    st.markdown('# Signal reconstruction')
+    st_plot(f'Learned dictionary - {color_mode}', plot_dictionary(nmf.W))
 
     # select signal to be visualized
     samples_per_image = 3 if color_mode == 'colors (identical basis)' else 1
 
-    max_value = nmf.n_signals // samples_per_image - 1
+    signal_number = 0 # min_value=0, max_value=nmf.n_signals//samples_per_image - 1
 
-    signal_number = 0 if nmf.n_signals == 1 else st.slider('Image number', min_value=0, max_value=max_value, value=0)
+    st_plot('Comparison to original signal',
+            plot_signal_reconstruction(nmf, signal_number, samples_per_image))
 
-    # show reconstruction of individual signals
-    signal_figs = plot_signal_reconstruction(nmf, signal_number, samples_per_image)
-    st_show_signal_reconstruction(signal_figs)
-    close_figs(signal_figs)
+    st_plot('Activations',
+            plot_activations(nmf.H, nmf_params, signal_number, samples_per_image))
 
-    # show activation pattern
-    activation_figs = plot_activations(nmf.H, nmf_params, signal_number, samples_per_image)
-    st_show_activations(activation_figs)
-    close_figs(activation_figs)
-
-    # show partial reconstructions
-    reconstruction_figs = plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image)
-    st_show_partial_reconstruction(reconstruction_figs)
-    close_figs(reconstruction_figs)
+    st_plot('Partial Reconstructions',
+            plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image))
