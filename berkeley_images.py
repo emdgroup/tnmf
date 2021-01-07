@@ -177,20 +177,21 @@ if __name__ == '__main__':
     f = '*.jpg'
     max_images = 5
     color_mode = 'colors (identical basis)'
+    dtype = np.float64
 
-    images, image_shape = load_images(d, f, max_images, color_mode)
+    images, image_shape = load_images(d, f, max_images, color_mode, dtype=dtype)
 
     nmf_params = {
         'verbose': 2,
         'use_fft': True,
         'shift_invariant': True,
-        'sparsity_H': 0.1,
-        'n_iterations': 5,
+        'sparsity_H': 0.5,
+        'n_iterations': 1000,
         'refit_H': True,
-        'n_components': 10,
-        'atom_size': 5,
+        'n_components': 16,
+        'atom_size': 8,
         'inhibition_range': None,
-        'inhibition_strength': 0.1,
+        'inhibition_strength': 0.25,
     }
 
     logging.info(f'NMF params: {nmf_params}')
