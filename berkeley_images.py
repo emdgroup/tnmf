@@ -8,8 +8,13 @@ import imageio
 import logging
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
+
+matplotlib.use('AGG')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
+
 
 COLOR_SELECTIONS = {
     'grey': lambda img: [np.dot(img[..., :3], [0.2989, 0.5870, 0.1140])[:, :, np.newaxis]],
@@ -95,7 +100,7 @@ def plot_dictionary(W, num_columns=5):
 
     for m in range(W.shape[-1]):
         ax = fig.add_subplot(nrows, num_columns, m+1, xticks=[], yticks=[])
-        im = ax.imshow(W[..., m])
+        im = ax.imshow(W[..., m].squeeze())
         ax.set_title(f'{m}')
         ax.grid(False)
         plt.colorbar(im, ax=ax)
