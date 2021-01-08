@@ -169,6 +169,7 @@ def close_figs(figs):
 def st_plot(title, figs):
     for ifig, fig in enumerate(figs):
         filename = f'{title}_{ifig}.png'
+        logging.info(f'Saving {filename}')
         fig.savefig(filename)
     close_figs(figs)
 
@@ -213,13 +214,12 @@ if __name__ == '__main__':
     # select signal to be visualized
     samples_per_image = 3 if color_mode == 'colors (identical basis)' else 1
 
-    signal_number = 0 # min_value=0, max_value=nmf.n_signals//samples_per_image - 1
+    for signal_number in range(nmf.n_signals//samples_per_image - 1):
+        st_plot(f'Comparison to original signal - sample {signal_number:04d}',
+                plot_signal_reconstruction(nmf, signal_number, samples_per_image))
 
-    st_plot('Comparison to original signal',
-            plot_signal_reconstruction(nmf, signal_number, samples_per_image))
+        st_plot(f'Activations - sample {signal_number:04d}',
+                plot_activations(nmf.H, nmf_params, signal_number, samples_per_image))
 
-    st_plot('Activations',
-            plot_activations(nmf.H, nmf_params, signal_number, samples_per_image))
-
-    st_plot('Partial Reconstructions',
-            plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image))
+        st_plot(f'Partial Reconstructions - sample {signal_number:04d}',
+                plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_image))
