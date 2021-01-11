@@ -8,6 +8,7 @@ import imageio
 import logging
 
 import numpy as np
+from scipy import fftpack
 import matplotlib
 import matplotlib.pyplot as plt
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
@@ -27,17 +28,30 @@ COLOR_SELECTIONS = {
 
 
 def filter_channel(ch):
+    """
+    combined low-pass/whitening filter as in
+
+    Olshausen, B. A., & Field, D. J. (1997). Sparse coding with an overcomplete basis set: A strategy employed by V1?
+    Vision Research, 37(23), 3311–3325. https://doi.org/10.1016/S0042-6989(97)00169-7
+    :param ch:
+    :return:
+    """
+    spectrum = fftpack.fft2(ch)
+
     f0x, f0y = ch.shape[0] // 2, ch.shape[1] // 2
 
     x = np.arange(-f0x, f0x, 1)
     y = np.arange(-f0y, f0y, 1)
     yy, xx = np.meshgrid(y, x)
-    ff = np.sqrt((xx/f0x)**2 + (yy/f0y)**2)
-    filter = np.exp(-ff**8)
-    return filter[:, :, np.newaxis] * ch
+    ff = np.sqrt((xx / f0x) ** 2 + (yy / f0y) ** 2)
+    filter = ff * np.exp(-ff ** 4)
+
+    spectrum *= filter[:, :, np.newaxis]
+
+    return np.clip(fftpack.ifft2(spectrum), 0., 1.)
 
 
-def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0,
+def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0, filter=False,
                 color_mode: str = 'grey', dtype=np.float32) -> (np.ndarray, tuple):
     images = []
     rows, cols = 10000, 10000
@@ -61,7 +75,7 @@ def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0,
         for channel in channels:
             ch = channel[remove_margin:-remove_margin-1, remove_margin:-remove_margin-1, :]
             rows, cols = min(rows, ch.shape[0]), min(cols, ch.shape[1])
-            images.append(filter_channel(ch))
+            images.append(filter_channel(ch) if filter else ch)
 
     # cut all images to fit the smallest image
     images = [image[:rows, :cols, :] for image in images]
@@ -198,6 +212,7 @@ if __name__ == '__main__':
         'remove_margin': 0,
         'color_mode': 'colors (identical basis)',
         'dtype': np.float64,
+        'filter': False,
     }
 
     logging.info(f'dataset params: {dataset_params}')
