@@ -26,6 +26,17 @@ COLOR_SELECTIONS = {
 }
 
 
+def filter_channel(ch):
+    f0x, f0y = ch.shape[0] // 2, ch.shape[1] // 2
+
+    x = np.arange(-f0x, f0x, 1)
+    y = np.arange(-f0y, f0y, 1)
+    yy, xx = np.meshgrid(y, x)
+    ff = np.sqrt((xx/f0x)**2 + (yy/f0y)**2)
+    filter = np.exp(-ff**8)
+    return filter[:, :, np.newaxis] * ch
+
+
 def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0,
                 color_mode: str = 'grey', dtype=np.float32) -> (np.ndarray, tuple):
     images = []
@@ -48,9 +59,9 @@ def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0,
         channels = [np.swapaxes(ch, 0, 1) if ch.shape[1] < ch.shape[0] else ch for ch in channels]
 
         for channel in channels:
-            ch = channel[remove_margin:-remove_margin, remove_margin:-remove_margin, :]
+            ch = channel[remove_margin:-remove_margin-1, remove_margin:-remove_margin-1, :]
             rows, cols = min(rows, ch.shape[0]), min(cols, ch.shape[1])
-            images.append(ch)
+            images.append(filter_channel(ch))
 
     # cut all images to fit the smallest image
     images = [image[:rows, :cols, :] for image in images]
