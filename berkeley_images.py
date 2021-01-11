@@ -26,7 +26,7 @@ COLOR_SELECTIONS = {
 }
 
 
-def load_images(path: str, pattern: str, max_images: int = 0,
+def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0,
                 color_mode: str = 'grey', dtype=np.float32) -> (np.ndarray, tuple):
     images = []
     rows, cols = 10000, 10000
@@ -48,8 +48,9 @@ def load_images(path: str, pattern: str, max_images: int = 0,
         channels = [np.swapaxes(ch, 0, 1) if ch.shape[1] < ch.shape[0] else ch for ch in channels]
 
         for channel in channels:
-            rows, cols = min(rows, channel.shape[0]), min(cols, channel.shape[1])
-            images.append(channel)
+            ch = channel[remove_margin:-remove_margin, remove_margin:-remove_margin, :]
+            rows, cols = min(rows, ch.shape[0]), min(cols, ch.shape[1])
+            images.append(ch)
 
     # cut all images to fit the smallest image
     images = [image[:rows, :cols, :] for image in images]
@@ -179,20 +180,25 @@ if __name__ == '__main__':
 
     np.random.seed(42)
 
-    d = r'BSR_bsds500/BSR/BSDS500/data/images/train'
-    f = '*.jpg'
-    max_images = 5
-    color_mode = 'colors (identical basis)'
-    dtype = np.float64
+    dataset_params = {
+        'path': r'BSR_bsds500/BSR/BSDS500/data/images/train',
+        'pattern': '*.jpg',
+        'max_images': 5,
+        'remove_margin': 0,
+        'color_mode': 'colors (identical basis)',
+        'dtype': np.float64,
+    }
 
-    images, image_shape = load_images(d, f, max_images, color_mode, dtype=dtype)
+    logging.info(f'dataset params: {dataset_params}')
+
+    images, image_shape = load_images(**dataset_params)
 
     nmf_params = {
         'verbose': 2,
         'use_fft': True,
         'shift_invariant': True,
         'sparsity_H': 0.5,
-        'n_iterations': 1000,
+        'n_iterations': 200,
         'refit_H': True,
         'n_components': 16,
         'atom_size': 8,
@@ -209,6 +215,7 @@ if __name__ == '__main__':
 
     # -------------------- visualization -------------------- #
 
+    color_mode = dataset_params['color_mode']
     st_plot(f'Learned dictionary - {color_mode}', plot_dictionary(nmf.W))
 
     # select signal to be visualized
