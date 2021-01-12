@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from numpy.lib.stride_tricks import as_strided
 from scipy.fft import rfftn, irfftn, next_fast_len
 from scipy.ndimage import convolve1d
-from opt_einsum import contract
+from opt_einsum import contract, contract_expression
 from itertools import product
 from abc import ABC
 from utils import normalize, shift
@@ -18,7 +18,6 @@ plt.style.use('seaborn')
 # TODO: replace 'matrix' with 'tensor' in docstrings
 # TODO: indicate 'override' in subclasses
 # TODO: refactor fft code parts into functions
-# TODO: precompute and re-use contract()-paths, see https://optimized-einsum.readthedocs.io/en/stable/reusing_paths.html
 
 
 class CachingFFT(object):
@@ -506,23 +505,23 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
 			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
 			cache['params_reconstruct'] = {
-				'contraction_string': '...cm,...mn->...cn',
 				'slices': tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
+				'contraction': contract_expression('...cm,...mn->...cn', self.W_fft.shape, self.H_fft.shape),
 			}
 
 			# fft details: gradient H computation
 			upper_idx = self.H.shape[:self.n_shift_dimensions]
 			cache['params_reconstruction_gradient_H'] = {
-				'contraction_string': '...cn,...cm->...mn',
 				'slices': tuple(slice(upper) for upper in upper_idx),
+				'contraction': contract_expression('...cn,...cm->...mn', self.V_fft.shape, self.W_reversed_fft.shape),
 			}
 
 			# fft details: gradient W computation
 			lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
 			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
 			cache['params_reconstruction_gradient_W'] = {
-				'contraction_string': '...cn,...mn->...cm',
 				'slices': tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
+				'contraction': contract_expression('...cn,...mn->...cm', self.V_fft.shape, self.H_reversed_fft.shape),
 			}
 		else:
 			# zero-padding of the signal matrix for full-size correlation
@@ -582,9 +581,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		assert self._use_fft
 		return self._H.f_reversed
 
-	def _fft_convolve(self, arr1_fft, arr2_fft, contraction_string, slices):
-		self._logger.debug(f'fft_convolve( contraction_string={contraction_string}, slices={slices} )')
-		result_fft = contract(contraction_string, arr1_fft, arr2_fft)
+	def _fft_convolve(self, arr1_fft, arr2_fft, contraction, slices):
+		result_fft = contraction(arr1_fft, arr2_fft)
 		result_pad = self._cache['ifft_fun'](result_fft)
 		result = result_pad[slices]
 		return result
@@ -606,7 +604,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 
 		assert self._use_fft
 
-		contraction_string = self._cache['params_reconstruct']['contraction_string']
+		contraction_string = '...cm,...mn->...cn'
 		slices = self._cache['params_reconstruct']['slices']
 		arr1_fft = self.W_fft[..., channel:channel+1, atom:atom+1]
 		arr2_fft = self.H_fft[..., atom:atom+1, sample:sample+1]
