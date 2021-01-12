@@ -597,21 +597,14 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		return R
 
 	def partial_reconstruct(self, sample: int, channel: int, atom: int) -> np.array:
-		"""Reconstructs the signal matrix via (fft-)convolution."""
+		"""Reconstructs a sample/channel via (fft-)convolution using only a specified atom."""
+		if self._use_fft:
+			R = self._fft_convolve(self.W_fft[..., channel:channel+1, atom:atom+1],
+								   self.H_fft[..., atom:atom+1, sample:sample+1], **self._cache['params_reconstruct'])
+		else:
+			raise NotImplementedError
 
-		# TODO: this is just a hacky copy of self._fft_convolve and should be generalized / merged
-		# R = self._fft_convolve(self.W_fft, self.H_fft, **self._cache['params_reconstruct'])
-
-		assert self._use_fft
-
-		contraction_string = '...cm,...mn->...cn'
-		slices = self._cache['params_reconstruct']['slices']
-		arr1_fft = self.W_fft[..., channel:channel+1, atom:atom+1]
-		arr2_fft = self.H_fft[..., atom:atom+1, sample:sample+1]
-		result_fft = contract(contraction_string, arr1_fft, arr2_fft)
-		result_pad = self._cache['ifft_fun'](result_fft)
-		result = result_pad[slices]
-		return result
+		return R
 
 	def _reconstruction_gradient_H(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
