@@ -472,8 +472,6 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	"""Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
 	implicitly via correlation/convolution."""
 
-	# TODO: switch original/frequency domains only on demand via setter/getters
-
 	def __init__(self, use_fft=True, **kwargs):
 		super().__init__(**kwargs)
 		self._use_fft = use_fft
