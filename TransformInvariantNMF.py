@@ -4,96 +4,19 @@ Author: Adrian Sosic
 
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
 from numpy.lib.stride_tricks import as_strided
-from scipy.fft import rfftn, irfftn, next_fast_len
+from scipy.fft import next_fast_len
 from scipy.ndimage import convolve1d
 from opt_einsum import contract, contract_expression
 from itertools import product
 from abc import ABC
 from utils import normalize, shift
+from CachingFFT import CachingFFT
 from typing import Optional, Tuple
-plt.style.use('seaborn')
 
 # TODO: replace 'matrix' with 'tensor' in docstrings
 # TODO: indicate 'override' in subclasses
 # TODO: refactor fft code parts into functions
-
-
-class CachingFFT(object):
-	"""
-	Wrapper class for conveniently caching and switching back and forth
-	between fields in coordinate space and fourier space
-	"""
-
-	def __init__(self, field_name: str, logger: logging.Logger = None):
-		self._c = None  # field in coordinate space
-		self._f = None  # field in fourier space
-		self._f_reversed = None  # time-reversed field in fourier space
-		self._fft_axes = None
-		self._fft_shape = None
-		self._fft_workers = -1
-		self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
-		self._field_name = field_name
-
-	def set_fft_params(self, fft_axes, fft_shape):
-		self._fft_axes = fft_axes
-		self._fft_shape = fft_shape
-
-	def _invalidate(self):
-		self._c = None
-		self._f = None
-		self._f_reversed = None
-
-	def has_c(self) -> bool:
-		"""Check if the field in coordinate space has already been computed"""
-		return self._c is not None
-
-	def has_f(self) -> bool:
-		"""Check if the field in fourier space has already been computed"""
-		return self._f is not None
-
-	@property
-	def c(self) -> np.array:
-		"""Getter for field in coordinate space"""
-		if self._c is None:
-			self._logger.debug(f'Computing {self._field_name}(x) = FFT^-1[ {self._field_name}(f) ]')
-			assert self.has_f
-			self._c = irfftn(self._f, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
-		return self._c
-
-	@c.setter
-	def c(self, c: np.array):
-		"""Setter for field in coordinate space"""
-		self._logger.debug(f'{"Setting" if c is not None else "Clearing"} {self._field_name}(x)')
-		self._invalidate()
-		self._c = c
-
-	@property
-	def f(self) -> np.array:
-		"""Getter for field in fourier space"""
-		if self._f is None:
-			self._logger.debug(f'Computing {self._field_name}(f) = FFT[ {self._field_name}(x) ]')
-			assert self.has_c()
-			self._f = rfftn(self._c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
-		return self._f
-
-	@f.setter
-	def f(self, f: np.array):
-		"""Setter for field in fourier space"""
-		self._logger.debug(f'{"Setting" if f is not None else "Clearing"} {self._field_name}(f)')
-		self._invalidate()
-		self._f = f
-
-	@property
-	def f_reversed(self) -> np.array:
-		"""Getter for time-reversed field in fourier space, intentionally no setter for now"""
-		if self._f_reversed is None:
-			self._logger.debug(f'Computing {self._field_name}_rev(f) = FFT[ {self._field_name}(-x) ]')
-			assert self.has_c()
-			c_reversed = np.flip(self._c, axis=self._fft_axes)
-			self._f_reversed = rfftn(c_reversed, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
-		return self._f_reversed
 
 
 class TransformInvariantNMF(ABC):
@@ -142,11 +65,11 @@ class TransformInvariantNMF(ABC):
 		self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
 
 		# signal, reconstruction, factorization, and transformation matrices
-		self._V = CachingFFT('V', self._logger)
-		self._R = CachingFFT('R', self._logger)
+		self._V = CachingFFT('V', logger=self._logger)
+		self._R = CachingFFT('R', logger=self._logger)
 		self._T = None
-		self._W = CachingFFT('W', self._logger)
-		self._H = CachingFFT('H', self._logger)
+		self._W = CachingFFT('W', logger=self._logger)
+		self._H = CachingFFT('H', logger=self._logger)
 
 		# constant to avoid division by zero
 		self.eps = eps
@@ -403,7 +326,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		return self.V.ndim - 2
 
 	@property
-	def shift_dimensions(self):
+	def shift_dimensions(self) -> Tuple[int]:
 		"""The dimension index of the shift invariant input dimensions."""
 		return tuple(range(self.n_shift_dimensions))
 
@@ -491,9 +414,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			fft_axes = self.shift_dimensions
 			fft_shape = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
 
-			# TODO: remove
-			cache['ifft_fun'] = lambda x: irfftn(x, axes=fft_axes, s=fft_shape, workers=-1)
-
+			cache['fft_axes'] = fft_axes
+			cache['fft_shape'] = fft_shape
 			self._V.set_fft_params(fft_axes, fft_shape)
 			self._R.set_fft_params(fft_axes, fft_shape)
 			self._W.set_fft_params(fft_axes, fft_shape)
@@ -580,10 +502,9 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		return self._H.f_reversed
 
 	def _fft_convolve(self, arr1_fft, arr2_fft, contraction, slices):
-		result_fft = contraction(arr1_fft, arr2_fft)
-		result_pad = self._cache['ifft_fun'](result_fft)
-		result = result_pad[slices]
-		return result
+		result = CachingFFT('fft_convolve', fft_axes=self._cache['fft_axes'], fft_shape=self._cache['fft_shape'])
+		result.f = contraction(arr1_fft, arr2_fft)
+		return result.c[slices]
 
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix via (fft-)convolution."""
