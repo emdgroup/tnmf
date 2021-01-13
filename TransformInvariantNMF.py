@@ -521,8 +521,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			R = self._fft_convolve(self.W_fft[..., channel:channel+1, atom:atom+1],
 								   self.H_fft[..., atom:atom+1, sample:sample+1], **self._cache['params_reconstruct'])
 		else:
-			raise NotImplementedError
-
+			H_strided = as_strided(self.H[..., atom:atom+1, sample:sample+1], self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
+			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W[..., channel:channel+1, atom:atom+1], self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		return R
 
 	def _reconstruction_gradient_H(self) -> np.array:
