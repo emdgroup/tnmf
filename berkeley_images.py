@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 
 matplotlib.use('AGG')
+plt.style.use('seaborn')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
 
