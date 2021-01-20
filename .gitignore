@@ -11,3 +11,8 @@
 *.DS_Store
 
 *.png
+
+BSR_bsds500
+
+.vscode
+env
