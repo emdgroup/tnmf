@@ -148,12 +148,12 @@ class TransformInvariantNMF(ABC):
 
 		Notation:
 		---------
-		d: number of input dimensions
+		d: number of input dimensions, i.e. shape of the individual samples
 		c: number of input channels
 		n: number of input samples
 		m: number of basis vectors (dictionary size)
-		t: number of basis vector transforms (= 1 for standard NMF without transform invariance)
-		h: number of basis vector dimensions (= d for standard NMF without transform invariance)
+		t: number of basis vector transforms (= 1 for standard NMF without transform invariance), i.e. potential placement positions of the basis vector
+		h: number of basis vector dimensions (= d for standard NMF without transform invariance), i.e. atom shape
 
 		Dimensions:
 		-----------
