@@ -470,34 +470,34 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		self._cache = cache
 
 	@property
-	def V_fft(self):
+	def V_fft(self) -> np.array:
 		assert self._use_fft
 		return self._V.f
 
 	@property
-	def R_fft(self):
+	def R_fft(self) -> np.array:
 		assert self._use_fft
 		# make sure that R.c is up-to-date
 		_ = self.R
 		return self._R.f
 
 	@property
-	def W_fft(self):
+	def W_fft(self) -> np.array:
 		assert self._use_fft
 		return self._W.f
 
 	@property
-	def W_reversed_fft(self):
+	def W_reversed_fft(self) -> np.array:
 		assert self._use_fft
 		return self._W.f_reversed
 
 	@property
-	def H_fft(self):
+	def H_fft(self) -> np.array:
 		assert self._use_fft
 		return self._H.f
 
 	@property
-	def H_reversed_fft(self):
+	def H_reversed_fft(self) -> np.array:
 		assert self._use_fft
 		return self._H.f_reversed
 
