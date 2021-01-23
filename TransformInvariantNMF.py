@@ -7,6 +7,7 @@ import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.fft import next_fast_len
 from scipy.ndimage import convolve1d
+from scipy.signal import fftconvolve
 from opt_einsum import contract, contract_expression
 from itertools import product
 from abc import ABC
@@ -289,7 +290,7 @@ class SparseNMF(TransformInvariantNMF):
 class BaseShiftInvariantNMF(TransformInvariantNMF):
 	"""Base class for shift-invariant non-negative matrix factorization."""
 
-	def __init__(self, inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs):
+	def __init__(self, mode: str = 'full', inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs):
 		"""
 		Parameters
 		----------
@@ -299,6 +300,9 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		"""
 		# set the basic parameters
 		super().__init__(**kwargs)
+
+		assert mode in ('full', 'valid', 'same')
+		self._mode = mode
 		
 		# default inhibition range = minimal range to cover the atom size
 		if inhibition_range is None:
@@ -318,6 +322,15 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def n_transforms(self) -> Tuple[int]:
 		"""Number of dictionary transforms."""
 		# TODO: inherit docstring from superclass
+		if self._mode == 'full':
+				return tuple(np.array(self.n_dim) + self.atom_size - 1)
+		elif self._mode == 'valid':
+				return tuple(np.array(self.n_dim) - self.atom_size + 1)
+		elif self._mode == 'same':
+				raise NotImplementedError
+		else:
+				raise ValueError(f'Unsupported mode {self._mode}.')
+
 		return tuple(np.array(self.n_dim) + self.atom_size - 1)
 
 	@property
@@ -395,10 +408,11 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	"""Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
 	implicitly via correlation/convolution."""
 
-	def __init__(self, use_fft=True, **kwargs):
+	def __init__(self, method='cachingFFT', **kwargs):
 		super().__init__(**kwargs)
-		self._use_fft = use_fft
-		self._logger.debug(f'Using the {"FFT" if self._use_fft else "non-FFT"} implementation.')
+		assert method in ('cachingFFT', 'contract', 'fftconvolve')
+		self._method = method
+		self._logger.debug(f'Using method {self._method}.')
 		self._cache = {}
 
 	def initialize(self, V):
@@ -409,7 +423,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		"""Caches several fitting related variables."""
 		cache = {}
 
-		if self._use_fft:
+		if self._method == 'cachingFFT':
 			# fft shape and functions
 			fft_axes = self.shift_dimensions
 			fft_shape = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
@@ -443,7 +457,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 				'slices': tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
 				'contraction': contract_expression('...cn,...mn->...cm', self.V_fft.shape, self.H_reversed_fft.shape),
 			}
-		else:
+		elif self._method == 'contract':
 			# zero-padding of the signal matrix for full-size correlation
 			cache['pad_width'] = (*self.n_shift_dimensions * ((self.atom_size - 1,) * 2,), (0, 0), (0, 0))
 			cache['V_padded'] = np.pad(self.V, pad_width=cache['pad_width'])
@@ -467,38 +481,43 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[-2:]
 			cache['H_strided_W_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
 			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['m', 'n']
+		elif self._method == 'fftconvolve':
+			pass
+		else:
+			raise ValueError('Unsupported method.')
+
 		self._cache = cache
 
 	@property
 	def V_fft(self) -> np.array:
-		assert self._use_fft
+		assert self._method == 'cachingFFT'
 		return self._V.f
 
 	@property
 	def R_fft(self) -> np.array:
-		assert self._use_fft
+		assert self._method == 'cachingFFT'
 		# make sure that R.c is up-to-date
 		_ = self.R
 		return self._R.f
 
 	@property
 	def W_fft(self) -> np.array:
-		assert self._use_fft
+		assert self._method == 'cachingFFT'
 		return self._W.f
 
 	@property
 	def W_reversed_fft(self) -> np.array:
-		assert self._use_fft
+		assert self._method == 'cachingFFT'
 		return self._W.f_reversed
 
 	@property
 	def H_fft(self) -> np.array:
-		assert self._use_fft
+		assert self._method == 'cachingFFT'
 		return self._H.f
 
 	@property
 	def H_reversed_fft(self) -> np.array:
-		assert self._use_fft
+		assert self._method == 'cachingFFT'
 		return self._H.f_reversed
 
 	def _fft_convolve(self, arr1_fft, arr2_fft, contraction, slices):
@@ -508,46 +527,71 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 
 	def _reconstruct(self) -> np.array:
 		"""Reconstructs the signal matrix via (fft-)convolution."""
-		if self._use_fft:
+		if self._method == 'cachingFFT':
 			R = self._fft_convolve(self.W_fft, self.H_fft, **self._cache['params_reconstruct'])
-		else:
+		elif self._method == 'contract':
 			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
+		elif self._method == 'fftconvolve':
+			R = np.sum(fftconvolve(self.W[...,:,np.newaxis], self.H[...,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions), axis=-2)
+		else:
+			R = None
 		return R
 
 	def partial_reconstruct(self, sample: int, channel: int, atom: int) -> np.array:
 		"""Reconstructs a sample/channel via (fft-)convolution using only a specified atom."""
-		if self._use_fft:
+		if self._method == 'cachingFFT':
 			R = self._fft_convolve(self.W_fft[..., channel:channel+1, atom:atom+1],
 								   self.H_fft[..., atom:atom+1, sample:sample+1], **self._cache['params_reconstruct'])
-		else:
+		elif self._method == 'contract':
 			H_strided = as_strided(self.H[..., atom:atom+1, sample:sample+1], self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W[..., channel:channel+1, atom:atom+1], self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
+		elif self._method == 'fftconvolve':
+			R = fftconvolve(self.W[..., channel:channel+1, atom:atom+1], self.H[..., atom:atom+1, sample:sample+1], mode='valid', axes=self.shift_dimensions)
+		else:
+			assert False
+			R = None
 		return R
 
 	def _reconstruction_gradient_H(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
-		if self._use_fft:
+		if self._method == 'cachingFFT':
 			numer = self._fft_convolve(self.V_fft, self.W_reversed_fft, **self._cache['params_reconstruction_gradient_H'])
 			denum = self._fft_convolve(self.R_fft, self.W_reversed_fft, **self._cache['params_reconstruction_gradient_H'])
-		else:
+		elif self._method == 'contract':
 			V_padded = self._cache['V_padded']
 			R_padded = np.pad(self.R, pad_width=self._cache['pad_width'])
 			V_strided = as_strided(V_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
 			R_strided = as_strided(R_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
 			numer = contract(self.W, self._cache['W_labels'], V_strided, self._cache['X_strided_W_labels'], self._cache['H_labels'], optimize='optimal')
 			denum = contract(self.W, self._cache['W_labels'], R_strided, self._cache['X_strided_W_labels'], self._cache['H_labels'], optimize='optimal')
+		elif self._method == 'fftconvolve':
+			reverse = (slice(None, None, -1),) * self.n_shift_dimensions
+			W_reversed = self.W[reverse]
+			numer = np.sum(fftconvolve(self.V[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode, axes=self.shift_dimensions), axis=-3)
+			denum = np.sum(fftconvolve(self.R[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode, axes=self.shift_dimensions), axis=-3)
+		else:
+			assert False
+			numer, denum = None, None
 		return numer, denum
 
 	def _reconstruction_gradient_W(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		# TODO: inherit docstring from superclass
-		if self._use_fft:
+		if self._method == 'cachingFFT':
 			numer = self._fft_convolve(self.V_fft, self.H_reversed_fft, **self._cache['params_reconstruction_gradient_W'])
 			denum = self._fft_convolve(self.R_fft, self.H_reversed_fft, **self._cache['params_reconstruction_gradient_W'])
-		else:
+		elif self._method == 'contract':
 			H_strided = as_strided(self.H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
 			numer = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.V, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
 			denum = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.R, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
+		elif self._method == 'fftconvolve':
+			reverse = (slice(None, None, -1),) * self.n_shift_dimensions
+			H_reversed = self.H[reverse]
+			numer = np.sum(fftconvolve(self.V[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions), axis=-1)
+			denum = np.sum(fftconvolve(self.R[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions), axis=-1)
+		else:
+			assert False
+			numer, denum = None, None
 		return numer, denum
