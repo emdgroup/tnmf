@@ -290,7 +290,7 @@ class SparseNMF(TransformInvariantNMF):
 class BaseShiftInvariantNMF(TransformInvariantNMF):
 	"""Base class for shift-invariant non-negative matrix factorization."""
 
-	def __init__(self, mode: str = 'full', inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs):
+	def __init__(self, shift_overlap_border: bool = True, inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs):
 		"""
 		Parameters
 		----------
@@ -301,8 +301,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		# set the basic parameters
 		super().__init__(**kwargs)
 
-		assert mode in ('full', 'valid', 'same')
-		self._mode = mode
+		self._shift_overlap_border = shift_overlap_border
 		
 		# default inhibition range = minimal range to cover the atom size
 		if inhibition_range is None:
@@ -322,16 +321,10 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def n_transforms(self) -> Tuple[int]:
 		"""Number of dictionary transforms."""
 		# TODO: inherit docstring from superclass
-		if self._mode == 'full':
+		if self._shift_overlap_border:
 				return tuple(np.array(self.n_dim) + self.atom_size - 1)
-		elif self._mode == 'valid':
-				return tuple(np.array(self.n_dim) - self.atom_size + 1)
-		elif self._mode == 'same':
-				raise NotImplementedError
 		else:
-				raise ValueError(f'Unsupported mode {self._mode}.')
-
-		return tuple(np.array(self.n_dim) + self.atom_size - 1)
+				return tuple(np.array(self.n_dim) - self.atom_size + 1)
 
 	@property
 	def n_shift_dimensions(self):
@@ -533,7 +526,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		elif self._method == 'fftconvolve':
-			R = np.sum(fftconvolve(self.W[...,:,np.newaxis], self.H[...,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions), axis=-2)
+			mode='valid' if self._shift_overlap_border else 'full'
+			R = np.sum(fftconvolve(self.W[...,:,np.newaxis], self.H[...,np.newaxis,:,:], mode=mode, axes=self.shift_dimensions), axis=-2)
 		else:
 			R = None
 		return R
@@ -547,7 +541,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			H_strided = as_strided(self.H[..., atom:atom+1, sample:sample+1], self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W[..., channel:channel+1, atom:atom+1], self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		elif self._method == 'fftconvolve':
-			R = fftconvolve(self.W[..., channel:channel+1, atom:atom+1], self.H[..., atom:atom+1, sample:sample+1], mode='valid', axes=self.shift_dimensions)
+			mode='valid' if self._shift_overlap_border else 'full'
+			R = fftconvolve(self.W[..., channel:channel+1, atom:atom+1], self.H[..., atom:atom+1, sample:sample+1], mode=mode, axes=self.shift_dimensions)
 		else:
 			assert False
 			R = None
@@ -569,8 +564,9 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		elif self._method == 'fftconvolve':
 			reverse = (slice(None, None, -1),) * self.n_shift_dimensions
 			W_reversed = self.W[reverse]
-			numer = np.sum(fftconvolve(self.V[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode, axes=self.shift_dimensions), axis=-3)
-			denum = np.sum(fftconvolve(self.R[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode, axes=self.shift_dimensions), axis=-3)
+			mode='full' if self._shift_overlap_border else 'valid'
+			numer = np.sum(fftconvolve(self.V[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=mode, axes=self.shift_dimensions), axis=-3)
+			denum = np.sum(fftconvolve(self.R[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=mode, axes=self.shift_dimensions), axis=-3)
 		else:
 			assert False
 			numer, denum = None, None

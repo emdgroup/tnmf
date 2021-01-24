@@ -223,7 +223,7 @@ if __name__ == '__main__':
     nmf_params = {
         'verbose': 2,
         'method': 'fftconvolve',
-        'mode': 'full',
+        'shift_overlap_border': True,
         'shift_invariant': True,
         'sparsity_H': 0.5,
         'n_iterations': 200,
