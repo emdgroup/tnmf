@@ -223,13 +223,13 @@ if __name__ == '__main__':
     nmf_params = {
         'verbose': 2,
         'method': 'fftconvolve',
-        'shift_overlap_border': True,
+        'reconstruction_mode': 'same', # 'same', 'full', 'valid'
         'shift_invariant': True,
         'sparsity_H': 0.5,
         'n_iterations': 200,
         'refit_H': True,
         'n_components': 16,
-        'atom_size': 8,
+        'atom_size': 9,
         'inhibition_range': None,
         'inhibition_strength': 0.25,
     }
