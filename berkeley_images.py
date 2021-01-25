@@ -96,14 +96,14 @@ def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0, f
     return images, (rows, cols)
 
 
-def compute_nmf(V, nmf_params):
+def compute_nmf(V, nmf_params, progress_callback):
     """Streamlit caching of NMF fitting."""
     nmf_params = nmf_params.copy()
     if nmf_params.pop('shift_invariant'):
         nmf = ShiftInvariantNMF(**nmf_params)
     else:
         nmf = SparseNMF(**nmf_params)
-    nmf.fit(V)
+    nmf.fit(V, progress_callback)
     return nmf
 
 
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     nmf_params = {
         'verbose': 2,
         'method': 'fftconvolve',
-        'reconstruction_mode': 'same', # 'same', 'full', 'valid'
+        'reconstruction_mode': 'full', # 'same', 'full', 'valid'
         'shift_invariant': True,
         'sparsity_H': 0.5,
         'n_iterations': 200,
@@ -238,8 +238,12 @@ if __name__ == '__main__':
 
     # -------------------- model fitting -------------------- #
 
+    def progress_callback(i: int, **energy) -> bool:
+        logging.info(f"Iteration: {i}\tError terms: {energy}")
+        return True
+
     # fit the NMF model
-    nmf = compute_nmf(images, nmf_params)
+    nmf = compute_nmf(images, nmf_params, progress_callback=progress_callback)
 
     # -------------------- visualization -------------------- #
 

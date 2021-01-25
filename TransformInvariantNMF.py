@@ -13,7 +13,7 @@ from itertools import product
 from abc import ABC
 from utils import normalize, shift
 from CachingFFT import CachingFFT
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 # TODO: replace 'matrix' with 'tensor' in docstrings
 # TODO: indicate 'override' in subclasses
@@ -181,7 +181,7 @@ class TransformInvariantNMF(ABC):
 		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
-	def fit(self, V):
+	def fit(self, V, progress_callback: Callable[[int, float, float, float], bool] = None):
 		"""Learns an NMF representation of a given signal matrix."""
 		# initialize all matrices
 		self.initialize(V)
@@ -189,7 +189,18 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			self._logger.info(f"Iteration: {i}\tReconstruction error: {self.reconstruction_error()}")
+			energy = {
+				'reconstruction':  self.reconstruction_error(),
+				'sparsity':  self.sparsity_error(),
+				'inhibition':  self.inhibition_error(),
+				}
+
+			if progress_callback is not None:
+				if not progress_callback(i, **energy):
+					break
+			else:
+				self._logger.info(f"Iteration: {i}\tError terms: {energy}")
+
 			self.update_H()
 			self.update_W()
 
@@ -207,8 +218,16 @@ class TransformInvariantNMF(ABC):
 		self._logger.info("NMF finished.")
 
 	def reconstruction_error(self) -> float:
-		"""Squared error between the input and its reconstruction."""
+		"""L2 norm error between the input and its reconstruction."""
 		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
+
+	def sparsity_error(self) -> float:
+		""" """
+		return 0.
+
+	def inhibition_error(self) -> float:
+		""" """
+		return 0.
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
