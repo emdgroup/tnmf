@@ -194,6 +194,7 @@ class TransformInvariantNMF(ABC):
 				'sparsity':  self.sparsity_error(),
 				'inhibition':  self.inhibition_error(),
 				}
+			energy['total'] = sum(energy.values())
 
 			if progress_callback is not None:
 				if not progress_callback(i, **energy):
@@ -222,12 +223,12 @@ class TransformInvariantNMF(ABC):
 		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
 
 	def sparsity_error(self) -> float:
-		""" """
-		return 0.
+		"""Energy contribution from the sparsity constraint for the activation tensor"""
+		return self.sparsity * self.H.sum()
 
 	def inhibition_error(self) -> float:
-		""" """
-		return 0.
+		"""Energy contribution from the inhibition term"""
+		return self._inhibition_energy
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
@@ -332,6 +333,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		self.inhibition_range = inhibition_range
 		self.inhibition_strength = inhibition_strength
 		self.kernel = 1 - ((np.arange(-inhibition_range, inhibition_range + 1) / inhibition_range) ** 2)
+		self._inhibition_energy = 0.
 
 	@property
 	def n_dim(self) -> Tuple[int]:
@@ -384,8 +386,9 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 			inhibition = self.H.copy()
 			for dim in self.shift_dimensions:
 				inhibition = convolve1d(inhibition, self.kernel, axis=dim, mode='constant', cval=0.0)
-			inhibition = inhibition - self.H
-			denum = denum + self.inhibition_strength * inhibition
+			inhibition = self.inhibition_strength * (inhibition - self.H)
+			denum = denum + inhibition
+			self._inhibition_energy = np.sum(self.H * inhibition)
 
 		return numer, denum
 
