@@ -604,6 +604,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	def _reconstruction_gradient_W(self) -> np.array:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		# TODO: inherit docstring from superclass
+		# TODO: The resulting numer and denum are of size h x c x m, but the fourier space computation creates a d x c x m matrix, which is much larger.
+		#       Maybe, this should be done without Fourier transforms just as a direct convolution to make it even faster??
 		if self._method == 'cachingFFT':
 			numer = self._fft_convolve(self.V_fft, self.H_reversed_fft, **self._cache['params_reconstruction_gradient_W'])
 			denum = self._fft_convolve(self.R_fft, self.H_reversed_fft, **self._cache['params_reconstruction_gradient_W'])
