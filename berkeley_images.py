@@ -6,11 +6,14 @@ import os
 import glob
 import imageio
 import logging
+from collections import defaultdict
 
 import numpy as np
 from scipy import fftpack
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.transforms as transforms
+import matplotlib.patches as mpatches
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 
 matplotlib.use('AGG')
@@ -185,6 +188,41 @@ def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_imag
     return figs
 
 
+def plot_cost_function(cost_function, start_at_iteration=2):
+    # we usually do not plot the 0th and 1st iteration as the values are just huge
+
+    fig = plt.figure(figsize=(12,8))
+    ax = fig.gca()
+
+    it = cost_function.pop('i')
+    first_refit = next((index for index, value in enumerate(it) if value < 0), None)
+
+    xvals = np.arange(start_at_iteration, len(it))
+
+    for key, values in cost_function.items():
+        ax.plot(xvals, values[start_at_iteration:], label=key)
+
+    if first_refit is not None:
+        first_refit = first_refit - 1
+        # the x coords of this transformation are data, and the y coord are axes
+        trans = transforms.blended_transform_factory(ax.transData, ax.transAxes)
+
+        # We want x to be in data coordinates and y to span from 0..1 in axes coords
+        rect = mpatches.Rectangle((first_refit, 0), width=len(it)-first_refit, height=1,
+                                transform=trans, color='grey', alpha=0.5)
+
+        ax.add_patch(rect)
+
+        ax.text((len(it)+first_refit)/2, 0.1, 'refit H', transform=trans,
+            fontsize=16, fontweight='bold', va='top', ha='center')
+
+    ax.set_title('Cost function')
+    ax.legend()
+    ax.set_xlabel('iteration')
+
+    return [fig]
+
+
 def close_figs(figs):
     if isinstance(figs, list):
         for fig in figs:
@@ -222,7 +260,7 @@ if __name__ == '__main__':
 
     nmf_params = {
         'verbose': 2,
-        'method': 'fftconvolve',
+        'method': 'cachingFFT',
         'reconstruction_mode': 'full', # 'same', 'full', 'valid'
         'shift_invariant': True,
         'sparsity_H': 0.5,
@@ -238,14 +276,26 @@ if __name__ == '__main__':
 
     # -------------------- model fitting -------------------- #
 
-    def progress_callback(i: int, **energy) -> bool:
-        logging.info(f"Iteration: {i}\tError terms: {energy}")
+    cost_function = defaultdict(list)
+
+    def progress_callback(nmf: 'TransformInvariantNMF', i: int) -> bool:
+        cost = nmf.cost_function()
+        cost_str = str(cost).replace(', ', '\t')
+        logging.info(f"Iteration: {i}\tCost function: {cost_str}")
+
+        for key, value in cost.items():
+            cost_function[key].append(value)
+
+        cost_function['i'].append(i)
+
         return True
 
     # fit the NMF model
     nmf = compute_nmf(images, nmf_params, progress_callback=progress_callback)
 
     # -------------------- visualization -------------------- #
+
+    st_plot('Cost function', plot_cost_function(cost_function))
 
     color_mode = dataset_params['color_mode']
     st_plot(f'Learned dictionary - {color_mode}', plot_dictionary(nmf.W))
