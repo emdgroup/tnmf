@@ -3,9 +3,11 @@ Author: Mathias Winkel
 """
 
 from berkeley_images import load_images, plot_signal_reconstruction, plot_dictionary, \
-    plot_activations, plot_partial_reconstruction, COLOR_SELECTIONS, close_figs
+    plot_activations, plot_partial_reconstruction, COLOR_SELECTIONS, close_figs, \
+    plot_cost_function
 
 from copy import deepcopy
+from collections import defaultdict
 import logging
 
 import streamlit as st
@@ -17,15 +19,19 @@ from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 COLOR_SELECTIONS_KEYS = list(COLOR_SELECTIONS.keys())
 
 
-def st_define_dataset_params() -> (str, str, int, int):
+def st_define_dataset_params() -> dict:
+
     st.sidebar.markdown('# Image Dataset')
-    d = st.sidebar.text_input('File path', value=r'BSR_bsds500/BSR/BSDS500/data/images/train')
-    f = st.sidebar.text_input('File filter', value='*.jpg')
-    m = st.sidebar.number_input('Max images', min_value=0, value=5)
-    c = st.sidebar.radio('Channel(s)', COLOR_SELECTIONS_KEYS, 0)
 
-    return d, f, m, c
-
+    return dict(
+        path=st.sidebar.text_input('File path', value=r'BSR_bsds500/BSR/BSDS500/data/images/train'),
+        pattern=st.sidebar.text_input('File filter', value='*.jpg'),
+        max_images=st.sidebar.number_input('Max images', min_value=0, value=5),
+        remove_margin=st.sidebar.number_input('Remove margin', min_value=0, value=0),
+        color_mode=st.sidebar.radio('Channel(s)', COLOR_SELECTIONS_KEYS, 0),
+        dtype=np.float64,
+        filter=st.sidebar.checkbox('Low-pass/whitening filter', False),
+    )
 
 def st_define_nmf_params(image_shape: tuple) -> dict:
 
@@ -35,7 +41,8 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
 
     nmf_params = dict(
         verbose=st.sidebar.slider('Verbose', min_value=0, max_value=3, value=2),
-        use_fft=st.sidebar.checkbox('Use FFT', True),
+        method=st.sidebar.radio('Mode', ['cachingFFT', 'fftconvolve', 'contract'], 0),
+        reconstruction_mode=st.sidebar.radio('Reconstruction mode', ['full', 'valid', 'same'], 0),
         shift_invariant=st.sidebar.checkbox('Shift invariant', True),
         sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
         n_iterations=st.sidebar.number_input('# Iterations', min_value=1, value=5),
@@ -55,7 +62,7 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
     if nmf_params['shift_invariant']:
 
         st.sidebar.markdown('### Shift invariance settings')
-        atom_size = st.sidebar.number_input('Atom size', min_value=0, max_value=min(*image_shape), value=5)
+        atom_size = st.sidebar.number_input('Atom size', min_value=0, max_value=min(*image_shape), value=9)
         inhibition = st.sidebar.radio('Inhibition range', ['Auto', 'Manual'], 0)
         if inhibition == 'Auto':
             inhibition_range = None
@@ -72,14 +79,14 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
 
 
 @st.cache
-def compute_nmf(V, nmf_params):
+def compute_nmf(V, nmf_params, progress_callback):
     """Streamlit caching of NMF fitting."""
     nmf_params = nmf_params.copy()
     if nmf_params.pop('shift_invariant'):
         nmf = ShiftInvariantNMF(**nmf_params)
     else:
         nmf = SparseNMF(**nmf_params)
-    nmf.fit(V)
+    nmf.fit(V, progress_callback)
     return nmf
 
 
@@ -100,8 +107,11 @@ if __name__ == '__main__':
     seed = st.sidebar.number_input('Random seed', value=42)
     np.random.seed(seed)
 
-    d, f, max_images, color_mode = st_define_dataset_params()
-    images, image_shape = load_images(d, f, max_images, color_mode)
+    dataset_params = st_define_dataset_params()
+
+    logging.info(f'dataset params: {dataset_params}')
+
+    images, image_shape = load_images(**dataset_params)
 
     nmf_params = st_define_nmf_params(image_shape)
 
@@ -113,10 +123,28 @@ if __name__ == '__main__':
 
     # -------------------- model fitting -------------------- #
 
+    cost_function = defaultdict(list)
+
+    def progress_callback(nmf: 'TransformInvariantNMF', i: int) -> bool:
+        cost = nmf.cost_function()
+        cost_str = str(cost).replace(', ', '\t')
+        logging.info(f"Iteration: {i}\tCost function: {cost_str}")
+
+        for key, value in cost.items():
+            cost_function[key].append(value)
+
+        cost_function['i'].append(i)
+
+        return True
+
     # fit the NMF model
-    nmf = deepcopy(compute_nmf(images, nmf_params))
+    nmf = deepcopy(compute_nmf(images, nmf_params, progress_callback=progress_callback))
 
     # -------------------- visualization -------------------- #
+
+    st_plot('Cost function', plot_cost_function(cost_function))
+
+    color_mode = dataset_params["color_mode"]
 
     st_plot(f'# Learned dictionary: {color_mode}', plot_dictionary(nmf.W))
 
