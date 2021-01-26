@@ -13,7 +13,7 @@ from itertools import product
 from abc import ABC
 from utils import normalize, shift
 from CachingFFT import CachingFFT
-from typing import Optional, Tuple, Callable
+from typing import Optional, Tuple, Callable, Dict
 
 # TODO: replace 'matrix' with 'tensor' in docstrings
 # TODO: indicate 'override' in subclasses
@@ -181,7 +181,7 @@ class TransformInvariantNMF(ABC):
 		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
-	def fit(self, V, progress_callback: Callable[[int, float, float, float], bool] = None):
+	def fit(self, V, progress_callback: Callable[['TransformInvariantNMF', int], bool] = None):
 		"""Learns an NMF representation of a given signal matrix."""
 		# initialize all matrices
 		self.initialize(V)
@@ -189,18 +189,11 @@ class TransformInvariantNMF(ABC):
 		# TODO: define stopping criterion
 		# iterate the multiplicative update rules
 		for i in range(self.n_iterations):
-			energy = {
-				'reconstruction':  self.reconstruction_error(),
-				'sparsity':  self.sparsity_error(),
-				'inhibition':  self.inhibition_error(),
-				}
-			energy['total'] = sum(energy.values())
-
 			if progress_callback is not None:
-				if not progress_callback(i, **energy):
+				if not progress_callback(self, i):
 					break
 			else:
-				self._logger.info(f"Iteration: {i}\tError terms: {energy}")
+				self._logger.info(f"Iteration: {i}\tCost function: {self.cost_function()}")
 
 			self.update_H()
 			self.update_W()
@@ -211,24 +204,35 @@ class TransformInvariantNMF(ABC):
 			self._logger.info("Refitting activations.")
 			for i in range(10):
 				self.update_H(sparsity=False)
-			self._logger.info(f"After refitting: \tReconstruction error: {self.reconstruction_error()}")
+			self._logger.info(f"After refitting: \tCost function: {self.cost_function()}")
 
 		assert self.H.dtype == self.V.dtype
 		assert self.W.dtype == self.V.dtype
 
 		self._logger.info("NMF finished.")
 
-	def reconstruction_error(self) -> float:
+	def cost_term_reconstruction(self) -> float:
 		"""L2 norm error between the input and its reconstruction."""
 		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
 
-	def sparsity_error(self) -> float:
-		"""Energy contribution from the sparsity constraint for the activation tensor"""
+	def cost_term_sparsity(self) -> float:
+		"""Cost function contribution from the sparsity constraint for the activation tensor"""
 		return self.sparsity * self.H.sum()
 
-	def inhibition_error(self) -> float:
-		"""Energy contribution from the inhibition term"""
-		return self._inhibition_energy
+	def cost_term_inhibition(self) -> float:
+		"""Cost function contribution from the inhibition term"""
+		return self._inhibition_cost
+
+	def cost_function(self) -> Dict[str, float]:
+		"""Returns the individual contributions and the total value of the cost function"""
+		cost = {
+			'reconstruction':  self.cost_term_reconstruction(),
+			'sparsity':  self.cost_term_sparsity(),
+			'inhibition':  self.cost_term_inhibition(),
+			}
+		cost['total'] = sum(cost.values())
+		return cost
+
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
@@ -333,7 +337,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		self.inhibition_range = inhibition_range
 		self.inhibition_strength = inhibition_strength
 		self.kernel = 1 - ((np.arange(-inhibition_range, inhibition_range + 1) / inhibition_range) ** 2)
-		self._inhibition_energy = 0.
+		self._inhibition_cost = 0.
 
 	@property
 	def n_dim(self) -> Tuple[int]:
@@ -388,7 +392,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 				inhibition = convolve1d(inhibition, self.kernel, axis=dim, mode='constant', cval=0.0)
 			inhibition = self.inhibition_strength * (inhibition - self.H)
 			denum = denum + inhibition
-			self._inhibition_energy = np.sum(self.H * inhibition)
+			self._inhibition_cost = np.sum(self.H * inhibition)
 
 		return numer, denum
 
