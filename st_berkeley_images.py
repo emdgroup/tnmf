@@ -55,6 +55,7 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
 
     nmf_params.update(dict(
         n_components=n_components,
+        atom_size=st.sidebar.number_input('Atom size', min_value=0, max_value=min(*image_shape), value=9),
     ))
 
     # -------------------- settings for shift invariance -------------------- #
@@ -62,7 +63,6 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
     if nmf_params['shift_invariant']:
 
         st.sidebar.markdown('### Shift invariance settings')
-        atom_size = st.sidebar.number_input('Atom size', min_value=0, max_value=min(*image_shape), value=9)
         inhibition = st.sidebar.radio('Inhibition range', ['Auto', 'Manual'], 0)
         if inhibition == 'Auto':
             inhibition_range = None
@@ -70,7 +70,6 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
             inhibition_range = st.sidebar.number_input('Inhibition range', min_value=0, value=atom_size)
 
         nmf_params.update(dict(
-            atom_size=atom_size,
             inhibition_range=inhibition_range,
             inhibition_strength=st.sidebar.number_input('Inhibition strength', min_value=0.0, value=0.1)
         ))
@@ -79,15 +78,31 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
 
 
 @st.cache
-def compute_nmf(V, nmf_params, progress_callback):
+def compute_nmf(V, nmf_params):
     """Streamlit caching of NMF fitting."""
+
+    cost_function = defaultdict(list)
+
+    def progress_callback(nmf: 'TransformInvariantNMF', i: int) -> bool:
+        cost = nmf.cost_function()
+        cost_str = str(cost).replace(', ', '\t')
+        logging.info(f"Iteration: {i}\tCost function: {cost_str}")
+
+        for key, value in cost.items():
+            cost_function[key].append(value)
+
+        cost_function['i'].append(i)
+
+        return True
+
     nmf_params = nmf_params.copy()
     if nmf_params.pop('shift_invariant'):
         nmf = ShiftInvariantNMF(**nmf_params)
     else:
         nmf = SparseNMF(**nmf_params)
     nmf.fit(V, progress_callback)
-    return nmf
+
+    return nmf, cost_function
 
 
 def st_plot(title, figs):
@@ -123,22 +138,8 @@ if __name__ == '__main__':
 
     # -------------------- model fitting -------------------- #
 
-    cost_function = defaultdict(list)
-
-    def progress_callback(nmf: 'TransformInvariantNMF', i: int) -> bool:
-        cost = nmf.cost_function()
-        cost_str = str(cost).replace(', ', '\t')
-        logging.info(f"Iteration: {i}\tCost function: {cost_str}")
-
-        for key, value in cost.items():
-            cost_function[key].append(value)
-
-        cost_function['i'].append(i)
-
-        return True
-
     # fit the NMF model
-    nmf = deepcopy(compute_nmf(images, nmf_params, progress_callback=progress_callback))
+    nmf, cost_function = deepcopy(compute_nmf(images, nmf_params))
 
     # -------------------- visualization -------------------- #
 

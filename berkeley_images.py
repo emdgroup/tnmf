@@ -194,13 +194,14 @@ def plot_cost_function(cost_function, start_at_iteration=2):
     fig = plt.figure(figsize=(12,8))
     ax = fig.gca()
 
-    it = cost_function.pop('i')
+    it = cost_function['i']
     first_refit = next((index for index, value in enumerate(it) if value < 0), None)
 
     xvals = np.arange(start_at_iteration, len(it))
 
     for key, values in cost_function.items():
-        ax.plot(xvals, values[start_at_iteration:], label=key)
+        if key != 'i':
+            ax.plot(xvals, values[start_at_iteration:], label=key)
 
     if first_refit is not None:
         first_refit = first_refit - 1
