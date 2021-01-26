@@ -205,10 +205,10 @@ class TransformInvariantNMF(ABC):
 			for i in range(10):
 				self.update_H(sparsity=False)
 
-			if progress_callback is not None:
-				progress_callback(self, -1)
-			else:
-				self._logger.info(f"After refitting: \tCost function: {self.cost_function()}")
+				if progress_callback is not None:
+					progress_callback(self, -i)  # negative iteration numbers indicate refitting
+				else:
+					self._logger.info(f"Refit iteration: {i}\tCost function: {self.cost_function()}")
 
 		assert self.H.dtype == self.V.dtype
 		assert self.W.dtype == self.V.dtype
