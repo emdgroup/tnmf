@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
     # -------------------- visualization -------------------- #
 
-    st_plot('Cost function', plot_cost_function(cost_function))
+    st_plot('# Cost function', plot_cost_function(cost_function))
 
     color_mode = dataset_params["color_mode"]
 
