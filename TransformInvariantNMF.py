@@ -217,7 +217,8 @@ class TransformInvariantNMF(ABC):
 
 	def cost_term_reconstruction(self) -> float:
 		"""L2 norm error between the input and its reconstruction."""
-		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
+		difference = (self.V - self.R).ravel()
+		return 0.5 * np.dot(difference, difference)
 
 	def cost_term_sparsity(self) -> float:
 		"""Cost function contribution from the sparsity constraint for the activation tensor"""
