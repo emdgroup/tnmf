@@ -146,7 +146,7 @@ def plot_activations(H, nmf_params, signal_number, samples_per_image):
     figs = []
     for atom in range(H.shape[-2]):
         fig, axes = plt.subplots(nrows=1, ncols=samples_per_image, squeeze=False, figsize=(samples_per_image*10, 5),
-                                 subplot_kw=dict(xticks=[], yticks=[], frame_on=False))
+                                 subplot_kw=dict(xticks=[], yticks=[], frame_on=True))
 
         for channel, ax in zip(range(samples_per_image), axes.flatten()):
             if nmf_params['shift_invariant']:
@@ -155,6 +155,9 @@ def plot_activations(H, nmf_params, signal_number, samples_per_image):
             else:
                 im = ax.imshow(H[0], aspect='equal')
             ax.set_title(f'atom {atom}, channel {channel}')
+            ax.patch.set_edgecolor('yellow')
+            ax.patch.set_linewidth('1')
+            ax.grid(False)
             plt.colorbar(im, ax=ax)
 
         plt.tight_layout()
@@ -169,7 +172,8 @@ def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_imag
 
     figs = []
     for atom in range(nmf.n_components):
-        fig, axes = plt.subplots(nrows=1, ncols=samples_per_image, squeeze=False, figsize=(samples_per_image*10, 5))
+        fig, axes = plt.subplots(nrows=1, ncols=samples_per_image, squeeze=False, figsize=(samples_per_image*10, 5),
+                                 subplot_kw=dict(xticks=[], yticks=[], frame_on=True))
 
         for channel, ax in zip(range(samples_per_image), axes.flatten()):
             if nmf_params['shift_invariant']:
@@ -178,9 +182,9 @@ def plot_partial_reconstruction(nmf, nmf_params, signal_number, samples_per_imag
             else:
                 raise NotImplementedError
             ax.set_title(f'atom {atom}, channel {channel}')
+            ax.patch.set_edgecolor('yellow')
+            ax.patch.set_linewidth('1')
             ax.grid(False)
-            ax.set_xticks([])
-            ax.set_yticks([])
             plt.colorbar(im, ax=ax)
 
         figs.append(fig)
