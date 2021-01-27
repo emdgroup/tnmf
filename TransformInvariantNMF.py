@@ -9,6 +9,7 @@ from numpy.lib.stride_tricks import as_strided
 import logging
 from scipy.fft import rfftn, irfftn, next_fast_len
 from scipy.ndimage import convolve1d
+from scipy.signal import convolve
 from opt_einsum import contract
 from itertools import product
 from abc import ABC
@@ -58,7 +59,8 @@ class TransformInvariantNMF(ABC):
 		self.atom_size = atom_size
 		self.n_components = n_components
 		self.n_iterations = n_iterations
-		self.sparsity = sparsity_H
+		self.sparsity_H = sparsity_H  # global activation sparsity regularisation parameter
+		self.sparsity = sparsity_H  # sparsity array to be added (broadcasted) in the multiplicative update
 		self.refit_H = refit_H
 
 		# signal, reconstruction, factorization, and transformation matrices
@@ -283,7 +285,11 @@ class SparseNMF(TransformInvariantNMF):
 class BaseShiftInvariantNMF(TransformInvariantNMF):
 	"""Base class for shift-invariant non-negative matrix factorization."""
 
-	def __init__(self, inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs):
+	def __init__(self,
+				 inhibition_range: Optional[int] = None,
+				 inhibition_strength: float = 0.1,
+				 weighted_sparsity_H: bool = False,
+				 **kwargs):
 		"""
 		Parameters
 		----------
@@ -302,6 +308,9 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		self.inhibition_range = inhibition_range
 		self.inhibition_strength = inhibition_strength
 		self.kernel = 1 - ((np.arange(-inhibition_range, inhibition_range + 1) / inhibition_range) ** 2)
+
+		# boolean flag indicating if the activation sparsity regularization shall be weighted depending on the position
+		self.weighted_sparsity_H = weighted_sparsity_H
 
 	@property
 	def n_dim(self) -> Tuple[int]:
@@ -325,10 +334,14 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		return tuple(range(self.n_shift_dimensions))
 
 	def initialize(self, V):
+		# TODO: add docstring and comments
 		assert np.isreal(V).all()
 		super().initialize(V)
 		self._normalization_dims = self.shift_dimensions
 		self._init_cache()
+		if self.weighted_sparsity_H:
+			sparsity_H_weights = convolve(np.ones((self.atom_size,) * self.n_shift_dimensions), np.ones(self.n_dim)) / (self.atom_size ** self.n_shift_dimensions)
+			self.sparsity = self.sparsity_H * sparsity_H_weights[:, :, None, None]
 
 	def _init_cache(self):
 		"""Caches several fitting related variables."""
