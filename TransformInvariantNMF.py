@@ -206,7 +206,7 @@ class TransformInvariantNMF(ABC):
 				self.update_H(sparsity=False)
 
 				if progress_callback is not None:
-					progress_callback(self, -i)  # negative iteration numbers indicate refitting
+					progress_callback(self, -i-1)  # negative iteration numbers indicate refitting
 				else:
 					self._logger.info(f"Refit iteration: {i}\tCost function: {self.cost_function()}")
 

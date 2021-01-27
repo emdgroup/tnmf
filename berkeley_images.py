@@ -204,12 +204,11 @@ def plot_cost_function(cost_function, start_at_iteration=2):
             ax.plot(xvals, values[start_at_iteration:], label=key)
 
     if first_refit is not None:
-        first_refit = first_refit - 1
         # the x coords of this transformation are data, and the y coord are axes
         trans = transforms.blended_transform_factory(ax.transData, ax.transAxes)
 
         # We want x to be in data coordinates and y to span from 0..1 in axes coords
-        rect = mpatches.Rectangle((first_refit, 0), width=len(it)-first_refit, height=1,
+        rect = mpatches.Rectangle((first_refit, 0), width=len(it)-first_refit-1, height=1,
                                 transform=trans, color='grey', alpha=0.5)
 
         ax.add_patch(rect)
