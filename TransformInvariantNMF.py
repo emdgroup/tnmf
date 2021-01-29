@@ -5,9 +5,8 @@ Author: Adrian Sosic
 import logging
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
-from scipy.fft import next_fast_len
+from scipy.fft import next_fast_len, rfftn, irfftn
 from scipy.ndimage import convolve1d
-from scipy.signal import fftconvolve
 from opt_einsum import contract, contract_expression
 from itertools import product
 from abc import ABC
@@ -18,6 +17,76 @@ from typing import Optional, Tuple, Callable, Dict
 # TODO: replace 'matrix' with 'tensor' in docstrings
 # TODO: indicate 'override' in subclasses
 # TODO: refactor fft code parts into functions
+
+
+def _centered(arr, newshape):
+	# Return the center newshape portion of the array.
+	newshape = np.asarray(newshape)
+	currshape = np.array(arr.shape)
+	startind = (currshape - newshape) // 2
+	endind = startind + newshape
+	myslice = [slice(startind[k], endind[k]) for k in range(len(endind))]
+	return arr[tuple(myslice)]
+
+
+def _inputs_swap_needed(mode, shape1, shape2, axes=None):
+	if mode != 'valid':
+		return False
+	if not shape1:
+		return False
+	if axes is None:
+		axes = range(len(shape1))
+	ok1 = all(shape1[i] >= shape2[i] for i in axes)
+	ok2 = all(shape2[i] >= shape1[i] for i in axes)
+
+	if not (ok1 or ok2):
+		raise ValueError("For 'valid' mode, one must be at least as large as the other in every dimension")
+
+	return not ok1
+
+
+def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=dict(mode='constant', constant_values=0), padding2=dict(mode='constant', constant_values=0)):
+
+	assert in1.ndim == in2.ndim
+	if axes is None:
+		axes = range(in1.ndim)
+
+	s1 = in1.shape
+	s2 = in2.shape
+	axes = [a for a in axes if s1[a] != 1 and s2[a] != 1]
+
+	if mode == 'valid':
+		if not all(s1[i] >= s2[i] for i in axes):
+			in1, in2, s1, s2, padding1, padding2 = in2, in1, s2, s1, padding2, padding1
+
+	shape = [max((s1[i], s2[i])) if i not in axes else s1[i] + s2[i] - 1 for i in range(in1.ndim)]
+	fshape = [next_fast_len(shape[a], True) for a in axes]
+
+	pad_width_1 = [((0, fshape[a] - in1.shape[a]) if a in axes else (0, 0)) for a in range(in1.ndim)]
+	pad_width_2 = [((0, fshape[a] - in2.shape[a]) if a in axes else (0, 0)) for a in range(in2.ndim)]
+
+	in1_padded = np.pad(in1, pad_width_1, **padding1)
+	in2_padded = np.pad(in2, pad_width_2, **padding2)
+
+	sp1 = rfftn(in1_padded, fshape, axes=axes)
+	sp2 = rfftn(in2_padded, fshape, axes=axes)
+	ret = irfftn(sp1 * sp2, fshape, axes=axes)
+
+	fslice = tuple([slice(sz) for sz in shape])
+	ret = ret[fslice]
+
+	if mode == "full":
+		ret = ret.copy()
+	elif mode == "same":
+		ret = _centered(ret, s1).copy()
+	elif mode == "valid":
+		shape_valid = [ret.shape[a] if a not in axes else s1[a] - s2[a] + 1 for a in range(ret.ndim)]
+		ret = _centered(ret, shape_valid).copy()
+	else:
+		raise ValueError("acceptable mode flags are 'valid', 'same', or 'full'")
+
+	# TODO: the sum could as well be performed in Fourier space, which saves us a number of back/transformations
+	return np.sum(ret, axis=sum_axis)
 
 
 class TransformInvariantNMF(ABC):
@@ -563,7 +632,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		elif self._method == 'fftconvolve':
-			R = np.sum(fftconvolve(self.H[...,np.newaxis,:,:], self.W[...,:,np.newaxis], mode=self._mode_R, axes=self.shift_dimensions), axis=-2)
+			R = fftconvolve_sum(self.H[...,np.newaxis,:,:], self.W[...,:,np.newaxis], mode=self._mode_R, axes=self.shift_dimensions, sum_axis=-2)
 		else:
 			R = None
 		return R
@@ -599,8 +668,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		elif self._method == 'fftconvolve':
 			reverse = (slice(None, None, -1),) * self.n_shift_dimensions
 			W_reversed = self.W[reverse]
-			numer = np.sum(fftconvolve(self.V[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode_H, axes=self.shift_dimensions), axis=-3)
-			denum = np.sum(fftconvolve(self.R[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode_H, axes=self.shift_dimensions), axis=-3)
+			numer = fftconvolve_sum(self.V[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode_H, axes=self.shift_dimensions, sum_axis=-3)
+			denum = fftconvolve_sum(self.R[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode_H, axes=self.shift_dimensions, sum_axis=-3)
 		else:
 			assert False
 			numer, denum = None, None
@@ -621,8 +690,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		elif self._method == 'fftconvolve':
 			reverse = (slice(None, None, -1),) * self.n_shift_dimensions
 			H_reversed = self.H[reverse]
-			numer = np.sum(fftconvolve(self.V[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions), axis=-1)
-			denum = np.sum(fftconvolve(self.R[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions), axis=-1)
+			numer = fftconvolve_sum(self.V[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions, sum_axis=-1)
+			denum = fftconvolve_sum(self.R[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions, sum_axis=-1)
 		else:
 			assert False
 			numer, denum = None, None
