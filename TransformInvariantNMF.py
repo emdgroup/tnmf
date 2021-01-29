@@ -507,11 +507,12 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	"""Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
 	implicitly via correlation/convolution."""
 
-	def __init__(self, method='cachingFFT', **kwargs):
+	def __init__(self, method='cachingFFT', input_padding=dict(mode='constant', constant_values=0), **kwargs):
 		super().__init__(**kwargs)
 		assert method in ('cachingFFT', 'contract', 'fftconvolve')
 		assert self._mode_R == 'valid' or method == 'fftconvolve'  # only fftconvolve support the different modes properly
 		self._method = method
+		self._input_padding = input_padding
 		self._logger.debug(f'Using method {self._method}.')
 		self._cache = {}
 
@@ -633,7 +634,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		elif self._method == 'fftconvolve':
-			R = fftconvolve_sum(self.H[...,np.newaxis,:,:], self.W[...,:,np.newaxis], mode=self._mode_R, axes=self.shift_dimensions, sum_axis=-2)
+			R = fftconvolve_sum(self.H[...,np.newaxis,:,:], self.W[...,:,np.newaxis], padding1=self._input_padding, mode=self._mode_R, axes=self.shift_dimensions, sum_axis=-2)
 		else:
 			R = None
 		return R
@@ -647,7 +648,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			H_strided = as_strided(self.H[..., atom:atom+1, sample:sample+1], self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W[..., channel:channel+1, atom:atom+1], self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		elif self._method == 'fftconvolve':
-			R = fftconvolve(self.H[..., atom:atom+1, sample:sample+1], self.W[..., channel:channel+1, atom:atom+1], mode=self._mode_R, axes=self.shift_dimensions)
+			R = fftconvolve_sum(self.H[..., atom:atom+1, sample:sample+1], self.W[..., channel:channel+1, atom:atom+1], padding1=self._input_padding, mode=self._mode_R, axes=self.shift_dimensions)
 		else:
 			assert False
 			R = None
@@ -669,8 +670,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		elif self._method == 'fftconvolve':
 			reverse = (slice(None, None, -1),) * self.n_shift_dimensions
 			W_reversed = self.W[reverse]
-			numer = fftconvolve_sum(self.V[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode_H, axes=self.shift_dimensions, sum_axis=-3)
-			denum = fftconvolve_sum(self.R[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], mode=self._mode_H, axes=self.shift_dimensions, sum_axis=-3)
+			numer = fftconvolve_sum(self.V[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], padding1=self._input_padding, mode=self._mode_H, axes=self.shift_dimensions, sum_axis=-3)
+			denum = fftconvolve_sum(self.R[...,:,np.newaxis,:], W_reversed[...,:,:,np.newaxis], padding1=self._input_padding, mode=self._mode_H, axes=self.shift_dimensions, sum_axis=-3)
 		else:
 			assert False
 			numer, denum = None, None
@@ -691,8 +692,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		elif self._method == 'fftconvolve':
 			reverse = (slice(None, None, -1),) * self.n_shift_dimensions
 			H_reversed = self.H[reverse]
-			numer = fftconvolve_sum(self.V[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions, sum_axis=-1)
-			denum = fftconvolve_sum(self.R[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], mode='valid', axes=self.shift_dimensions, sum_axis=-1)
+			numer = fftconvolve_sum(self.V[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], padding1=self._input_padding, padding2=self._input_padding, mode='valid', axes=self.shift_dimensions, sum_axis=-1)
+			denum = fftconvolve_sum(self.R[:,:,:,np.newaxis,:], H_reversed[:,:,np.newaxis,:,:], padding1=self._input_padding, padding2=self._input_padding, mode='valid', axes=self.shift_dimensions, sum_axis=-1)
 		else:
 			assert False
 			numer, denum = None, None
