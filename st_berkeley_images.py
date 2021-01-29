@@ -15,7 +15,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 
-
 COLOR_SELECTIONS_KEYS = list(COLOR_SELECTIONS.keys())
 
 
@@ -42,12 +41,42 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
     nmf_params = dict(
         verbose=st.sidebar.slider('Verbose', min_value=0, max_value=3, value=2),
         method=st.sidebar.radio('Mode', ['cachingFFT', 'fftconvolve', 'contract'], 0),
-        reconstruction_mode=st.sidebar.radio('Reconstruction mode', ['full', 'valid', 'same'], 0),
+    )
+
+    PADDING_OPTIONS = {
+        'pad zeros': dict(mode='constant', constant_values=0),
+        'wrap':  dict(mode='wrap'),
+        'edge': dict(mode='edge'),
+        'reflect odd': dict(mode='reflect', reflect_type='odd'),
+        'reflect even': dict(mode='reflect', reflect_type='even'),
+        'symmetric': dict(mode='symmetric'),
+        'mean': dict(mode='mean'),
+        'median': dict(mode='median'),
+    }
+
+    RECONSTRUCTION_MODES = {
+        'valid (H larger than V)': 'valid',
+        'same (H same size as V)': 'same',
+        'full (H smaller than V)': 'full',
+    }
+
+    if nmf_params['method'] == 'fftconvolve':
+        nmf_params.update(dict(
+            reconstruction_mode=RECONSTRUCTION_MODES[st.sidebar.radio('Reconstruction mode', list(RECONSTRUCTION_MODES.keys()), 0)],
+            input_padding=PADDING_OPTIONS[st.sidebar.radio('Sample padding', list(PADDING_OPTIONS.keys()), 0)]
+        ))
+    else:
+        nmf_params.update(dict(
+            reconstruction_mode='valid',
+            input_padding=PADDING_OPTIONS['pad zeros']
+        ))
+
+    nmf_params.update(dict(
         shift_invariant=st.sidebar.checkbox('Shift invariant', True),
         sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.1),
         n_iterations=st.sidebar.number_input('# Iterations', min_value=1, value=5),
-        refit_H=st.sidebar.checkbox('Refit activations without sparsity', True)
-    )
+        refit_H=st.sidebar.checkbox('Refit activations without sparsity', True),
+    ))
 
     # -------------------- dictionary size  -------------------- #
 
