@@ -86,7 +86,7 @@ def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=di
 		raise ValueError("acceptable mode flags are 'valid', 'same', or 'full'")
 
 	# TODO: the sum could as well be performed in Fourier space, which saves us a number of back/transformations
-	return np.sum(ret, axis=sum_axis)
+	return np.sum(ret, axis=sum_axis) if sum_axis is not None else ret
 
 
 class TransformInvariantNMF(ABC):
