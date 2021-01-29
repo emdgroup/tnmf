@@ -8,6 +8,7 @@ from berkeley_images import load_images, plot_signal_reconstruction, plot_dictio
 
 from copy import deepcopy
 from collections import defaultdict
+from functools import partial
 import logging
 
 import streamlit as st
@@ -106,13 +107,14 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
     return nmf_params
 
 
-@st.cache
+@st.cache(suppress_st_warning=True)
 def compute_nmf(V, nmf_params):
     """Streamlit caching of NMF fitting."""
 
     cost_function = defaultdict(list)
 
-    def progress_callback(nmf: 'TransformInvariantNMF', i: int) -> bool:
+    def progress_callback(nmf: 'TransformInvariantNMF', i: int, progress_bar) -> bool:
+        progress_bar.progress((i+1) / nmf.n_iterations)
         cost = nmf.cost_function()
         cost_str = str(cost).replace(', ', '\t')
         logging.info(f"Iteration: {i}\tCost function: {cost_str}")
@@ -125,11 +127,15 @@ def compute_nmf(V, nmf_params):
         return True
 
     nmf_params = nmf_params.copy()
+
     if nmf_params.pop('shift_invariant'):
         nmf = ShiftInvariantNMF(**nmf_params)
     else:
         nmf = SparseNMF(**nmf_params)
-    nmf.fit(V, progress_callback)
+
+    progress_bar = st.progress(0)
+    nmf.fit(V, partial(progress_callback, progress_bar=progress_bar))
+    progress_bar.empty()
 
     return nmf, cost_function
 
