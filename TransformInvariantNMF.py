@@ -510,6 +510,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	def __init__(self, method='cachingFFT', **kwargs):
 		super().__init__(**kwargs)
 		assert method in ('cachingFFT', 'contract', 'fftconvolve')
+		assert self._mode_R == 'valid' or method == 'fftconvolve'  # only fftconvolve support the different modes properly
 		self._method = method
 		self._logger.debug(f'Using method {self._method}.')
 		self._cache = {}
