@@ -49,7 +49,7 @@ def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=di
 
 	assert in1.ndim == in2.ndim
 	if axes is None:
-		axes = range(in1.ndim)
+		axes = [range(in1.ndim)]
 
 	s1 = in1.shape
 	s2 = in2.shape
@@ -70,10 +70,20 @@ def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=di
 
 	sp1 = rfftn(in1_padded, fshape, axes=axes)
 	sp2 = rfftn(in2_padded, fshape, axes=axes)
-	ret = irfftn(sp1 * sp2, fshape, axes=axes)
+	sp1sp2 = sp1 * sp2
 
-	fslice = tuple([slice(sz) for sz in shape])
-	ret = ret[fslice]
+	fslice = [slice(sz) for sz in shape]
+
+	if sum_axis is not None:
+		if sum_axis < 0:
+			sum_axis = sp1sp2.ndim + sum_axis
+		assert sum_axis not in axes
+		axes = [(a if a < sum_axis else a - 1) for a in axes]
+		sp1sp2 = np.sum(sp1sp2, axis=sum_axis)
+		del fslice[sum_axis]
+
+	ret = irfftn(sp1sp2, fshape, axes=axes)
+	ret = ret[tuple(fslice)]
 
 	if mode == "full":
 		ret = ret.copy()
@@ -85,8 +95,7 @@ def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=di
 	else:
 		raise ValueError("acceptable mode flags are 'valid', 'same', or 'full'")
 
-	# TODO: the sum could as well be performed in Fourier space, which saves us a number of back/transformations
-	return np.sum(ret, axis=sum_axis) if sum_axis is not None else ret
+	return ret
 
 
 class TransformInvariantNMF(ABC):
