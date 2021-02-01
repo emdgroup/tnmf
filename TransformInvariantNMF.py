@@ -19,33 +19,16 @@ from typing import Optional, Tuple, Callable, Dict
 # TODO: refactor fft code parts into functions
 
 
-def _centered(arr, newshape):
-	# Return the center newshape portion of the array.
-	newshape = np.asarray(newshape)
-	currshape = np.array(arr.shape)
-	startind = (currshape - newshape) // 2
-	endind = startind + newshape
-	myslice = [slice(startind[k], endind[k]) for k in range(len(endind))]
-	return arr[tuple(myslice)]
-
-
-def _inputs_swap_needed(mode, shape1, shape2, axes=None):
-	if mode != 'valid':
-		return False
-	if not shape1:
-		return False
-	if axes is None:
-		axes = range(len(shape1))
-	ok1 = all(shape1[i] >= shape2[i] for i in axes)
-	ok2 = all(shape2[i] >= shape1[i] for i in axes)
-
-	if not (ok1 or ok2):
-		raise ValueError("For 'valid' mode, one must be at least as large as the other in every dimension")
-
-	return not ok1
-
-
 def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=dict(mode='constant', constant_values=0), padding2=dict(mode='constant', constant_values=0)):
+
+	def _centered(arr, newshape):
+		# Return the center newshape portion of the array.
+		newshape = np.asarray(newshape)
+		currshape = np.array(arr.shape)
+		startind = (currshape - newshape) // 2
+		endind = startind + newshape
+		myslice = [slice(startind[k], endind[k]) for k in range(len(endind))]
+		return arr[tuple(myslice)]
 
 	assert in1.ndim == in2.ndim
 	if axes is None:
