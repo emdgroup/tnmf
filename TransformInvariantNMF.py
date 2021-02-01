@@ -300,14 +300,14 @@ class TransformInvariantNMF(ABC):
 		return cost
 
 
-	def _reconstruction_gradient_H(self) -> (np.array, np.array):
+	def _reconstruction_gradient_H(self) -> Tuple[np.array, np.array]:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
 		TW = contract('tdh,hcm->tdcm', self._T, self.W, optimize='optimal')
 		numer = contract('tdcm,dcn->tmn', TW, self.V, optimize='optimal')
 		denum = contract('tdcm,dcn->tmn', TW, self.R, optimize='optimal')
 		return numer, denum
 
-	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
+	def _gradient_H(self, sparsity: bool = True) -> Tuple[np.array, np.array]:
 		"""
 		Computes the positive and the negative parts of the energy gradient w.r.t. the activation tensor.
 
@@ -345,7 +345,7 @@ class TransformInvariantNMF(ABC):
 		# update the activation tensor
 		self.H = self.H * (numer / (denum + self.eps))
 
-	def _reconstruction_gradient_W(self) -> (np.array, np.array):
+	def _reconstruction_gradient_W(self) -> Tuple[np.array, np.array]:
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the dictionary matrix."""
 		numer = contract('tdh,dcn,tmn->hcm', self._T, self.V, self.H, optimize='optimal')
 		denum = contract('tdh,dcn,tmn->hcm', self._T, self.R, self.H, optimize='optimal')
@@ -444,7 +444,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
-	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
+	def _gradient_H(self, sparsity: bool = True) -> Tuple[np.array, np.array]:
 		"""Computes the positive and the negative parts of the energy gradient w.r.t. the activation tensor."""
 		# TODO: inherit docstring from superclass
 
