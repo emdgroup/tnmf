@@ -30,6 +30,11 @@ def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=di
 		myslice = [slice(startind[k], endind[k]) for k in range(len(endind))]
 		return arr[tuple(myslice)]
 
+	def _rfftn_padded(field, padding, fshape, axes):
+		pad_width = [((0, fshape[a] - field.shape[a]) if a in axes else (0, 0)) for a in range(field.ndim)]
+		field_padded = np.pad(field, pad_width, **padding)
+		return rfftn(field_padded, fshape, axes=axes)
+
 	assert in1.ndim == in2.ndim
 	if axes is None:
 		axes = [range(in1.ndim)]
@@ -45,14 +50,8 @@ def fftconvolve_sum(in1, in2, mode="full", axes=None, sum_axis=None, padding1=di
 	shape = [max((s1[i], s2[i])) if i not in axes else s1[i] + s2[i] - 1 for i in range(in1.ndim)]
 	fshape = [next_fast_len(shape[a], True) for a in axes]
 
-	pad_width_1 = [((0, fshape[a] - in1.shape[a]) if a in axes else (0, 0)) for a in range(in1.ndim)]
-	pad_width_2 = [((0, fshape[a] - in2.shape[a]) if a in axes else (0, 0)) for a in range(in2.ndim)]
-
-	in1_padded = np.pad(in1, pad_width_1, **padding1)
-	in2_padded = np.pad(in2, pad_width_2, **padding2)
-
-	sp1 = rfftn(in1_padded, fshape, axes=axes)
-	sp2 = rfftn(in2_padded, fshape, axes=axes)
+	sp1 = _rfftn_padded(in1, padding1, fshape, axes)
+	sp2 = _rfftn_padded(in2, padding2, fshape, axes)
 	sp1sp2 = sp1 * sp2
 
 	fslice = [slice(sz) for sz in shape]
