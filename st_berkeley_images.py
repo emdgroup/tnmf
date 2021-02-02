@@ -27,13 +27,14 @@ def st_define_dataset_params() -> dict:
         path=st.sidebar.text_input('File path', value=r'BSR_bsds500/BSR/BSDS500/data/images/train'),
         pattern=st.sidebar.text_input('File filter', value='*.jpg'),
         max_images=st.sidebar.number_input('Max images', min_value=0, value=5),
+        batch_size=0,
         remove_margin=st.sidebar.number_input('Remove margin', min_value=0, value=0),
         color_mode=st.sidebar.radio('Channel(s)', COLOR_SELECTIONS_KEYS, 0),
         dtype=np.float64,
         filter=st.sidebar.checkbox('Low-pass/whitening filter', False),
     )
 
-def st_define_nmf_params(image_shape: tuple) -> dict:
+def st_define_nmf_params() -> dict:
 
     st.sidebar.markdown('# NMF settings')
 
@@ -85,7 +86,7 @@ def st_define_nmf_params(image_shape: tuple) -> dict:
 
     nmf_params.update(dict(
         n_components=n_components,
-        atom_size=st.sidebar.number_input('Atom size', min_value=0, max_value=min(*image_shape), value=9),
+        atom_size=st.sidebar.number_input('Atom size', min_value=0, value=9),
     ))
 
     # -------------------- settings for shift invariance -------------------- #
@@ -114,7 +115,7 @@ def compute_nmf(V, nmf_params):
     cost_function = defaultdict(list)
 
     def progress_callback(nmf: 'TransformInvariantNMF', i: int, progress_bar) -> bool:
-        progress_bar.progress((i+1) / nmf.n_iterations)
+        progress_bar.progress(i / nmf.n_iterations)
         cost = nmf.cost_function()
         cost_str = str(cost).replace(', ', '\t')
         logging.info(f"Iteration: {i}\tCost function: {cost_str}")
@@ -161,9 +162,7 @@ if __name__ == '__main__':
 
     logging.info(f'dataset params: {dataset_params}')
 
-    images, image_shape = load_images(**dataset_params)
-
-    nmf_params = st_define_nmf_params(image_shape)
+    nmf_params = st_define_nmf_params()
 
     logging.info(f'NMF params: {nmf_params}')
 
@@ -172,6 +171,8 @@ if __name__ == '__main__':
         st.stop()
 
     # -------------------- model fitting -------------------- #
+
+    images = list(load_images(**dataset_params))[0]
 
     # fit the NMF model
     nmf, cost_function = deepcopy(compute_nmf(images, nmf_params))

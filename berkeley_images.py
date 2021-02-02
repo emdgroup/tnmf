@@ -95,7 +95,7 @@ def load_images(path: str, pattern: str, max_images: int = 0, batch_size=0, remo
         assert images.shape[3] in (batch_size, 3*batch_size) or batch_size == 0
         assert images.dtype == dtype
 
-        return images, (rows, cols)
+        return images
 
     count = 0
     batch_count = 0
@@ -326,7 +326,7 @@ if __name__ == '__main__':
     else:
         nmf = SparseNMF(**params)
 
-    for ibatch, (images, _) in enumerate(load_images(**dataset_params)):
+    for ibatch, images in enumerate(load_images(**dataset_params)):
         logging.info(f'Processing batch {ibatch}...')
         nmf.partial_fit(images, progress_callback=progress_callback)
 
