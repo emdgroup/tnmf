@@ -58,21 +58,11 @@ def filter_channel(ch):
     return np.clip(fftpack.ifft2(spectrum), 0., 1.)
 
 
-def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0, filter=False,
+def load_images(path: str, pattern: str, max_images: int = 0, batch_size=0, remove_margin=0, filter=False,
                 color_mode: str = 'grey', dtype=np.float32) -> Tuple[np.ndarray, tuple]:
-    images = []
-    rows, cols = 10000, 10000
-
     logging.info(f'Loading files from "{path}" with pattern "{pattern}" in color mode "{color_mode}"')
 
-    count = 0
-    for count, filename in enumerate(glob.glob(os.path.join(os.getcwd(), path, pattern))):
-        # limit number of images
-        if 0 < max_images <= count:
-            break
-
-        logging.info(filename)
-
+    def add_image(images, filename):
         img = (imageio.imread(filename)[:, :, :3] / 255.).astype(dtype)
         channels = COLOR_SELECTIONS[color_mode](img)
 
@@ -81,36 +71,57 @@ def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0, f
 
         for channel in channels:
             ch = channel[remove_margin:-remove_margin-1, remove_margin:-remove_margin-1, :]
-            rows, cols = min(rows, ch.shape[0]), min(cols, ch.shape[1])
             images.append(filter_channel(ch) if filter else ch)
 
-    # cut all images to fit the smallest image
-    images = [image[:rows, :cols, :] for image in images]
+        return images
 
-    images = np.asarray(images, dtype=dtype)
+    def emit_batch(images, batch_size):
+        # find smallest image
+        rows = min(ch.shape[0] for ch in images)
+        cols = min(ch.shape[1] for ch in images)
 
-    # roll image index to the last dimension because this is how the NMF needs its data
-    images = np.moveaxis(images, 0, -1)
+        # cut all images to fit the smallest image
+        images = [image[:rows, :cols, :] for image in images]
 
-    # just ensure nothing was garbled in the code above
-    assert (images.ndim == 4)
-    assert (images.shape[0] == rows and images.shape[1] == cols)
-    assert (images.shape[2] in (1, 3))
-    assert (images.shape[3] in (count, 3 * count))
-    assert (images.dtype == dtype)
+        images = np.asarray(images, dtype=dtype)
 
-    return images, (rows, cols)
+        # roll image index to the last dimension because this is how the NMF needs its data
+        images = np.moveaxis(images, 0, -1)
 
+        # just ensure nothing was garbled in the code above
+        assert images.ndim == 4
+        assert images.shape[0] == rows and images.shape[1] == cols
+        assert images.shape[2] in (1, 3)
+        assert images.shape[3] in (batch_size, 3*batch_size) or batch_size == 0
+        assert images.dtype == dtype
 
-def compute_nmf(V, nmf_params, progress_callback):
-    """Streamlit caching of NMF fitting."""
-    nmf_params = nmf_params.copy()
-    if nmf_params.pop('shift_invariant'):
-        nmf = ShiftInvariantNMF(**nmf_params)
-    else:
-        nmf = SparseNMF(**nmf_params)
-    nmf.fit(V, progress_callback)
-    return nmf
+        return images, (rows, cols)
+
+    count = 0
+    batch_count = 0
+    images = []
+
+    for filename in glob.glob(os.path.join(os.getcwd(), path, pattern)):
+
+        logging.info(filename)
+        images = add_image(images, filename)
+
+        count +=1
+        batch_count += 1
+
+        # limit total number of images
+        if 0 < max_images <= count:
+            break
+
+        # limit batch size
+        if 0 < batch_size <= batch_count:
+            yield emit_batch(images, batch_count)
+            images = []
+            batch_count = 0
+
+    # yield all leftover images
+    if images:
+        yield emit_batch(images, max_images % batch_size if batch_size > 0 else max_images)
 
 
 def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
@@ -263,7 +274,8 @@ if __name__ == '__main__':
     dataset_params = {
         'path': r'BSR_bsds500/BSR/BSDS500/data/images/train',
         'pattern': '*.jpg',
-        'max_images': 5,
+        'max_images': 11,
+        'batch_size': 3,
         'remove_margin': 0,
         'color_mode': 'colors (identical basis)',
         'dtype': np.float64,
@@ -271,8 +283,6 @@ if __name__ == '__main__':
     }
 
     logging.info(f'dataset params: {dataset_params}')
-
-    images, image_shape = load_images(**dataset_params)
 
     nmf_params = {
         'verbose': 2,
@@ -283,12 +293,12 @@ if __name__ == '__main__':
                                                                     # dict(mode='symmetric'), dict(mode='mean'), dict(mode='median'),
         'shift_invariant': True,
         'sparsity_H': 0.5,
-        'n_iterations': 200,
-        'refit_H': True,
+        'n_iterations': 50,
+        'refit_H': False,
         'n_components': 16,
         'atom_size': 9,
         'inhibition_range': None,
-        'inhibition_strength': 0.25,
+        'inhibition_strength': 0.0,
     }
 
     logging.info(f'NMF params: {nmf_params}')
@@ -310,7 +320,15 @@ if __name__ == '__main__':
         return True
 
     # fit the NMF model
-    nmf = compute_nmf(images, nmf_params, progress_callback=progress_callback)
+    params = nmf_params.copy()
+    if params.pop('shift_invariant'):
+        nmf = ShiftInvariantNMF(**params)
+    else:
+        nmf = SparseNMF(**params)
+
+    for ibatch, (images, _) in enumerate(load_images(**dataset_params)):
+        logging.info(f'Processing batch {ibatch}...')
+        nmf.partial_fit(images, progress_callback=progress_callback)
 
     # -------------------- visualization -------------------- #
 

@@ -133,6 +133,9 @@ class TransformInvariantNMF(ABC):
 		self._W = CachingFFT('W', logger=self._logger)
 		self._H = CachingFFT('H', logger=self._logger)
 
+		# counter for total iterations performed
+		self.n_iterations_done = 0
+
 		# constant to avoid division by zero
 		self.eps = eps
 
@@ -204,7 +207,7 @@ class TransformInvariantNMF(ABC):
 		"""Generates all dictionary transforms for the given signal matrix."""
 		raise NotImplementedError
 
-	def initialize(self, V):
+	def initialize(self, V, keep_W: bool):
 		"""
 		Stores the signal matrix and initialize the factorization (and transformation) matrices.
 
@@ -226,6 +229,10 @@ class TransformInvariantNMF(ABC):
 		"""
 		# store the signal matrix
 		self._V.c = np.asarray(V)
+  
+  		# keep track of how many iterations have been performed for the same W
+		if not keep_W:
+			self.n_iterations_done = 0
 
 		# if explicit transformation matrices are used, create and store them
 		try:
@@ -234,30 +241,40 @@ class TransformInvariantNMF(ABC):
 			pass
 
 		# initialize the factorization matrices
-		self._init_factorization_matrices()
+		self._init_factorization_matrices(keep_W)
 
-	def _init_factorization_matrices(self):
+	def _init_factorization_matrices(self, keep_W: bool):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: use clever scaling of tensors for initialization
-		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
+		if not keep_W:
+			self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
 	def fit(self, V, progress_callback: Callable[['TransformInvariantNMF', int], bool] = None):
 		"""Learns an NMF representation of a given signal matrix."""
 		# initialize all matrices
-		self.initialize(V)
+		self.initialize(V, keep_W=False)
+		self._do_fit(V, progress_callback)
 
+	def partial_fit(self, V, progress_callback: Callable[['TransformInvariantNMF', int], bool] = None):
+		"""Learns an NMF representation of a given signal matrix."""
+		# initialize all matrices
+		self.initialize(V, keep_W=self.n_iterations_done > 0)
+		self._do_fit(V, progress_callback)
+
+	def _do_fit(self, V, progress_callback: Callable[['TransformInvariantNMF', int], bool] = None):
 		# TODO: define stopping criterion
-		# iterate the multiplicative update rules
-		for i in range(self.n_iterations):
-			if progress_callback is not None:
-				if not progress_callback(self, i):
-					break
-			else:
-				self._logger.info(f"Iteration: {i}\tCost function: {self.cost_function()}")
 
+		# iterate the multiplicative update rules
+		for self.n_iterations_done in range(self.n_iterations_done+1, self.n_iterations_done + 1 + self.n_iterations):
 			self.update_H()
 			self.update_W()
+
+			if progress_callback is not None:
+				if not progress_callback(self, self.n_iterations_done):
+					break
+			else:
+				self._logger.info(f"Iteration: {self.n_iterations_done}\tCost function: {self.cost_function()}")
 
 		# TODO: define stopping criterion
 		# refit the activations using the learned dictionary
@@ -367,10 +384,10 @@ class SparseNMF(TransformInvariantNMF):
 	def __init__(self, **kwargs):
 		super().__init__(atom_size=None, **kwargs)
 
-	def initialize(self, X):
+	def initialize(self, X, keep_W: bool):
 		"""Creates a TransformInvariantNMF where the atom size equals the signal size."""
 		self.atom_size = np.shape(X)[0]
-		super().initialize(X)
+		super().initialize(X, keep_W)
 
 	def generate_transforms(self) -> np.array:
 		"""No transformations are applied (achieved via a single identity transform)."""
@@ -433,15 +450,16 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		"""The dimension index of the shift invariant input dimensions."""
 		return tuple(range(self.n_shift_dimensions))
 
-	def initialize(self, V):
+	def initialize(self, V, keep_W: bool):
 		assert np.isreal(V).all()
-		super().initialize(V)
+		super().initialize(V, keep_W)
 		self._normalization_dims = self.shift_dimensions
 
-	def _init_factorization_matrices(self):
+	def _init_factorization_matrices(self, keep_W: bool):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: inherit docstring from superclass
-		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
+		if not keep_W:
+			self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
 	def _gradient_H(self, sparsity: bool = True) -> Tuple[np.array, np.array]:
@@ -477,11 +495,11 @@ class ExplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 	"""Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
 	explicitly via transformation matrices."""
 
-	def initialize(self, V):
+	def initialize(self, V, keep_W: bool):
 		if V.ndim > 3:
 			raise ValueError("'ExplicitShiftInvariantNMF' currently supports (multi-channel) 1-D signals only. "
 							 "For higher-dimensional signals, use 'ImplicitShiftInvariantNMF'.")
-		super().__init__(V)
+		super().initialize(V, keep_W)
 
 	def generate_transforms(self) -> np.array:
 		"""Generates all possible shift matrices for the signal dimension and given atom size."""
@@ -508,8 +526,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		self._logger.debug(f'Using method {self._method}.')
 		self._cache = {}
 
-	def initialize(self, V):
-		super().initialize(V)
+	def initialize(self, V, keep_W: bool):
+		super().initialize(V, keep_W)
 		self._init_cache()
 
 	def _init_cache(self):
