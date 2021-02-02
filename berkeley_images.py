@@ -276,8 +276,11 @@ if __name__ == '__main__':
 
     nmf_params = {
         'verbose': 2,
-        'method': 'cachingFFT',
-        'reconstruction_mode': 'full', # 'same', 'full', 'valid'
+        'method': 'cachingFFT',  # 'cachingFFT', 'fftconvolve', 'contract'
+        'reconstruction_mode': 'valid',  # 'same', 'full', 'valid'
+        'input_padding': dict(mode='constant', constant_values=0),  # dict(mode='constant', constant_values=0), dict(mode='wrap'), dict(mode='edge'),
+                                                                    # dict(mode='reflect', reflect_type='odd'), dict(mode='reflect', reflect_type='even'),
+                                                                    # dict(mode='symmetric'), dict(mode='mean'), dict(mode='median'),
         'shift_invariant': True,
         'sparsity_H': 0.5,
         'n_iterations': 200,
