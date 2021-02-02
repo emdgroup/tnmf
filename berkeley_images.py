@@ -17,7 +17,9 @@ import matplotlib.transforms as transforms
 import matplotlib.patches as mpatches
 from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
 
-matplotlib.use('AGG')
+if __name__ == '__main__':
+    matplotlib.use('AGG')
+
 plt.style.use('seaborn')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
