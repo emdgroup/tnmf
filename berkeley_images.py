@@ -112,14 +112,21 @@ def compute_nmf(V, nmf_params, progress_callback):
 
 
 def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8), subplot_kw=dict(xticks=[], yticks=[], frame_on=False))
-    for iplot, ax in enumerate(axes):
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(20, 8), subplot_kw=dict(xticks=[], yticks=[], frame_on=False))
+    for iplot, ax in enumerate(axes.flatten()):
         if iplot == 0:
-            data = np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image])
+            ax.imshow(np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]))
+            ax.set_title('V')
+        elif iplot == 1:
+            ax.imshow(np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]), 0., 1.))
+            ax.set_title('R')
+        elif iplot == 2:
+            ax.matshow(np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image])
+                       -np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]))
+            ax.set_title('V-R')
         else:
-            data = np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]), 0., 1.)
+            ax.set_visible(False)
 
-        ax.imshow(data)
         ax.grid(False)
 
     return [fig]
