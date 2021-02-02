@@ -7,6 +7,7 @@ import glob
 import imageio
 import logging
 from collections import defaultdict
+from typing import Tuple
 
 import numpy as np
 from scipy import fftpack
@@ -56,7 +57,7 @@ def filter_channel(ch):
 
 
 def load_images(path: str, pattern: str, max_images: int = 0, remove_margin=0, filter=False,
-                color_mode: str = 'grey', dtype=np.float32) -> (np.ndarray, tuple):
+                color_mode: str = 'grey', dtype=np.float32) -> Tuple[np.ndarray, tuple]:
     images = []
     rows, cols = 10000, 10000
 
