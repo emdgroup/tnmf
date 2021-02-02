@@ -121,9 +121,11 @@ def plot_signal_reconstruction(nmf, signal_number, samples_per_image):
             ax.imshow(np.clip(np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]), 0., 1.))
             ax.set_title('R')
         elif iplot == 2:
-            ax.matshow(np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image])
-                       -np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]))
+            diffplot = ax.matshow(np.squeeze(nmf.V[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image])
+                                  -np.squeeze(nmf.R[..., signal_number * samples_per_image:(signal_number + 1) * samples_per_image]),
+                                  cmap='bwr', vmin=-1., vmax=1.)
             ax.set_title('V-R')
+            fig.colorbar(diffplot, ax=ax)
         else:
             ax.set_visible(False)
 
