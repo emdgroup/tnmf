@@ -48,12 +48,12 @@ def st_define_nmf_params() -> dict:
     PADDING_OPTIONS = {
         'pad zeros': dict(mode='constant', constant_values=0),
         'wrap':  dict(mode='wrap'),
-        'edge': dict(mode='edge'),
-        'reflect odd': dict(mode='reflect', reflect_type='odd'),
+        # 'edge': dict(mode='edge'),
+        # 'reflect odd': dict(mode='reflect', reflect_type='odd'),
         'reflect even': dict(mode='reflect', reflect_type='even'),
-        'symmetric': dict(mode='symmetric'),
-        'mean': dict(mode='mean'),
-        'median': dict(mode='median'),
+        # 'symmetric': dict(mode='symmetric'),
+        # 'mean': dict(mode='mean'),
+        # 'median': dict(mode='median'),
     }
 
     RECONSTRUCTION_MODES = {
