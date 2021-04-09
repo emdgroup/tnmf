@@ -4,9 +4,9 @@ Author: Adrian Sosic
 
 import logging
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 from numpy.lib.stride_tricks import as_strided
-import logging
 from scipy.fft import rfftn, irfftn, next_fast_len
 from scipy.ndimage import convolve1d
 from scipy.signal import convolve
@@ -548,3 +548,64 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			numer = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.V, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
 			denum = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.R, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
 		return numer, denum
+
+
+class AutoGradShiftInvariantNMF(ImplicitShiftInvariantNMF):
+
+	def __init__(self, **kwargs):
+		super().__init__(self, **kwargs)
+		self._use_fft = True
+
+	def _reconstruct_auto(self) -> np.array:
+		W = torch.tensor(self.W, requires_grad=True)
+		H = torch.tensor(self.H, requires_grad=True)
+		self._Hauto = H
+		self._Wauto = W
+		R = torch.zeros(self.V.shape)
+		for c in range(self.n_channels):
+			for m in range(self.n_components):
+				for n in range(self.n_signals):
+					w = W[:, :, c, m]
+					h = H[:, :, m, n]
+					R[:, :, c, n] += torch.nn.functional.conv2d(
+						h.view((1,1,*h.size())), w.view((1,1,*w.size())),
+					)[0, 0, :, :]
+		return R
+
+	def energy(self) -> torch.tensor:
+		R = self._reconstruct_auto()
+		V = torch.tensor(self.V)
+		# pos = torch.square(torch.norm(V, 'fro')) + torch.square(torch.norm(R, 'fro'))
+		pos = 0.5 * torch.sum(torch.square(V)) + 0.5 * torch.sum(torch.square(R))
+		neg = torch.sum(R * V)
+		return pos, neg
+
+	def _reconstruction_gradient_W(self) -> np.array:
+		numer, denum = super()._reconstruction_gradient_W()
+		pos, neg = self.energy()
+		pos.backward()
+		denum_auto = self._Wauto.grad
+
+		pos, neg = self.energy()
+		neg.backward()
+		numer_auto = self._Wauto.grad
+
+		numer_auto = torch.flip(numer_auto, (0,1))
+		denum_auto = torch.flip(denum_auto, (0,1))
+		return numer_auto.numpy(), denum_auto.numpy()
+
+
+	def _reconstruction_gradient_H(self) -> np.array:
+		numer, denum = super()._reconstruction_gradient_H()
+		pos, neg = self.energy()
+		pos.backward()
+		denum_auto = self._Hauto.grad
+
+		pos, neg = self.energy()
+		neg.backward()
+		numer_auto = self._Hauto.grad
+
+		numer_auto = torch.flip(numer_auto, (0,1))
+		denum_auto = torch.flip(denum_auto, (0,1))
+		# denum_auto = torch.flip(denum_auto, (0,))
+		return numer_auto.numpy(), denum_auto.numpy()

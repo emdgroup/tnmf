@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 from signals import generate_pulse_train, generate_block_image
-from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF
+from TransformInvariantNMF import SparseNMF, ShiftInvariantNMF, AutoGradShiftInvariantNMF
 from itertools import product, repeat
 from more_itertools import chunked
 from copy import deepcopy
@@ -20,7 +20,7 @@ def compute_nmf(V, nmf_params):
 	"""Streamlit caching of NMF fitting."""
 	nmf_params = nmf_params.copy()
 	if nmf_params.pop('shift_invariant'):
-		nmf = ShiftInvariantNMF(**nmf_params)
+		nmf = AutoGradShiftInvariantNMF(**nmf_params)
 	else:
 		nmf = SparseNMF(**nmf_params)
 	nmf.fit(V)
