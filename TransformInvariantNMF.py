@@ -557,25 +557,22 @@ class AutoGradShiftInvariantNMF(ImplicitShiftInvariantNMF):
 		self._use_fft = True
 
 	def _reconstruct_auto(self) -> np.array:
-		W = torch.tensor(self.W, requires_grad=True)
-		H = torch.tensor(self.H, requires_grad=True)
-		self._Hauto = H
-		self._Wauto = W
+		self._Wauto = torch.tensor(self.W, requires_grad=True)
+		self._Hauto = torch.tensor(self.H, requires_grad=True)
 		R = torch.zeros(self.V.shape)
 		for c in range(self.n_channels):
 			for m in range(self.n_components):
 				for n in range(self.n_signals):
-					w = W[:, :, c, m]
-					h = H[:, :, m, n]
+					w = self._Wauto[:, :, c, m]
+					h = self._Hauto[:, :, m, n]
 					R[:, :, c, n] += torch.nn.functional.conv2d(
-						h.view((1,1,*h.size())), w.view((1,1,*w.size())),
+						h.view((1,1,*h.size())), torch.flip(w, (0,1)).view((1,1,*w.size())),
 					)[0, 0, :, :]
 		return R
 
 	def energy(self) -> torch.tensor:
 		R = self._reconstruct_auto()
 		V = torch.tensor(self.V)
-		# pos = torch.square(torch.norm(V, 'fro')) + torch.square(torch.norm(R, 'fro'))
 		pos = 0.5 * torch.sum(torch.square(V)) + 0.5 * torch.sum(torch.square(R))
 		neg = torch.sum(R * V)
 		return pos, neg
@@ -590,10 +587,9 @@ class AutoGradShiftInvariantNMF(ImplicitShiftInvariantNMF):
 		neg.backward()
 		numer_auto = self._Wauto.grad
 
-		numer_auto = torch.flip(numer_auto, (0,1))
-		denum_auto = torch.flip(denum_auto, (0,1))
+		assert np.allclose(numer, numer_auto)
+		assert np.allclose(denum, denum_auto)
 		return numer_auto.numpy(), denum_auto.numpy()
-
 
 	def _reconstruction_gradient_H(self) -> np.array:
 		numer, denum = super()._reconstruction_gradient_H()
@@ -605,7 +601,6 @@ class AutoGradShiftInvariantNMF(ImplicitShiftInvariantNMF):
 		neg.backward()
 		numer_auto = self._Hauto.grad
 
-		numer_auto = torch.flip(numer_auto, (0,1))
-		denum_auto = torch.flip(denum_auto, (0,1))
-		# denum_auto = torch.flip(denum_auto, (0,))
+		assert np.allclose(numer, numer_auto)
+		assert np.allclose(denum, denum_auto)
 		return numer_auto.numpy(), denum_auto.numpy()
