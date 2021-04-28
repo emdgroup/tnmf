@@ -321,7 +321,8 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def n_transforms(self) -> Tuple[int]:
 		"""Number of dictionary transforms."""
 		# TODO: inherit docstring from superclass
-		return tuple(np.array(self.n_dim) + self.atom_size - 1)
+		# return tuple(np.array(self.n_dim) + self.atom_size - 1)
+		return tuple(np.array(self.n_dim))
 
 	@property
 	def n_shift_dimensions(self):
@@ -349,7 +350,8 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 
 		if self._use_fft:
 			# fft shape and functions
-			cache['fft_shape'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
+			cache['fft_shape'] = [s for s in np.array(self.V.shape[:self.n_shift_dimensions])]
+			# cache['fft_shape'] = [next_fast_len(s) for s in np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.H.shape[:self.n_shift_dimensions]) - 1]
 			cache['fft_fun'] = lambda x: rfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
 			cache['ifft_fun'] = lambda x: irfftn(x, axes=self.shift_dimensions, s=cache['fft_shape'], workers=-1)
 
@@ -359,7 +361,8 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 			# fft details: reconstruction
 			lower_idx = np.array(self.W.shape[:self.n_shift_dimensions]) - 1
 			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
-			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
+			# slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
+			slices = tuple(slice(None) for lower, upper in zip(lower_idx, upper_idx))
 			cache[('W', 'H')] = {
 				'contraction_string': '...cm,...mn->...cn',
 				'slices': slices
@@ -375,8 +378,16 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 			cache[('R', 'W')] = cache[('V', 'W')]
 
 			# fft details: gradient W computation
-			lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
-			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			# lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
+			# upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) + np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			# slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
+
+
+			# upper_idx = np.array(self.W.shape[:self.n_shift_dimensions])
+			# slices = tuple(slice(upper) for upper in upper_idx)
+
+			lower_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - np.array(self.W.shape[:self.n_shift_dimensions]) - 1
+			upper_idx = np.array(self.V.shape[:self.n_shift_dimensions]) - 1
 			slices = tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx))
 			cache[('V', 'H')] = {
 				'contraction_string': '...cn,...mn->...cm',
@@ -425,12 +436,12 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		numer, denum = super()._gradient_H(sparsity)
 
 		# add the inhibition gradient component
-		if self.inhibition_range and self.inhibition_strength:
-			inhibition = self.H.copy()
-			for dim in self.shift_dimensions:
-				inhibition = convolve1d(inhibition, self.kernel, axis=dim, mode='constant', cval=0.0)
-			inhibition = inhibition - self.H
-			denum = denum + self.inhibition_strength * inhibition
+		# if self.inhibition_range and self.inhibition_strength:
+		# 	inhibition = self.H.copy()
+		# 	for dim in self.shift_dimensions:
+		# 		inhibition = convolve1d(inhibition, self.kernel, axis=dim, mode='constant', cval=0.0)
+		# 	inhibition = inhibition - self.H
+		# 	denum = denum + self.inhibition_strength * inhibition
 
 		return numer, denum
 
@@ -517,6 +528,7 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		"""Reconstructs the signal matrix via (fft-)convolution."""
 		if self._use_fft:
 			R = self._fft_convolve('W', 'H')
+			R = np.roll(R, -self.atom_size, self.shift_dimensions)
 		else:
 			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
