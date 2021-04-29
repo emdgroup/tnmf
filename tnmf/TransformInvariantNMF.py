@@ -11,6 +11,7 @@ Authors: Adrian Sosic, Mathias Winkel
 # TODO: cache reconstruction result
 # TODO: flexible input types for V
 # TODO: we extract .shape[...] too often
+# TODO: add support for inhibition
 
 import numpy as np
 
