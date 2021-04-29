@@ -12,9 +12,12 @@ class CachingFFT(object):
     between fields in coordinate space and fourier space
     """
 
-    def __init__(self, field_name: str,
-                 fft_axes: Optional[Tuple[int]] = None,
-                 fft_shape: Optional[List[int]] = None, logger: Optional[logging.Logger] = None):
+    def __init__(
+        self,
+        field_name: str,
+        fft_axes: Optional[Tuple[int]] = None,
+        fft_shape: Optional[List[int]] = None, logger: Optional[logging.Logger] = None,
+    ):
         self._c = None  # field in coordinate space
         self._f = None  # field in fourier space
         self._f_reversed = None  # time-reversed field in fourier space
@@ -90,21 +93,23 @@ class CachingFFT(object):
 
 class NumPy_CachingFFT_Backend(Backend):
 
-    def __init__(self,
-                 logger: logging.Logger = None,
-                 verbose: int = 0,
-                 **kwargs):
+    def __init__(
+        self,
+        logger: logging.Logger = None,
+        verbose: int = 0,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
 
     def initialize_matrices(
-            self,
-            V: np.ndarray,
-            atom_shape: Tuple[int, ...],
-            n_atoms: int,
-            mode_R: str,
-            W: Optional[np.array] = None,
+        self,
+        V: np.ndarray,
+        atom_shape: Tuple[int, ...],
+        n_atoms: int,
+        mode_R: str,
+        W: Optional[np.array] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
         self._n_shift_dimensions = len(atom_shape)
         self._shift_dimensions = tuple(range(-1, -len(atom_shape)-1, -1))
@@ -188,7 +193,6 @@ class NumPy_CachingFFT_Backend(Backend):
         return numer, denum
 
     def _reconstruct_cachingfft(self, W: np.array, H: np.array) -> np.array:
-        # TODO: do not recompute _R if it is already up-to-date
         self._R.c = self._fft_convolve(W.f, H.f, **self._cache['params_reconstruct'])
         return self._R
 
