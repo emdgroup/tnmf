@@ -28,4 +28,4 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
-        flake8 . --count --show-source --max-complexity=10 --max-line-length=127 --statistics
+        flake8
