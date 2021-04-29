@@ -5,3 +5,5 @@ opt-einsum==3.3.0
 scipy==1.5.4
 streamlit==0.71.0
 pytest==6.2.3
+sphinx
+sphinx-autoapi
