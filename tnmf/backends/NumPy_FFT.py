@@ -112,7 +112,7 @@ class NumPy_FFT_Backend(Backend):
 
         self._n_shift_dimensions = len(atom_shape)
         self._shift_dimensions = tuple(range(-1, -len(atom_shape)-1, -1))
-        return super().initialize_matrices(V, atom_shape, n_atoms, n_transforms(V.shape[:2]),  W)
+        return super().initialize_matrices(V, atom_shape, n_atoms, n_transforms(V.shape[2:]),  W)
 
     def reconstruction_gradient_W(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
         R = self.reconstruct(W, H)
