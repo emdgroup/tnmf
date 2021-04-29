@@ -42,10 +42,10 @@ class PyTorch_Backend(Backend):
         transform_shape = self.n_transforms(self._sample_shape, atom_shape)
 
         self.dtype = numpy_to_torch_dtype_dict[V.dtype]
-        H = (1 - torch.rand((n_samples, n_atoms, *transform_shape), dtype=self.dtype)).requires_grad_()
+        H = (1 - torch.rand((n_samples, n_atoms, *transform_shape), dtype=self.dtype))
 
         if W is None:
-            W = (1 - torch.rand((n_atoms, n_channels, *atom_shape), dtype=self.dtype)).requires_grad_()
+            W = (1 - torch.rand((n_atoms, n_channels, *atom_shape), dtype=self.dtype))
 
         return W, H
 
@@ -53,16 +53,20 @@ class PyTorch_Backend(Backend):
         return arr / (arr.sum(dim=axes, keepdim=True))
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
-        neg_energy, pos_energy = self._energy_terms(V, W, H)
-        neg = torch.autograd.grad(neg_energy, W, retain_graph=True)[0]
-        pos = torch.autograd.grad(pos_energy, W)[0]
-        return neg, pos
+        W_grad = W.detach().requires_grad_()
+        neg_energy, pos_energy = self._energy_terms(V, W_grad, H)
+        neg = torch.autograd.grad(neg_energy, W_grad, retain_graph=True)[0]
+        pos = torch.autograd.grad(pos_energy, W_grad)[0]
+        assert not H.requires_grad
+        return neg.detach(), pos.detach()
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
-        neg_energy, pos_energy = self._energy_terms(V, W, H)
-        neg = torch.autograd.grad(neg_energy, H, retain_graph=True)[0]
-        pos = torch.autograd.grad(pos_energy, H)[0]
-        return neg, pos
+        H_grad = H.detach().requires_grad_()
+        neg_energy, pos_energy = self._energy_terms(V, W, H_grad)
+        neg = torch.autograd.grad(neg_energy, H_grad, retain_graph=True)[0]
+        pos = torch.autograd.grad(pos_energy, H_grad)[0]
+        assert not W.requires_grad
+        return neg.detach(), pos.detach()
 
     def _energy_terms(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
         V = torch.as_tensor(V)
