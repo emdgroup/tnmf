@@ -4,6 +4,7 @@ Test if a single sample decomposition works
 
 from scipy.misc import face
 import numpy as np
+import torch
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 import logging
 
@@ -11,8 +12,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(m
 
 
 def do_test(backend: str, expected_error: float):
-    np.random.seed(seed=42)
-
     img = face(gray=True) / 255
 
     # downsample for higher speed
@@ -41,11 +40,14 @@ def do_test(backend: str, expected_error: float):
 
 
 def test_numpy_fft():
+    np.random.seed(seed=42)
     do_test('numpy_fft', 104.74284)
 
 def test_pytorch():
-    do_test('pytorch', 104.74284)
+    torch.manual_seed(42)
+    do_test('pytorch', 104.2733)
 
 
 #def test_numpy_caching_fft():
+#    np.random.seed(seed=42)
 #    do_test('numpy_caching_fft', 104.0667)
