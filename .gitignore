@@ -9,3 +9,9 @@
 
 # MacOS
 *.DS_Store
+
+env
+__pycache__
+_build
+.vscode
+workspace.code-workspace
