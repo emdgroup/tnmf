@@ -65,12 +65,12 @@ class PyTorch_Backend(Backend):
 
     def _energy_terms(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
         V = torch.as_tensor(V)
-        R = self.reconstruct(W, H)
+        R = self._reconstruct_torch(W, H)
         neg = (R * V).sum()
         pos = 0.5 * (V.square().sum() + R.square().sum())
         return neg, pos
 
-    def reconstruct(self, W: Tensor, H: Tensor) -> Tensor:
+    def _reconstruct_torch(self, W: Tensor, H: Tensor) -> Tensor:
         n_samples = H.shape[0]
         n_atoms = W.shape[0]
         n_channels = W.shape[1]
@@ -92,7 +92,12 @@ class PyTorch_Backend(Backend):
                                                               w.view((1, 1, *w.shape)))[0, 0, :, :]
             return R
 
+    def reconstruct(self, W: Tensor, H: Tensor) -> np.ndarray:
+        R = self._reconstruct_torch(W, H)
+        return R.detach().numpy()
+
     def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:
         V = torch.as_tensor(V)
-        R = self.reconstruct(W, H)
-        return 0.5 * torch.sum(torch.square(V - R))
+        R = self._reconstruct_torch(W, H)
+        energy = 0.5 * torch.sum(torch.square(V - R))
+        return float(energy)
