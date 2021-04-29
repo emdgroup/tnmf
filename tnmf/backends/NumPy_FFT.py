@@ -80,7 +80,7 @@ def fftconvolve_sum(
 class NumPy_FFT_Backend(Backend):
 
     def __init__(self,
-                 reconstruction_mode: str = 'full',
+                 reconstruction_mode: str = 'valid',
                  input_padding=dict(mode='constant', constant_values=0),
                  **kwargs):
         super().__init__(**kwargs)
