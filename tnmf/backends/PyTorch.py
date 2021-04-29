@@ -1,5 +1,6 @@
 # TODO: fix numpy to torch dtype
-# TODO: it should be possible to reformulate the gradients using https://pytorch.org/docs/stable/autograd.html#torch.autograd.functional.jacobian
+# TODO: it should be possible to reformulate the gradients using
+#       https://pytorch.org/docs/stable/autograd.html#torch.autograd.functional.jacobian
 # TODO: merge gradient functions into one
 # TODO: add device option
 
