@@ -19,6 +19,7 @@ import logging
 from typing import Tuple, Callable
 from .backends.NumPy_FFT import NumPy_FFT_Backend
 from .backends.PyTorch import PyTorch_Backend
+from .backends.NumPy_CachingFFT import NumPy_CachingFFT_Backend
 
 
 class TransformInvariantNMF:
@@ -41,6 +42,7 @@ class TransformInvariantNMF:
 
         backend_map = {
             'numpy_fft': NumPy_FFT_Backend,
+            'numpy_caching_fft': NumPy_CachingFFT_Backend,
             'pytorch': PyTorch_Backend,
         }
 

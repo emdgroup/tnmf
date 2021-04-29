@@ -44,11 +44,11 @@ def test_numpy_fft():
     do_test('numpy_fft', 104.74284)
 
 
+def test_numpy_caching_fft():
+    np.random.seed(seed=42)
+    do_test('numpy_caching_fft', 104.74284)
+
+
 def test_pytorch():
     torch.manual_seed(42)
     do_test('pytorch', 104.2733)
-
-
-# def test_numpy_caching_fft():
-#     np.random.seed(seed=42)
-#     do_test('numpy_caching_fft', 104.0667)
