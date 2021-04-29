@@ -1,4 +1,5 @@
 # TODO: generalize n_transforms from numpy_fft to all backends
+# TODO: create numpy-specific backend class
 
 import abc
 import numpy as np

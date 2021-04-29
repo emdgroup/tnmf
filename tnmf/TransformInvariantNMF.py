@@ -9,12 +9,15 @@ Authors: Adrian Sosic, Mathias Winkel
 # TODO: naming convention: energy (instead of cost/error)
 # TODO: add options for tensor renormalization
 # TODO: cache reconstruction result
+# TODO: flexible input types for V
+# TODO: we extract .shape[...] too often
 
 import numpy as np
 
 import logging
 from typing import Tuple, Callable
 from .backends.NumPy_FFT import NumPy_FFT_Backend
+from .backends.PyTorch import PyTorch_Backend
 
 
 class TransformInvariantNMF:
@@ -37,6 +40,7 @@ class TransformInvariantNMF:
 
         backend_map = {
             'numpy_fft': NumPy_FFT_Backend,
+            'pytorch': PyTorch_Backend,
         }
 
         self._backend = backend_map[backend.lower()](**kwargs)
