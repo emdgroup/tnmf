@@ -19,6 +19,7 @@ numpy_to_torch_dtype_dict = {
     np.float16: torch.float16,
     np.float32: torch.float32,
     np.float64: torch.float64,
+    np.dtype('float64'): torch.float64,
     np.complex64: torch.complex64,
     np.complex128: torch.complex128
 }
@@ -31,13 +32,13 @@ class PyTorch_Backend(Backend):
             V: np.ndarray,
             atom_shape: Tuple[int, ...],
             n_atoms: int,
-            transform_shape: Tuple[int, ...],
             W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
-
         self._sample_shape = V.shape[2:]
         n_samples = V.shape[0]
         n_channels = V.shape[1]
+
+        transform_shape = self.n_transforms(self._sample_shape, atom_shape)
 
         self.dtype = numpy_to_torch_dtype_dict[V.dtype]
         H = (1 - torch.rand((n_samples, n_atoms, *transform_shape), dtype=self.dtype)).requires_grad_()
@@ -91,7 +92,7 @@ class PyTorch_Backend(Backend):
                                                               w.view((1, 1, *w.shape)))[0, 0, :, :]
             return R
 
-    def reconstruction_error(self, V: Tensor, W: Tensor, H: Tensor) -> float:
+    def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:
         V = torch.as_tensor(V)
         R = self.reconstruct(W, H)
         return 0.5 * torch.sum(torch.square(V - R))

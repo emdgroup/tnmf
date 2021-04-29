@@ -79,40 +79,16 @@ def fftconvolve_sum(
 
 class NumPy_FFT_Backend(Backend):
 
-    def __init__(self,
-                 reconstruction_mode: str = 'valid',
-                 input_padding=dict(mode='constant', constant_values=0),
-                 **kwargs):
-        super().__init__(**kwargs)
-        self._input_padding = input_padding
-
-        self._mode_R = reconstruction_mode
-        self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
-
     def initialize_matrices(
             self,
             V: np.ndarray,
             atom_shape: Tuple[int, ...],
             n_atoms: int,
-            transform_shape: Tuple[int, ...],
             W: Optional[np.array] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
-
-        # TODO: we are ignoring transform_shape here...
-        def n_transforms(sample_shape: Tuple[int, ...]) -> Tuple[int, ...]:
-            """Number of dictionary transforms in each dimension"""
-            if self._mode_R == 'valid':
-                return tuple(np.array(sample_shape) + np.array(atom_shape) - 1)
-            elif self._mode_R == 'full':
-                return tuple(np.array(sample_shape) - np.array(atom_shape) + 1)
-            elif self._mode_R == 'same':
-                return tuple(np.array(sample_shape))
-            else:
-                raise ValueError
-
         self._n_shift_dimensions = len(atom_shape)
         self._shift_dimensions = tuple(range(-1, -len(atom_shape)-1, -1))
-        return super().initialize_matrices(V, atom_shape, n_atoms, n_transforms(V.shape[2:]),  W)
+        return super().initialize_matrices(V, atom_shape, n_atoms,  W)
 
     def reconstruction_gradient_W(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
         R = self.reconstruct(W, H)
@@ -124,10 +100,12 @@ class NumPy_FFT_Backend(Backend):
         H_reversed = H[reverse]
 
         #                     V|R[n, _, c, ... ] * H[n , m, _, ...]   --> dR / dW[m, c, ...]
-        neg = fftconvolve_sum(V[:, np.newaxis, :, ...], H_reversed[:, :, np.newaxis, ...], padding1=self._input_padding,
-                                padding2=self._input_padding, mode='valid', axes=self._shift_dimensions, sum_axis=0)
-        pos = fftconvolve_sum(R[:, np.newaxis, :, ...], H_reversed[:, :, np.newaxis, ...], padding1=self._input_padding,
-                                padding2=self._input_padding, mode='valid', axes=self._shift_dimensions, sum_axis=0)
+        neg = fftconvolve_sum(
+            V[:, np.newaxis, :, ...], H_reversed[:, :, np.newaxis, ...], padding1=self._input_padding,
+            padding2=self._input_padding, mode='valid', axes=self._shift_dimensions, sum_axis=0)
+        pos = fftconvolve_sum(
+            R[:, np.newaxis, :, ...], H_reversed[:, :, np.newaxis, ...], padding1=self._input_padding,
+            padding2=self._input_padding, mode='valid', axes=self._shift_dimensions, sum_axis=0)
         return neg, pos
 
     def reconstruction_gradient_H(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
@@ -140,14 +118,17 @@ class NumPy_FFT_Backend(Backend):
         W_reversed = W[reverse]
 
         #        sum_c        V|R[n, _, c, ... ] * W[_ , m, c, ...]   --> dR / dH[n, m, ...]
-        neg = fftconvolve_sum(V[:, np.newaxis, :, ...], W_reversed[np.newaxis, :, :, ...],
-                                padding1=self._input_padding, mode=self._mode_H, axes=self._shift_dimensions, sum_axis=2)
-        pos = fftconvolve_sum(R[:, np.newaxis, :, ...], W_reversed[np.newaxis, :, :, ...],
-                                padding1=self._input_padding, mode=self._mode_H, axes=self._shift_dimensions, sum_axis=2)
+        neg = fftconvolve_sum(
+            V[:, np.newaxis, :, ...], W_reversed[np.newaxis, :, :, ...],
+            padding1=self._input_padding, mode=self._mode_H, axes=self._shift_dimensions, sum_axis=2)
+        pos = fftconvolve_sum(
+            R[:, np.newaxis, :, ...], W_reversed[np.newaxis, :, :, ...],
+            padding1=self._input_padding, mode=self._mode_H, axes=self._shift_dimensions, sum_axis=2)
         return neg, pos
 
     def reconstruct(self, W: np.array, H: np.array) -> np.array:
         #        sum_m    H[n, m, _, ... ] * W[_ , m, c, ...]   --> R[n, c, ...]
-        R = fftconvolve_sum(H[:, :, np.newaxis, ...], W[np.newaxis, :, ...],
-                            padding1=self._input_padding, mode=self._mode_R, axes=self._shift_dimensions, sum_axis=1)
+        R = fftconvolve_sum(
+            H[:, :, np.newaxis, ...], W[np.newaxis, :, ...],
+            padding1=self._input_padding, mode=self._mode_R, axes=self._shift_dimensions, sum_axis=1)
         return R

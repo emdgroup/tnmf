@@ -1,5 +1,7 @@
 # TODO: generalize n_transforms from numpy_fft to all backends
 # TODO: create numpy-specific backend class
+# TODO: all backends need to support self._mode_R et al
+# TODO: do we need self._input_padding ? If yes, all backends have to support it.
 
 import abc
 import numpy as np
@@ -8,17 +10,39 @@ from typing import Tuple, Optional
 
 class Backend(metaclass=abc.ABCMeta):
 
+    def __init__(
+        self,
+        reconstruction_mode: str = 'valid',
+        input_padding=dict(mode='constant', constant_values=0),
+    ):
+        self._input_padding = input_padding
+        self._mode_R = reconstruction_mode
+        self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
+
+    def n_transforms(self, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
+        """Number of dictionary transforms in each dimension"""
+        if self._mode_R == 'valid':
+            return tuple(np.array(sample_shape) + np.array(atom_shape) - 1)
+        elif self._mode_R == 'full':
+            return tuple(np.array(sample_shape) - np.array(atom_shape) + 1)
+        elif self._mode_R == 'same':
+            return tuple(np.array(sample_shape))
+        else:
+            raise ValueError
+
     def initialize_matrices(
             self,
             V: np.ndarray,
             atom_shape: Tuple[int, ...],
             n_atoms: int,
-            transform_shape: Tuple[int, ...],
+            mode_R: str,
             W: Optional[np.array] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
         self._sample_shape = V.shape[2:]
         n_samples = V.shape[0]
         n_channels = V.shape[1]
+
+        transform_shape = self.n_transforms(self._sample_shape, atom_shape)
 
         H = np.asarray(1 - np.random.rand(n_samples, n_atoms, *transform_shape), dtype=V.dtype)
 
