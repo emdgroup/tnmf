@@ -39,6 +39,11 @@ def do_test(backend: str, expected_error: float):
     assert np.isclose(0.5*np.sum(np.square(img_r - img)), expected_error)
 
 
+def test_numpy():
+    np.random.seed(seed=42)
+    do_test('numpy', 104.74284)
+
+
 def test_numpy_fft():
     np.random.seed(seed=42)
     do_test('numpy_fft', 104.74284)
