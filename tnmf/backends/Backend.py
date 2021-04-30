@@ -42,9 +42,9 @@ class Backend(metaclass=abc.ABCMeta):
         n_samples = V.shape[0]
         n_channels = V.shape[1]
 
-        transform_shape = self.n_transforms(self._sample_shape, atom_shape)
+        self._transform_shape = self.n_transforms(self._sample_shape, atom_shape)
 
-        H = np.asarray(1 - np.random.rand(n_samples, n_atoms, *transform_shape), dtype=V.dtype)
+        H = np.asarray(1 - np.random.rand(n_samples, n_atoms, *self._transform_shape), dtype=V.dtype)
 
         if W is None:
             W = np.asarray(1 - np.random.rand(n_atoms, n_channels, *atom_shape), dtype=V.dtype)
