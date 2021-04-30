@@ -60,7 +60,7 @@ class TransformInvariantNMF:
     def _update_W(self, V: np.ndarray):
         neg, pos = self._backend.reconstruction_gradient_W(V, self._W, self._H)
 
-        self._W = self._W * (neg / (pos + self.eps))
+        self._W *= (neg / (pos + self.eps))
         self._W = self._backend.normalize(self._W, axes=self._axes_W_normalization)
 
     def _update_H(self, V: np.ndarray, sparsity: float = 0):
@@ -71,7 +71,7 @@ class TransformInvariantNMF:
         if sparsity > 0:
             pos = pos + sparsity
 
-        self._H = self._H * (neg / (pos + self.eps))
+        self._H *= (neg / (pos + self.eps))
 
     def _do_fit(
             self,
