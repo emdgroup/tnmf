@@ -6,7 +6,6 @@ from scipy.misc import face
 import numpy as np
 from tnmf.old.TransformInvariantNMF import ShiftInvariantNMF
 import logging
-import pytest
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
