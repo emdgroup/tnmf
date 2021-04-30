@@ -18,7 +18,7 @@ def do_test(use_fft: bool, expected_error: float):
     img = img[::4, ::4] + img[1::4, ::4] + img[::4, 1::4] + img[1::4, 1::4]
     img /= 4.0
 
-    img = img[np.newaxis, np.newaxis, ...]
+    img = img[..., np.newaxis, np.newaxis]
 
     patch_shape = 7
 
@@ -41,16 +41,14 @@ def do_test(use_fft: bool, expected_error: float):
     assert np.isclose(nmf.reconstruction_error(), expected_error)
 
     img_r = nmf.R
-    assert np.isclose(0.5*np.sum(np.square(img_r - img)), expected_error)
+    assert np.isclose(np.sqrt(np.sum(np.square(img_r - img))), expected_error)
 
 
-@pytest.mark.skip(reason="Results do not seem to converge to something correct")
 def test_numpy():
     np.random.seed(seed=42)
-    do_test(use_fft=False, expected_error=104.74284)
+    do_test(use_fft=False, expected_error=26.2722)
 
 
-@pytest.mark.skip(reason="Results do not seem to converge to something correct")
 def test_numpy_fft():
     np.random.seed(seed=42)
-    do_test(use_fft=False, expected_error=104.74284)
+    do_test(use_fft=False, expected_error=26.27222)
