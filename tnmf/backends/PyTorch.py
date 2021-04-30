@@ -25,6 +25,12 @@ numpy_to_torch_dtype_dict = {
     np.complex128: torch.complex128
 }
 
+conv_dict = {
+    1: torch.nn.functional.conv1d,
+    2: torch.nn.functional.conv2d,
+    3: torch.nn.functional.conv3d,
+}
+
 
 class PyTorch_Backend(Backend):
 
@@ -74,26 +80,25 @@ class PyTorch_Backend(Backend):
         return neg, pos
 
     def _reconstruct_torch(self, W: Tensor, H: Tensor) -> Tensor:
+        # TODO: support dimensions > 3
+        # TODO: remove atom for loop
+        # TODO: consider transposed convolution as alternative
+
         n_samples = H.shape[0]
         n_atoms = W.shape[0]
         n_channels = W.shape[1]
+        n_shift_dimensions = W.ndim - 2
 
-        # TODO: support multiple dimensions
-        # TODO: remove for loops
-        assert len(self._sample_shape) == 2
+        assert n_shift_dimensions <= 3
+        conv_fun = conv_dict[n_shift_dimensions]
+        flip_dims = list(range(-n_shift_dimensions, 0))
+        W_flipped = torch.flip(W, flip_dims)
 
         R = torch.zeros((n_samples, n_channels, *self._sample_shape), dtype=self.dtype)
+        for i_atom in range(n_atoms):
+            R += conv_fun(H[:, i_atom, None], W_flipped[i_atom, None])
 
-        for i_sample in range(n_samples):
-            for i_channel in range(n_channels):
-                for i_atom in range(n_atoms):
-                    w = W[i_atom, i_channel]
-                    w = torch.flip(w, (-2, -1))  # torch.nn.functional.conv2d() is actually a correlation
-
-                    h = H[i_sample, i_atom]
-                    R[i_sample] += torch.nn.functional.conv2d(h.view((1, 1, *h.shape)),
-                                                              w.view((1, 1, *w.shape)))[0, 0, :, :]
-            return R
+        return R
 
     def reconstruct(self, W: Tensor, H: Tensor) -> np.ndarray:
         R = self._reconstruct_torch(W, H)
