@@ -57,7 +57,6 @@ class PyTorch_Backend(Backend):
         neg_energy, pos_energy = self._energy_terms(V, W_grad, H)
         neg = torch.autograd.grad(neg_energy, W_grad, retain_graph=True)[0]
         pos = torch.autograd.grad(pos_energy, W_grad)[0]
-        assert not H.requires_grad
         return neg.detach(), pos.detach()
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
@@ -65,7 +64,6 @@ class PyTorch_Backend(Backend):
         neg_energy, pos_energy = self._energy_terms(V, W, H_grad)
         neg = torch.autograd.grad(neg_energy, H_grad, retain_graph=True)[0]
         pos = torch.autograd.grad(pos_energy, H_grad)[0]
-        assert not W.requires_grad
         return neg.detach(), pos.detach()
 
     def _energy_terms(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
