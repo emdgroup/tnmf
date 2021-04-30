@@ -7,8 +7,7 @@ from .Backend import PyTorchBackend
 from torch import Tensor
 import torch
 import numpy as np
-from typing import Tuple, Optional
-
+from typing import Tuple
 
 
 conv_dict = {
