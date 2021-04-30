@@ -41,17 +41,12 @@ class PyTorch_Backend(Backend):
             n_atoms: int,
             W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
-        self._sample_shape = V.shape[2:]
-        n_samples = V.shape[0]
-        n_channels = V.shape[1]
-
-        transform_shape = self.n_transforms(self._sample_shape, atom_shape)
 
         self.dtype = numpy_to_torch_dtype_dict[V.dtype]
-        H = (1 - torch.rand((n_samples, n_atoms, *transform_shape), dtype=self.dtype))
+        H = (1 - torch.rand((self.n_samples, n_atoms, *self._transform_shape), dtype=self.dtype))
 
         if W is None:
-            W = (1 - torch.rand((n_atoms, n_channels, *atom_shape), dtype=self.dtype))
+            W = (1 - torch.rand((n_atoms, self.n_channels, *atom_shape), dtype=self.dtype))
 
         return W, H
 
