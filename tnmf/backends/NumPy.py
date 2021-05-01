@@ -46,7 +46,7 @@ class NumPy_Backend(NumPyBackend):
             'H_strided_V_strides': H.strides + H.strides[2:],
             'H_strided_V_labels': ['n', 'm'] + [s + str(i) for s, i in product(['a', 'd'], shift_dim_idx)],
             # dimension info for striding in reconstruction computation
-            'H_strided_W_shape': V.shape + atom_shape,
+            'H_strided_W_shape': H.shape[:2] + V.shape[2:] + atom_shape,
             'H_strided_W_strides': H.strides + H.strides[2:],
             'H_strided_W_labels': ['n', 'm'] + [s + str(i) for s, i in product(['d', 'a'], shift_dim_idx)],
         })
