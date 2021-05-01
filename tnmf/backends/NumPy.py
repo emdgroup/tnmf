@@ -1,4 +1,4 @@
-from .Backend import Backend
+from ._NumPyBackend import NumPyBackend
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from opt_einsum import contract
@@ -6,18 +6,17 @@ from itertools import product
 from typing import Tuple, Optional
 
 
-class NumPy_Backend(Backend):
+class NumPy_Backend(NumPyBackend):
 
-    def initialize_matrices(
-            self,
-            V: np.ndarray,
-            atom_shape: Tuple[int, ...],
-            n_atoms: int,
-            mode_R: str,
-            W: Optional[np.array] = None,
+    def _initialize_matrices(
+        self,
+        V: np.ndarray,
+        atom_shape: Tuple[int, ...],
+        n_atoms: int,
+        W: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
-        W, H = super().initialize_matrices(V, atom_shape, n_atoms, mode_R, W)
+        W, H = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
         n_shift_axes = len(self._sample_shape)
         self._shift_axes = tuple(range(-n_shift_axes, 0))
