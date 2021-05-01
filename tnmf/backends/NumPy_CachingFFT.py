@@ -1,4 +1,4 @@
-from .Backend import NumpyBackend
+from ._NumPyBackend import NumPyBackend
 import logging
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
@@ -91,7 +91,7 @@ class CachingFFT(object):
         return self._f_reversed
 
 
-class NumPy_CachingFFT_Backend(NumpyBackend):
+class NumPy_CachingFFT_Backend(NumPyBackend):
 
     def __init__(
         self,
@@ -103,7 +103,7 @@ class NumPy_CachingFFT_Backend(NumpyBackend):
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
 
-    def initialize_matrices(
+    def _initialize_matrices(
         self,
         V: np.ndarray,
         atom_shape: Tuple[int, ...],
@@ -111,7 +111,7 @@ class NumPy_CachingFFT_Backend(NumpyBackend):
         W: Optional[np.array] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
-        w, h = super().initialize_matrices(V, atom_shape, n_atoms, W)
+        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
         self._R = CachingFFT('R', logger=self._logger)
         self._V = CachingFFT('V', logger=self._logger)

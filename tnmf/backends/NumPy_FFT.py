@@ -1,4 +1,4 @@
-from .Backend import NumpyBackend
+from ._NumPyBackend import NumPyBackend
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
 from typing import Tuple
@@ -77,7 +77,7 @@ def fftconvolve_sum(
     return ret
 
 
-class NumPy_FFT_Backend(NumpyBackend):
+class NumPy_FFT_Backend(NumPyBackend):
 
     def reconstruction_gradient_W(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
         R = self.reconstruct(W, H)

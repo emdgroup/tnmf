@@ -5,25 +5,8 @@
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 import abc
-import torch
 import numpy as np
 from typing import Tuple, Optional
-from torch import Tensor
-
-# see https://github.com/pytorch/pytorch/issues/40568#issuecomment-649961327
-numpy_to_torch_dtype_dict = {
-    np.uint8: torch.uint8,
-    np.int8: torch.int8,
-    np.int16: torch.int16,
-    np.int32: torch.int32,
-    np.int64: torch.int64,
-    np.float16: torch.float16,
-    np.float32: torch.float32,
-    np.float64: torch.float64,
-    np.dtype('float64'): torch.float64,
-    np.complex64: torch.complex64,
-    np.complex128: torch.complex128
-}
 
 
 class Backend(metaclass=abc.ABCMeta):
@@ -37,7 +20,17 @@ class Backend(metaclass=abc.ABCMeta):
         self._mode_R = reconstruction_mode
         self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
 
-    def _get_dimensions(self, V, atom_shape):
+    def initialize(
+        self,
+        V: np.ndarray,
+        atom_shape: Tuple[int, ...],
+        n_atoms: int,
+        W: Optional[np.ndarray] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        self._set_dimensions(V, atom_shape)
+        return self._initialize_matrices(V, atom_shape, n_atoms, W)
+
+    def _set_dimensions(self, V, atom_shape):
         self.n_samples = V.shape[0]
         self.n_channels = V.shape[1]
         self._sample_shape = V.shape[2:]
@@ -60,6 +53,16 @@ class Backend(metaclass=abc.ABCMeta):
         return arr / (arr.sum(axis=axes, keepdims=True))
 
     @abc.abstractmethod
+    def _initialize_matrices(
+        self,
+        V: np.ndarray,
+        atom_shape: Tuple[int, ...],
+        n_atoms: int,
+        W: Optional[np.ndarray] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
@@ -75,40 +78,3 @@ class Backend(metaclass=abc.ABCMeta):
         R = self.reconstruct(W, H)
         assert R.shape == V.shape
         return 0.5 * np.sum(np.square(V - R))
-
-
-class NumpyBackend(Backend):
-
-    def initialize_matrices(
-            self,
-            V: np.ndarray,
-            atom_shape: Tuple[int, ...],
-            n_atoms: int,
-            W: Optional[np.array] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-
-        H = np.asarray(1 - np.random.rand(self.n_samples, n_atoms, *self._transform_shape), dtype=V.dtype)
-
-        if W is None:
-            W = np.asarray(1 - np.random.rand(n_atoms, self.n_channels, *atom_shape), dtype=V.dtype)
-
-        return W, H
-
-
-class PyTorchBackend(Backend):
-
-    def initialize_matrices(
-            self,
-            V: np.ndarray,
-            atom_shape: Tuple[int, ...],
-            n_atoms: int,
-            W: Optional[Tensor] = None,
-    ) -> Tuple[Tensor, Tensor]:
-
-        self.dtype = numpy_to_torch_dtype_dict[V.dtype]
-        H = (1 - torch.rand((self.n_samples, n_atoms, *self._transform_shape), dtype=self.dtype))
-
-        if W is None:
-            W = (1 - torch.rand((n_atoms, self.n_channels, *atom_shape), dtype=self.dtype))
-
-        return W, H

@@ -3,7 +3,7 @@
 # TODO: merge gradient functions into one
 # TODO: add device option
 
-from .Backend import PyTorchBackend
+from ._PyTorchBackend import PyTorchBackend
 from torch import Tensor
 import torch
 import numpy as np

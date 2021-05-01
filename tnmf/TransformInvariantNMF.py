@@ -86,9 +86,7 @@ class TransformInvariantNMF:
     ):
         assert update_H or update_W
 
-        self._backend._get_dimensions(V, self.atom_shape)
-
-        self._W, self._H = self._backend.initialize_matrices(
+        self._W, self._H = self._backend.initialize(
             V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
 
         if not keep_W:
