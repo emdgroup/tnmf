@@ -1,7 +1,7 @@
-from .Backend import Backend
+from ._NumPyBackend import NumPyBackend
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
-from typing import Tuple, Optional
+from typing import Tuple
 
 
 def fftconvolve_sum(
@@ -77,18 +77,7 @@ def fftconvolve_sum(
     return ret
 
 
-class NumPy_FFT_Backend(Backend):
-
-    def initialize_matrices(
-            self,
-            V: np.ndarray,
-            atom_shape: Tuple[int, ...],
-            n_atoms: int,
-            W: Optional[np.array] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        self._n_shift_dimensions = len(atom_shape)
-        self._shift_dimensions = tuple(range(-1, -len(atom_shape)-1, -1))
-        return super().initialize_matrices(V, atom_shape, n_atoms,  W)
+class NumPy_FFT_Backend(NumPyBackend):
 
     def reconstruction_gradient_W(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
         R = self.reconstruct(W, H)

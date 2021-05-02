@@ -1,7 +1,8 @@
 # TODO: generalize n_transforms from numpy_fft to all backends
-# TODO: create numpy-specific backend class
 # TODO: all backends need to support self._mode_R et al
 # TODO: do we need self._input_padding ? If yes, all backends have to support it.
+# TODO: fix numpy to torch dtype
+# TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 import abc
 import numpy as np
@@ -19,6 +20,24 @@ class Backend(metaclass=abc.ABCMeta):
         self._mode_R = reconstruction_mode
         self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
 
+    def initialize(
+        self,
+        V: np.ndarray,
+        atom_shape: Tuple[int, ...],
+        n_atoms: int,
+        W: Optional[np.ndarray] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        self._set_dimensions(V, atom_shape)
+        return self._initialize_matrices(V, atom_shape, n_atoms, W)
+
+    def _set_dimensions(self, V, atom_shape):
+        self.n_samples = V.shape[0]
+        self.n_channels = V.shape[1]
+        self._sample_shape = V.shape[2:]
+        self._transform_shape = self.n_transforms(self._sample_shape, atom_shape)
+        self._n_shift_dimensions = len(atom_shape)
+        self._shift_dimensions = tuple(range(-1, -len(atom_shape)-1, -1))
+
     def n_transforms(self, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
         """Number of dictionary transforms in each dimension"""
         if self._mode_R == 'valid':
@@ -30,29 +49,18 @@ class Backend(metaclass=abc.ABCMeta):
         else:
             raise ValueError
 
-    def initialize_matrices(
-            self,
-            V: np.ndarray,
-            atom_shape: Tuple[int, ...],
-            n_atoms: int,
-            mode_R: str,
-            W: Optional[np.array] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        self._sample_shape = V.shape[2:]
-        n_samples = V.shape[0]
-        n_channels = V.shape[1]
-
-        self._transform_shape = self.n_transforms(self._sample_shape, atom_shape)
-
-        H = np.asarray(1 - np.random.rand(n_samples, n_atoms, *self._transform_shape), dtype=V.dtype)
-
-        if W is None:
-            W = np.asarray(1 - np.random.rand(n_atoms, n_channels, *atom_shape), dtype=V.dtype)
-
-        return W, H
-
     def normalize(self, arr: np.ndarray, axes: Tuple[int]) -> np.ndarray:
         return arr / (arr.sum(axis=axes, keepdims=True))
+
+    @abc.abstractmethod
+    def _initialize_matrices(
+        self,
+        V: np.ndarray,
+        atom_shape: Tuple[int, ...],
+        n_atoms: int,
+        W: Optional[np.ndarray] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        raise NotImplementedError
 
     @abc.abstractmethod
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
