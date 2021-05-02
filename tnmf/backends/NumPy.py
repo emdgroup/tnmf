@@ -31,7 +31,6 @@ class NumPy_Backend(NumPyBackend):
             'V_padded': np.pad(V, pad_width=self._cache['pad_width']).copy(),
         })
 
-        # TODO: fix indices and clean from here
         self._cache.update({
             # dimension labels of the data and reconstruction matrices
             'V_labels': ['n', 'c'] + ['d' + str(i) for i in shift_dim_idx],
