@@ -1,9 +1,11 @@
-from ._NumPyBackend import NumPyBackend
+from itertools import product
+from typing import Tuple, Optional
+
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from opt_einsum import contract
-from itertools import product
-from typing import Tuple, Optional
+
+from ._NumPyBackend import NumPyBackend
 
 
 class NumPy_Backend(NumPyBackend):

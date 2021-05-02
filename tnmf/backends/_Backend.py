@@ -5,8 +5,9 @@
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 import abc
-import numpy as np
 from typing import Tuple, Optional
+
+import numpy as np
 
 
 class Backend(metaclass=abc.ABCMeta):
@@ -19,6 +20,12 @@ class Backend(metaclass=abc.ABCMeta):
         self._input_padding = input_padding
         self._mode_R = reconstruction_mode
         self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
+        self.n_samples = None
+        self.n_channels = None
+        self._sample_shape = None
+        self._transform_shape = None
+        self._n_shift_dimensions = None
+        self._shift_dimensions = None
 
     def initialize(
         self,
@@ -42,14 +49,17 @@ class Backend(metaclass=abc.ABCMeta):
         """Number of dictionary transforms in each dimension"""
         if self._mode_R == 'valid':
             return tuple(np.array(sample_shape) + np.array(atom_shape) - 1)
-        elif self._mode_R == 'full':
-            return tuple(np.array(sample_shape) - np.array(atom_shape) + 1)
-        elif self._mode_R == 'same':
-            return tuple(np.array(sample_shape))
-        else:
-            raise ValueError
 
-    def normalize(self, arr: np.ndarray, axes: Tuple[int]) -> np.ndarray:
+        if self._mode_R == 'full':
+            return tuple(np.array(sample_shape) - np.array(atom_shape) + 1)
+
+        if self._mode_R == 'same':
+            return tuple(np.array(sample_shape))
+
+        raise ValueError
+
+    @staticmethod
+    def normalize(arr: np.ndarray, axes: Tuple[int]) -> np.ndarray:
         return arr / (arr.sum(axis=axes, keepdims=True))
 
     @abc.abstractmethod

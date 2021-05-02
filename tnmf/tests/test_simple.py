@@ -2,11 +2,13 @@
 Test if a single sample decomposition works
 """
 
-from scipy.misc import face
+import logging
+
 import numpy as np
 import torch
+from scipy.misc import face
+
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
-import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 

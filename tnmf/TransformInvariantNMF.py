@@ -13,10 +13,11 @@ Authors: Adrian Sosic, Mathias Winkel
 # TODO: we extract .shape[...] too often
 # TODO: add support for inhibition
 
-import numpy as np
-
 import logging
 from typing import Tuple, Callable
+
+import numpy as np
+
 from .backends.NumPy import NumPy_Backend
 from .backends.NumPy_FFT import NumPy_FFT_Backend
 from .backends.PyTorch import PyTorch_Backend
@@ -54,6 +55,8 @@ class TransformInvariantNMF:
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
 
         self.n_iterations_done = 0
+        self._W = None
+        self._H = None
 
     def reconstruct(self) -> np.ndarray:
         return self._backend.reconstruct(self._W, self._H)

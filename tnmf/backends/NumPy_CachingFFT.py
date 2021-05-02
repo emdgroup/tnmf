@@ -1,12 +1,14 @@
-from ._NumPyBackend import NumPyBackend
 import logging
+from typing import Tuple, Optional, List
+
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
 from opt_einsum import contract_expression
-from typing import Tuple, Optional, List
+
+from ._NumPyBackend import NumPyBackend
 
 
-class CachingFFT(object):
+class CachingFFT():
     """
     Wrapper class for conveniently caching and switching back and forth
     between fields in coordinate space and fourier space
@@ -52,7 +54,7 @@ class CachingFFT(object):
     def c(self) -> np.array:
         """Getter for field in coordinate space"""
         if self._c is None:
-            self._logger.debug(f'Computing {self._field_name}(x) = FFT^-1[ {self._field_name}(f) ]')
+            self._logger.debug(f'Computing {self._field_name}(x) = FFT^-1[ {self._field_name}(f) ]', )
             assert self.has_f
             self._c = irfftn(self._f, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
         return self._c
@@ -102,6 +104,9 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         super().__init__(**kwargs)
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
+        self._V = None
+        self._R = None
+        self._cache = {}
 
     def _initialize_matrices(
         self,
@@ -125,7 +130,6 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
             W = CachingFFT('W', logger=self._logger)
             W.c = w
 
-        self._cache = {}
         # fft shape and functions
         fft_axes = self._shift_dimensions
         fft_shape = [next_fast_len(s) for s in np.array(sample_shape) + np.array(self._transform_shape) - 1]

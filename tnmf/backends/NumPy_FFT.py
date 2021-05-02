@@ -1,7 +1,9 @@
-from ._NumPyBackend import NumPyBackend
+from typing import Tuple
+
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
-from typing import Tuple
+
+from ._NumPyBackend import NumPyBackend
 
 
 def fftconvolve_sum(

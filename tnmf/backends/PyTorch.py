@@ -2,12 +2,15 @@
 #       https://pytorch.org/docs/stable/autograd.html#torch.autograd.functional.jacobian
 # TODO: merge gradient functions into one
 # TODO: add device option
+# TODO: use torch.fft.rfftn() to generalize for more dimensions and improve performance
+
+from typing import Tuple
+
+import numpy as np
+import torch
+from torch import Tensor
 
 from ._PyTorchBackend import PyTorchBackend
-from torch import Tensor
-import torch
-import numpy as np
-from typing import Tuple
 
 
 conv_dict = {
@@ -19,7 +22,8 @@ conv_dict = {
 
 class PyTorch_Backend(PyTorchBackend):
 
-    def normalize(self, arr: Tensor, axes: Tuple[int]) -> Tensor:
+    @staticmethod
+    def normalize(arr: Tensor, axes: Tuple[int]) -> Tensor:
         return arr / (arr.sum(dim=axes, keepdim=True))
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
@@ -58,7 +62,7 @@ class PyTorch_Backend(PyTorchBackend):
         flip_dims = list(range(-n_shift_dimensions, 0))
         W_flipped = torch.flip(W, flip_dims)
 
-        R = torch.zeros((n_samples, n_channels, *self._sample_shape), dtype=self.dtype)
+        R = torch.zeros((n_samples, n_channels, *self._sample_shape), dtype=W.dtype)
         for i_atom in range(n_atoms):
             R += conv_fun(H[:, i_atom, None], W_flipped[i_atom, None])
 
