@@ -35,7 +35,7 @@ def do_test(backend: str, expected_error: float):
 
     nmf.fit(img)
 
-    assert np.isclose(nmf._energy_function(img), expected_error)
+    assert np.isclose(nmf._energy_function(img), expected_error)  # pylint: disable=protected-access
 
     img_r = nmf.reconstruct()
     assert np.isclose(0.5*np.sum(np.square(img_r - img)), expected_error)

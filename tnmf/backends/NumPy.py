@@ -10,6 +10,14 @@ from ._NumPyBackend import NumPyBackend
 
 class NumPy_Backend(NumPyBackend):
 
+    def __init__(
+        self,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self._shift_axes = None
+        self._cache = {}
+
     def _initialize_matrices(
         self,
         V: np.ndarray,

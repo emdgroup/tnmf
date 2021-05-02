@@ -148,7 +148,9 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         self._cache['params_reconstruct'] = {
             'slices': (slice(None, None, 1),) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
             #              sum_m W[m, c, ...] * H[n, m, ... ] --> R[n, c, ...]
-            'contraction': contract_expression('mc...,nm...->nc...', W.f.shape, H.f.shape),
+            'contraction': contract_expression('mc...,nm...->nc...',
+                                               W.f.shape,
+                                               H.f.shape),
         }
 
         # fft details: gradient H computation
@@ -156,7 +158,9 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         self._cache['params_reconstruction_gradient_H'] = {
             'slices': (slice(None, None, 1),) * 2 + tuple(slice(upper) for upper in upper_idx),
             #              sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
-            'contraction': contract_expression('nc...,mc...->nm...', self._V.f.shape, W.f_reversed.shape),
+            'contraction': contract_expression('nc...,mc...->nm...',
+                                               self._V.f.shape,
+                                               W.f_reversed.shape),
         }
 
         # fft details: gradient W computation
@@ -165,7 +169,9 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         self._cache['params_reconstruction_gradient_W'] = {
             'slices': (slice(None, None, 1),) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
             #              sum_n V|R[n, c, ... ] * H[n , m, ...]   --> dR / dW[m, c, ...]
-            'contraction': contract_expression('nc...,nm...->mc...', self._V.f.shape, H.f_reversed.shape),
+            'contraction': contract_expression('nc...,nm...->mc...',
+                                               self._V.f.shape,
+                                               H.f_reversed.shape),  # pylint: disable=no-member
         }
 
         return W, H
