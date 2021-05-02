@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Dict
 
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
@@ -12,8 +12,8 @@ def fftconvolve_sum(
         mode: str = "full",
         axes: Tuple[int] = None,
         sum_axis: Tuple[int] = None,
-        padding1=dict(mode='constant', constant_values=0),
-        padding2=dict(mode='constant', constant_values=0),
+        padding1: Dict = None,
+        padding2: Dict = None,
 ):
 
     def _centered(arr, newshape):
@@ -29,6 +29,11 @@ def fftconvolve_sum(
         pad_width = [((0, fshape[a] - field.shape[a]) if a in axes else (0, 0)) for a in range(field.ndim)]
         field_padded = np.pad(field, pad_width, **padding)
         return rfftn(field_padded, np.array(fshape)[axes], axes=axes)
+
+    if padding1 is None:
+        padding1 = dict(mode='constant', constant_values=0)
+    if padding2 is None:
+        padding2 = dict(mode='constant', constant_values=0)
 
     assert in1.ndim == in2.ndim
     if axes is None:

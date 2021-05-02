@@ -5,7 +5,7 @@
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 import abc
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 import numpy as np
 
@@ -15,9 +15,9 @@ class Backend(metaclass=abc.ABCMeta):
     def __init__(
         self,
         reconstruction_mode: str = 'valid',
-        input_padding=dict(mode='constant', constant_values=0),
+        input_padding: Dict = None,
     ):
-        self._input_padding = input_padding
+        self._input_padding = input_padding if input_padding is not None else dict(mode='constant', constant_values=0)
         self._mode_R = reconstruction_mode
         self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
         self.n_samples = None
