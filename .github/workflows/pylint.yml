@@ -1,5 +1,5 @@
-# This workflow will install Python dependencies, and run the flake8 linter for a selected Python version
-name: Python flake8 linter
+# This workflow will install Python dependencies, and run the pylint linter for a selected Python version
+name: Python pylint linter
 
 on:
   push:
@@ -24,8 +24,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8
+        python -m pip install pylint
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
+    - name: Lint with pylint
       run: |
-        flake8
+        pylint tnmf
