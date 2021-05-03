@@ -327,7 +327,6 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def initialize(self, V):
 		assert np.isreal(V).all()
 		super().initialize(V)
-		self._normalization_dims = self.shift_dimensions
 		self._init_cache()
 
 	def _init_cache(self):
@@ -401,6 +400,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: inherit docstring from superclass
+		self._normalization_dims = self.shift_dimensions
 		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
