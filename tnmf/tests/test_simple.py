@@ -43,19 +43,19 @@ def do_test(backend: str, expected_error: float):
 
 def test_numpy():
     np.random.seed(seed=42)
-    do_test('numpy', 104.74284)
+    do_test('numpy', 345.39105)
 
 
 def test_numpy_fft():
     np.random.seed(seed=42)
-    do_test('numpy_fft', 104.74284)
+    do_test('numpy_fft', 345.39105)
 
 
 def test_numpy_caching_fft():
     np.random.seed(seed=42)
-    do_test('numpy_caching_fft', 104.74284)
+    do_test('numpy_caching_fft', 345.39105)
 
 
 def test_pytorch():
     torch.manual_seed(42)
-    do_test('pytorch', 104.2733)
+    do_test('pytorch', 347.09467)
