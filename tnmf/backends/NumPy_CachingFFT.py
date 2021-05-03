@@ -181,7 +181,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         return W, H
 
     @staticmethod
-    def normalize(arr: CachingFFT, axis: Optional[Union[int, Tuple[int, ...]]]) -> CachingFFT:
+    def normalize(arr: CachingFFT, axis: Optional[Union[int, Tuple[int, ...]]] = None):
         # TODO: overwriting the parent method can be avoided by redefining the division operator of CachingFFT and defining
         #   a common "array type" that can handle both np.ndarray and CachingFFT objects
         arr.c /= arr.c.sum(axis=axis, keepdims=True)

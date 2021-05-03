@@ -59,7 +59,7 @@ class Backend(metaclass=abc.ABCMeta):
         raise ValueError
 
     @staticmethod
-    def normalize(arr: np.ndarray, axis: Optional[Union[int, Tuple[int, ...]]]) -> np.ndarray:
+    def normalize(arr: np.ndarray, axis: Optional[Union[int, Tuple[int, ...]]] = None):
         arr /= (arr.sum(axis=axis, keepdims=True))
 
     @abc.abstractmethod
