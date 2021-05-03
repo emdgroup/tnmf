@@ -1,7 +1,7 @@
 # TODO: consider adding shape getters to CachingFFT
 
 import logging
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional
 
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
@@ -20,7 +20,7 @@ class CachingFFT():
         self,
         field_name: str,
         fft_axes: Optional[Tuple[int, ...]] = None,
-        fft_shape: Optional[List[int, ...]] = None,
+        fft_shape: Optional[Tuple[int, ...]] = None,
         logger: Optional[logging.Logger] = None,
     ):
         self._c = None  # field in coordinate space
@@ -36,7 +36,7 @@ class CachingFFT():
         self.c *= other
         return self
 
-    def set_fft_params(self, fft_axes: Tuple[int, ...], fft_shape: List[int, ...]):
+    def set_fft_params(self, fft_axes: Tuple[int, ...], fft_shape: Tuple[int, ...]):
         self._fft_axes = fft_axes
         self._fft_shape = fft_shape
 
@@ -135,7 +135,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
         # fft shape and functions
         fft_axes = self._shift_dimensions
-        fft_shape = [next_fast_len(s) for s in np.array(sample_shape) + np.array(self._transform_shape) - 1]
+        fft_shape = tuple(next_fast_len(s) for s in np.array(sample_shape) + np.array(self._transform_shape) - 1)
 
         self._cache['fft_axes'] = fft_axes
         self._cache['fft_shape'] = fft_shape
