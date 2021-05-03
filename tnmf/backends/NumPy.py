@@ -62,7 +62,7 @@ class NumPy_Backend(NumPyBackend):
 
         return W, H
 
-    def reconstruction_gradient_W(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
+    def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         H_strided = as_strided(H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
         R = self.reconstruct(W, H)
 
@@ -77,7 +77,7 @@ class NumPy_Backend(NumPyBackend):
             self._cache['W_labels'], optimize='optimal'), axis=self._shift_axes)
         return numer, denum
 
-    def reconstruction_gradient_H(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
+    def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         V_padded = self._cache['V_padded']
         R_padded = np.pad(self.reconstruct(W, H), pad_width=self._cache['pad_width'])
 
@@ -94,7 +94,7 @@ class NumPy_Backend(NumPyBackend):
             self._cache['H_labels'], optimize='optimal')
         return numer, denum
 
-    def reconstruct(self, W: np.array, H: np.array) -> np.array:
+    def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         H_strided = as_strided(H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
         R = contract(
             H_strided, self._cache['H_strided_W_labels'],

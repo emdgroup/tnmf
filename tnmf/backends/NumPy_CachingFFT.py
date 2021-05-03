@@ -1,3 +1,5 @@
+# TODO: consider adding shape getters to CachingFFT
+
 import logging
 from typing import Tuple, Optional, List
 
@@ -51,7 +53,7 @@ class CachingFFT():
         return self._f is not None
 
     @property
-    def c(self) -> np.array:
+    def c(self) -> np.ndarray:
         """Getter for field in coordinate space"""
         if self._c is None:
             self._logger.debug(f'Computing {self._field_name}(x) = FFT^-1[ {self._field_name}(f) ]', )
@@ -60,14 +62,14 @@ class CachingFFT():
         return self._c
 
     @c.setter
-    def c(self, c: np.array):
+    def c(self, c: np.ndarray):
         """Setter for field in coordinate space"""
         self._logger.debug(f'{"Setting" if c is not None else "Clearing"} {self._field_name}(x)')
         self._invalidate()
         self._c = c
 
     @property
-    def f(self) -> np.array:
+    def f(self) -> np.ndarray:
         """Getter for field in fourier space"""
         if self._f is None:
             self._logger.debug(f'Computing {self._field_name}(f) = FFT[ {self._field_name}(x) ]')
@@ -76,14 +78,14 @@ class CachingFFT():
         return self._f
 
     @f.setter
-    def f(self, f: np.array):
+    def f(self, f: np.ndarray):
         """Setter for field in fourier space"""
         self._logger.debug(f'{"Setting" if f is not None else "Clearing"} {self._field_name}(f)')
         self._invalidate()
         self._f = f
 
     @property
-    def f_reversed(self) -> np.array:
+    def f_reversed(self) -> np.ndarray:
         """Getter for time-reversed field in fourier space, intentionally no setter for now"""
         if self._f_reversed is None:
             self._logger.debug(f'Computing {self._field_name}_rev(f) = FFT[ {self._field_name}(-x) ]')
@@ -113,7 +115,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         V: np.ndarray,
         atom_shape: Tuple[int, ...],
         n_atoms: int,
-        W: Optional[np.array] = None,
+        W: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
@@ -166,6 +168,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         # fft details: gradient W computation
         lower_idx = np.array(sample_shape) - 1
         upper_idx = np.array(sample_shape) + np.array(atom_shape) - 1
+        # TODO: understand why pylint triggers a warning for H.f_reversed.shape but not for W.f_reversed or H.f
         self._cache['params_reconstruction_gradient_W'] = {
             'slices': (slice(None, None, 1),) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
             #              sum_n V|R[n, c, ... ] * H[n , m, ...]   --> dR / dW[m, c, ...]
@@ -176,7 +179,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
         return W, H
 
-    def normalize(self, arr: np.array, axes: Tuple[int]) -> np.array:
+    def normalize(self, arr: np.ndarray, axes: Tuple[int]) -> np.ndarray:
         arr.c /= arr.c.sum(axis=axes, keepdims=True)
         return arr
 
@@ -185,24 +188,24 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         result.f = contraction(arr1_fft, arr2_fft)
         return result.c[slices]
 
-    def reconstruction_gradient_W(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
+    def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self._reconstruct_cachingfft(W, H)
         assert R.c.shape == V.shape
         numer = self._fft_convolve(self._V.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
         denum = self._fft_convolve(self._R.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
         return numer, denum
 
-    def reconstruction_gradient_H(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
+    def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self._reconstruct_cachingfft(W, H)
         assert R.c.shape == V.shape
         numer = self._fft_convolve(self._V.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
         denum = self._fft_convolve(self._R.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
         return numer, denum
 
-    def _reconstruct_cachingfft(self, W: np.array, H: np.array) -> np.array:
+    def _reconstruct_cachingfft(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         self._R.c = self._fft_convolve(W.f, H.f, **self._cache['params_reconstruct'])
         return self._R
 
-    def reconstruct(self, W: np.array, H: np.array) -> np.array:
+    def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         R = self._reconstruct_cachingfft(W, H)
         return R.c

@@ -7,8 +7,8 @@ from ._NumPyBackend import NumPyBackend
 
 
 def fftconvolve_sum(
-        in1: np.array,
-        in2: np.array,
+        in1: np.ndarray,
+        in2: np.ndarray,
         mode: str = "full",
         axes: Tuple[int] = None,
         sum_axis: Tuple[int] = None,
@@ -86,7 +86,7 @@ def fftconvolve_sum(
 
 class NumPy_FFT_Backend(NumPyBackend):
 
-    def reconstruction_gradient_W(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
+    def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self.reconstruct(W, H)
         assert R.shape == V.shape
 
@@ -104,7 +104,7 @@ class NumPy_FFT_Backend(NumPyBackend):
             padding2=self._input_padding, mode='valid', axes=self._shift_dimensions, sum_axis=0)
         return neg, pos
 
-    def reconstruction_gradient_H(self, V: np.array, W: np.array, H: np.array) -> Tuple[np.array, np.array]:
+    def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self.reconstruct(W, H)
         assert R.shape == V.shape
 
@@ -122,7 +122,7 @@ class NumPy_FFT_Backend(NumPyBackend):
             padding1=self._input_padding, mode=self._mode_H, axes=self._shift_dimensions, sum_axis=2)
         return neg, pos
 
-    def reconstruct(self, W: np.array, H: np.array) -> np.array:
+    def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         #        sum_m    H[n, m, _, ... ] * W[_ , m, c, ...]   --> R[n, c, ...]
         R = fftconvolve_sum(
             H[:, :, np.newaxis, ...], W[np.newaxis, :, ...],
