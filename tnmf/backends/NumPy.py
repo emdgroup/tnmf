@@ -66,33 +66,33 @@ class NumPy_Backend(NumPyBackend):
         H_strided = as_strided(H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
         R = self.reconstruct(W, H)
 
-        numer = np.flip(contract(
+        neg = np.flip(contract(
             H_strided, self._cache['H_strided_V_labels'],
             V, self._cache['V_labels'],
             self._cache['W_labels'], optimize='optimal'), axis=self._shift_axes)
 
-        denum = np.flip(contract(
+        pos = np.flip(contract(
             H_strided, self._cache['H_strided_V_labels'],
             R, self._cache['V_labels'],
             self._cache['W_labels'], optimize='optimal'), axis=self._shift_axes)
-        return numer, denum
+        return neg, pos
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         V_padded = self._cache['V_padded']
         R_padded = np.pad(self.reconstruct(W, H), pad_width=self._cache['pad_width'])
 
         V_strided = as_strided(V_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
-        numer = contract(
+        neg = contract(
             W, self._cache['W_labels'],
             V_strided, self._cache['X_strided_W_labels'],
             self._cache['H_labels'], optimize='optimal')
 
         R_strided = as_strided(R_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
-        denum = contract(
+        pos = contract(
             W, self._cache['W_labels'],
             R_strided, self._cache['X_strided_W_labels'],
             self._cache['H_labels'], optimize='optimal')
-        return numer, denum
+        return neg, pos
 
     def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         H_strided = as_strided(H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)

@@ -192,16 +192,16 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self._reconstruct_cachingfft(W, H)
         assert R.c.shape == V.shape
-        numer = self._fft_convolve(self._V.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
-        denum = self._fft_convolve(self._R.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
-        return numer, denum
+        neg = self._fft_convolve(self._V.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
+        pos = self._fft_convolve(self._R.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
+        return neg, pos
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self._reconstruct_cachingfft(W, H)
         assert R.c.shape == V.shape
-        numer = self._fft_convolve(self._V.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
-        denum = self._fft_convolve(self._R.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
-        return numer, denum
+        neg = self._fft_convolve(self._V.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
+        pos = self._fft_convolve(self._R.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
+        return neg, pos
 
     def _reconstruct_cachingfft(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         self._R.c = self._fft_convolve(W.f, H.f, **self._cache['params_reconstruct'])
