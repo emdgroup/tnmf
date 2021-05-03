@@ -10,8 +10,8 @@ def fftconvolve_sum(
         in1: np.ndarray,
         in2: np.ndarray,
         mode: str = "full",
-        axes: Tuple[int] = None,
-        sum_axis: Tuple[int] = None,
+        axes: Tuple[int, ...] = None,
+        sum_axis: Tuple[int, ...] = None,
         padding1: Dict = None,
         padding2: Dict = None,
 ):

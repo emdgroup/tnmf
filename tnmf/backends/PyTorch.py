@@ -23,7 +23,7 @@ conv_dict = {
 class PyTorch_Backend(PyTorchBackend):
 
     @staticmethod
-    def normalize(arr: Tensor, axes: Tuple[int]) -> Tensor:
+    def normalize(arr: Tensor, axes: Tuple[int, ...]) -> Tensor:
         return arr / (arr.sum(dim=axes, keepdim=True))
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:

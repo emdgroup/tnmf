@@ -19,8 +19,9 @@ class CachingFFT():
     def __init__(
         self,
         field_name: str,
-        fft_axes: Optional[Tuple[int]] = None,
-        fft_shape: Optional[List[int]] = None, logger: Optional[logging.Logger] = None,
+        fft_axes: Optional[Tuple[int, ...]] = None,
+        fft_shape: Optional[List[int, ...]] = None,
+        logger: Optional[logging.Logger] = None,
     ):
         self._c = None  # field in coordinate space
         self._f = None  # field in fourier space
@@ -35,7 +36,7 @@ class CachingFFT():
         self.c *= other
         return self
 
-    def set_fft_params(self, fft_axes: Tuple[int], fft_shape: List[int]):
+    def set_fft_params(self, fft_axes: Tuple[int, ...], fft_shape: List[int, ...]):
         self._fft_axes = fft_axes
         self._fft_shape = fft_shape
 
@@ -179,7 +180,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
         return W, H
 
-    def normalize(self, arr: np.ndarray, axes: Tuple[int]) -> np.ndarray:
+    def normalize(self, arr: np.ndarray, axes: Tuple[int, ...]) -> np.ndarray:
         arr.c /= arr.c.sum(axis=axes, keepdims=True)
         return arr
 
