@@ -2,11 +2,13 @@
 Test if a single sample decomposition works
 """
 
-from scipy.misc import face
+import logging
+
 import numpy as np
 import torch
+from scipy.misc import face
+
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
-import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
@@ -33,7 +35,7 @@ def do_test(backend: str, expected_error: float):
 
     nmf.fit(img)
 
-    assert np.isclose(nmf._energy_function(img), expected_error)
+    assert np.isclose(nmf._energy_function(img), expected_error)  # pylint: disable=protected-access
 
     img_r = nmf.reconstruct()
     assert np.isclose(0.5*np.sum(np.square(img_r - img)), expected_error)

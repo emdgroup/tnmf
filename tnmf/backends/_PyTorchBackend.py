@@ -1,8 +1,12 @@
-from ._Backend import Backend
+# pylint: disable=abstract-method
+
+from typing import Tuple, Optional
+
 import numpy as np
 import torch
 from torch import Tensor
-from typing import Tuple, Optional
+
+from ._Backend import Backend
 
 # see https://github.com/pytorch/pytorch/issues/40568#issuecomment-649961327
 numpy_to_torch_dtype_dict = {
@@ -30,10 +34,10 @@ class PyTorchBackend(Backend):
         W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
 
-        self.dtype = numpy_to_torch_dtype_dict[V.dtype]
-        H = (1 - torch.rand((self.n_samples, n_atoms, *self._transform_shape), dtype=self.dtype))
+        dtype = numpy_to_torch_dtype_dict[V.dtype]
+        H = (1 - torch.rand((self.n_samples, n_atoms, *self._transform_shape), dtype=dtype))
 
         if W is None:
-            W = (1 - torch.rand((n_atoms, self.n_channels, *atom_shape), dtype=self.dtype))
+            W = (1 - torch.rand((n_atoms, self.n_channels, *atom_shape), dtype=dtype))
 
         return W, H
