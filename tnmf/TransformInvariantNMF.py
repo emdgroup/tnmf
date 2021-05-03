@@ -68,7 +68,7 @@ class TransformInvariantNMF:
         neg, pos = self._backend.reconstruction_gradient_W(V, self._W, self._H)
 
         self._W *= (neg / (pos + self.eps))
-        self._W = self._backend.normalize(self._W, axes=self._axes_W_normalization)
+        self._backend.normalize(self._W, axis=self._axes_W_normalization)
 
     def _update_H(self, V: np.ndarray, sparsity: float = 0):
         assert sparsity >= 0
@@ -95,7 +95,7 @@ class TransformInvariantNMF:
             V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
 
         if not keep_W:
-            self._W = self._backend.normalize(self._W, self._axes_W_normalization)
+            self._backend.normalize(self._W, self._axes_W_normalization)
 
         for self.n_iterations_done in range(self.n_iterations):
             if update_H:

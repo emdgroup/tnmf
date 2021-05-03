@@ -5,7 +5,7 @@
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 import abc
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict, Union
 
 import numpy as np
 
@@ -59,8 +59,8 @@ class Backend(metaclass=abc.ABCMeta):
         raise ValueError
 
     @staticmethod
-    def normalize(arr: np.ndarray, axes: Tuple[int, ...]) -> np.ndarray:
-        return arr / (arr.sum(axis=axes, keepdims=True))
+    def normalize(arr: np.ndarray, axis: Optional[Union[int, Tuple[int, ...]]] = None):
+        arr /= (arr.sum(axis=axis, keepdims=True))
 
     @abc.abstractmethod
     def _initialize_matrices(

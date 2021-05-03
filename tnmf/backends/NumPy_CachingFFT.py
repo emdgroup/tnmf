@@ -1,7 +1,7 @@
 # TODO: consider adding shape getters to CachingFFT
 
 import logging
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
@@ -180,9 +180,11 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
         return W, H
 
-    def normalize(self, arr: np.ndarray, axes: Tuple[int, ...]) -> np.ndarray:
-        arr.c /= arr.c.sum(axis=axes, keepdims=True)
-        return arr
+    @staticmethod
+    def normalize(arr: CachingFFT, axis: Optional[Union[int, Tuple[int, ...]]] = None):
+        # TODO: overwriting the parent method can be avoided by redefining the division operator of CachingFFT and defining
+        #   a common "array type" that can handle both np.ndarray and CachingFFT objects
+        arr.c /= arr.c.sum(axis=axis, keepdims=True)
 
     def _fft_convolve(self, arr1_fft, arr2_fft, contraction, slices):
         result = CachingFFT('fft_convolve', fft_axes=self._cache['fft_axes'], fft_shape=self._cache['fft_shape'])
