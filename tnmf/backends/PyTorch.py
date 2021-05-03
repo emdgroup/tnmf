@@ -4,7 +4,7 @@
 # TODO: add device option
 # TODO: use torch.fft.rfftn() to generalize for more dimensions and improve performance
 
-from typing import Tuple
+from typing import Tuple, Union, Optional
 
 import numpy as np
 import torch
@@ -23,8 +23,8 @@ conv_dict = {
 class PyTorch_Backend(PyTorchBackend):
 
     @staticmethod
-    def normalize(arr: Tensor, axes: Tuple[int, ...]) -> Tensor:
-        return arr / (arr.sum(dim=axes, keepdim=True))
+    def normalize(arr: Tensor, axis: Optional[Union[int, Tuple[int, ...]]]) -> Tensor:
+        arr.divide_(arr.sum(dim=axis, keepdim=True))
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
         W_grad = W.detach().requires_grad_()
