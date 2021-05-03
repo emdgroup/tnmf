@@ -8,7 +8,7 @@ on:
     branches: [ main ]
 
 jobs:
-  run-flake8:
+  run-pylint:
 
     runs-on: ubuntu-latest
     strategy:
