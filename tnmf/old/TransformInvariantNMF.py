@@ -201,7 +201,7 @@ class TransformInvariantNMF(ABC):
 
 	def reconstruction_error(self) -> float:
 		"""Squared error between the input and its reconstruction."""
-		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
+		return 0.5 * np.sum(np.square(self.V - self.R))
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
