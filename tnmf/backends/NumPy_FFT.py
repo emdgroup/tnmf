@@ -69,7 +69,7 @@ def fftconvolve_sum(
         del s2[sum_axis]
 
     ret = irfftn(sp1sp2, np.array(fshape)[axes], axes=axes)
-    ret = ret[fslice]
+    ret = ret[tuple(fslice)]  # pylint: disable=invalid-sequence-index
 
     if mode == "full":
         ret = ret.copy()
