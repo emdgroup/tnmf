@@ -12,7 +12,7 @@ from scipy.ndimage import convolve1d
 from opt_einsum import contract
 from itertools import product
 from abc import ABC
-from utils import normalize, shift
+from .utils import normalize, shift
 from typing import Optional, Tuple
 plt.style.use('seaborn')
 
@@ -172,8 +172,8 @@ class TransformInvariantNMF(ABC):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: use clever scaling of tensors for initialization
-		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
-		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
+		self.H = 1 - np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
+		self.W = normalize(1 - np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 
 	def fit(self, V):
 		"""Learns an NMF representation of a given signal matrix."""
@@ -201,7 +201,7 @@ class TransformInvariantNMF(ABC):
 
 	def reconstruction_error(self) -> float:
 		"""Squared error between the input and its reconstruction."""
-		return np.linalg.norm((self.V - self.R).ravel(), ord=2)
+		return 0.5 * np.sum(np.square(self.V - self.R))
 
 	def _reconstruction_gradient_H(self) -> (np.array, np.array):
 		"""Positive and negative parts of the gradient of the reconstruction error w.r.t. the activation tensor."""
@@ -327,7 +327,6 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def initialize(self, V):
 		assert np.isreal(V).all()
 		super().initialize(V)
-		self._normalization_dims = self.shift_dimensions
 		self._init_cache()
 
 	def _init_cache(self):
@@ -401,6 +400,7 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: inherit docstring from superclass
+		self._normalization_dims = self.shift_dimensions
 		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
 
