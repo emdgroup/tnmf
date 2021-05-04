@@ -196,23 +196,19 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         return result.c[slices]
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        R = self._reconstruct_cachingfft(W, H)
+        R = self.reconstruct(W, H)
         assert R.c.shape == V.shape
         neg = self._fft_convolve(self._V.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
         pos = self._fft_convolve(self._R.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
         return neg, pos
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        R = self._reconstruct_cachingfft(W, H)
+        R = self.reconstruct(W, H)
         assert R.c.shape == V.shape
         neg = self._fft_convolve(self._V.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
         pos = self._fft_convolve(self._R.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
         return neg, pos
 
-    def _reconstruct_cachingfft(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
+    def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         self._R.c = self._fft_convolve(W.f, H.f, **self._cache['params_reconstruct'])
         return self._R
-
-    def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
-        R = self._reconstruct_cachingfft(W, H)
-        return R.c

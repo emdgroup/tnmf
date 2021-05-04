@@ -70,7 +70,7 @@ class PyTorch_Backend(PyTorchBackend):
 
     def reconstruct(self, W: Tensor, H: Tensor) -> np.ndarray:
         R = self._reconstruct_torch(W, H)
-        return R.detach().numpy()
+        return R
 
     def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:
         V = torch.as_tensor(V)

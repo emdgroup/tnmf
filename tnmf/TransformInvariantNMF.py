@@ -66,7 +66,11 @@ class TransformInvariantNMF:
     def H(self) -> np.ndarray:
         return self._backend.to_ndarray(self._H)
 
-    def reconstruct(self) -> np.ndarray:
+    @property
+    def R(self) -> np.ndarray:
+        return self._backend.to_ndarray(self._reconstruct())
+
+    def _reconstruct(self) -> np.ndarray:
         return self._backend.reconstruct(self._W, self._H)
 
     def _energy_function(self, V: np.ndarray) -> float:

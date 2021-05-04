@@ -89,6 +89,6 @@ class Backend(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     def reconstruction_energy(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> float:
-        R = self.reconstruct(W, H)
+        R = self.to_ndarray(self.reconstruct(W, H))
         assert R.shape == V.shape
         return 0.5 * np.sum(np.square(V - R))
