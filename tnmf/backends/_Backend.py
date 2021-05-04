@@ -43,7 +43,7 @@ class Backend(metaclass=abc.ABCMeta):
         self._sample_shape = V.shape[2:]
         self._transform_shape = self.n_transforms(self._sample_shape, atom_shape)
         self._n_shift_dimensions = len(atom_shape)
-        self._shift_dimensions = tuple(range(-1, -len(atom_shape)-1, -1))
+        self._shift_dimensions = tuple(range(-1, -len(atom_shape) - 1, -1))
 
     def n_transforms(self, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
         """Number of dictionary transforms in each dimension"""
