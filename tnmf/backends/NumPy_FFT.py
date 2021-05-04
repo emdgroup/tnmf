@@ -41,7 +41,7 @@ def fftconvolve_sum(
 
     s1 = list(in1.shape)
     s2 = list(in2.shape)
-    axes = sorted([a if a >= 0 else a+in1.ndim for a in axes])
+    axes = sorted([a if a >= 0 else a + in1.ndim for a in axes])
     axes = [a for a in axes if s1[a] != 1 and s2[a] != 1]
 
     if mode == 'valid':
@@ -69,7 +69,7 @@ def fftconvolve_sum(
         del s2[sum_axis]
 
     ret = irfftn(sp1sp2, np.array(fshape)[axes], axes=axes)
-    ret = ret[fslice]
+    ret = ret[tuple(fslice)]  # pylint: disable=invalid-sequence-index
 
     if mode == "full":
         ret = ret.copy()
