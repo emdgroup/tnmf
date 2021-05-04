@@ -12,7 +12,7 @@ from scipy.ndimage import convolve1d
 from opt_einsum import contract
 from itertools import product
 from abc import ABC
-from utils import normalize, shift
+from .utils import normalize, shift
 from typing import Optional, Tuple
 plt.style.use('seaborn')
 
