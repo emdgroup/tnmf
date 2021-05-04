@@ -37,6 +37,10 @@ class Backend(metaclass=abc.ABCMeta):
         self._set_dimensions(V, atom_shape)
         return self._initialize_matrices(V, atom_shape, n_atoms, W)
 
+    @abc.abstractstaticmethod
+    def to_ndarray(arr) -> np.ndarray:
+        raise NotImplementedError
+
     def _set_dimensions(self, V, atom_shape):
         self.n_samples = V.shape[0]
         self.n_channels = V.shape[1]

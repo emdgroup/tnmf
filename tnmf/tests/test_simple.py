@@ -40,6 +40,9 @@ def do_test(backend: str, expected_error: float):
     img_r = nmf.reconstruct()
     assert np.isclose(0.5 * np.sum(np.square(img_r - img)), expected_error)
 
+    norm_W = np.sum(nmf.W, axis=(-1, -2))
+    assert np.allclose(norm_W, 1.)
+
 
 def test_numpy():
     np.random.seed(seed=42)

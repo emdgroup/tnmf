@@ -58,6 +58,14 @@ class TransformInvariantNMF:
         self._W = None
         self._H = None
 
+    @property
+    def W(self) -> np.ndarray:
+        return self._backend.to_ndarray(self._W)
+
+    @property
+    def H(self) -> np.ndarray:
+        return self._backend.to_ndarray(self._H)
+
     def reconstruct(self) -> np.ndarray:
         return self._backend.reconstruct(self._W, self._H)
 

@@ -23,3 +23,7 @@ class NumPyBackend(Backend):
             W = np.asarray(1 - np.random.rand(n_atoms, self.n_channels, *atom_shape), dtype=V.dtype)
 
         return W, H
+
+    @staticmethod
+    def to_ndarray(arr: np.ndarray) -> np.ndarray:
+        return arr

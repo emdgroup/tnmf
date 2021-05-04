@@ -41,3 +41,7 @@ class PyTorchBackend(Backend):
             W = (1 - torch.rand((n_atoms, self.n_channels, *atom_shape), dtype=dtype))
 
         return W, H
+
+    @staticmethod
+    def to_ndarray(arr: Tensor) -> np.ndarray:
+        return arr.detach().numpy()
