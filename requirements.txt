@@ -5,6 +5,7 @@ opt-einsum==3.3.0
 scipy==1.5.4
 streamlit==0.71.0
 pytest==6.2.3
+pytest-cov==2.11.1
 sphinx
 sphinx-autoapi
 flake8==3.9.1
