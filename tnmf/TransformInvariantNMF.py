@@ -39,7 +39,7 @@ class TransformInvariantNMF:
         self.atom_shape = atom_shape
         self.n_atoms = n_atoms
         self.n_iterations = n_iterations
-        self._axes_W_normalization = tuple(range(1, len(atom_shape) + 1))
+        self._axes_W_normalization = tuple(range(-len(atom_shape), 0))
         self.eps = 1.e-9
 
         backend_map = {
