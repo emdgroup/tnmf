@@ -172,8 +172,8 @@ class TransformInvariantNMF(ABC):
 	def _init_factorization_matrices(self):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: use clever scaling of tensors for initialization
-		self.H = np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
-		self.W = normalize(np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
+		self.H = 1 - np.random.random([self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
+		self.W = normalize(1 - np.random.random([self.atom_size, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
 
 	def fit(self, V):
 		"""Learns an NMF representation of a given signal matrix."""
