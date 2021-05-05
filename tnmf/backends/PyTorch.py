@@ -42,12 +42,12 @@ class PyTorch_Backend(PyTorchBackend):
 
     def _energy_terms(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
         V = torch.as_tensor(V)
-        R = self._reconstruct_torch(W, H)
+        R = self.reconstruct(W, H)
         neg = (R * V).sum()
         pos = 0.5 * (V.square().sum() + R.square().sum())
         return neg, pos
 
-    def _reconstruct_torch(self, W: Tensor, H: Tensor) -> Tensor:
+    def reconstruct(self, W: Tensor, H: Tensor) -> Tensor:
         # TODO: support dimensions > 3
         # TODO: remove atom for loop
         # TODO: consider transposed convolution as alternative
@@ -68,12 +68,8 @@ class PyTorch_Backend(PyTorchBackend):
 
         return R
 
-    def reconstruct(self, W: Tensor, H: Tensor) -> np.ndarray:
-        R = self._reconstruct_torch(W, H)
-        return R.detach().numpy()
-
     def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:
         V = torch.as_tensor(V)
-        R = self._reconstruct_torch(W, H)
+        R = self.reconstruct(W, H)
         energy = 0.5 * torch.sum(torch.square(V - R))
         return float(energy)
