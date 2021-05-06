@@ -76,21 +76,27 @@ class TransformInvariantNMF:
     def _energy_function(self, V: np.ndarray) -> float:
         return self._backend.reconstruction_energy(V, self._W, self._H)
 
+    def _multiplicative_update(self, arr: np.ndarray, neg, pos, sparsity: float = 0):
+        assert sparsity >= 0
+
+        regularization = self.eps
+
+        if sparsity > 0:
+            regularization += sparsity
+
+        pos += regularization
+
+        arr *= neg
+        arr /= pos
+
     def _update_W(self, V: np.ndarray):
         neg, pos = self._backend.reconstruction_gradient_W(V, self._W, self._H)
-
-        self._W *= (neg / (pos + self.eps))
+        self._multiplicative_update(self._W, neg, pos)
         self._backend.normalize(self._W, axis=self._axes_W_normalization)
 
     def _update_H(self, V: np.ndarray, sparsity: float = 0):
-        assert sparsity >= 0
-
         neg, pos = self._backend.reconstruction_gradient_H(V, self._W, self._H)
-
-        if sparsity > 0:
-            pos = pos + sparsity
-
-        self._H *= (neg / (pos + self.eps))
+        self._multiplicative_update(self._H, neg, pos, sparsity)
 
     def _do_fit(
             self,

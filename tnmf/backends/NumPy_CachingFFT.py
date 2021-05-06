@@ -36,6 +36,10 @@ class CachingFFT():
         self.c *= other
         return self
 
+    def __itruediv__(self, other):
+        self.c /= other
+        return self
+
     def set_fft_params(self, fft_axes: Tuple[int, ...], fft_shape: Tuple[int, ...]):
         self._fft_axes = fft_axes
         self._fft_shape = fft_shape

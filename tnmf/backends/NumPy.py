@@ -38,32 +38,27 @@ class NumPy_Backend(NumPyBackend):
         }
 
         self._cache.update({
-            'V_padded': np.pad(V, pad_width=self._cache['pad_width']).copy(),
-        })
-
-        self._cache.update({
+            'V_padded': np.pad(V, pad_width=self._cache['pad_width']),
             # dimension labels of the data and reconstruction matrices
             'V_labels': ['n', 'c'] + ['d' + str(i) for i in shift_dim_idx],
             'W_labels': ['m', 'c'] + ['a' + str(i) for i in shift_dim_idx],
             'H_labels': ['n', 'm'] + ['d' + str(i) for i in shift_dim_idx],
             # dimension info for striding in gradient_H computation
             'X_strided_W_shape': V.shape[:2] + H.shape[2:] + atom_shape,
-            'X_strided_W_strides': self._cache['V_padded'].strides + self._cache['V_padded'].strides[2:],
             'X_strided_W_labels': ['n', 'c'] + [s + str(i) for s, i in product(['d', 'a'], shift_dim_idx)],
             # dimension info for striding in gradient_W computation
             'H_strided_V_shape': H.shape[:2] + atom_shape + V.shape[2:],
-            'H_strided_V_strides': H.strides + H.strides[2:],
             'H_strided_V_labels': ['n', 'm'] + [s + str(i) for s, i in product(['a', 'd'], shift_dim_idx)],
             # dimension info for striding in reconstruction computation
             'H_strided_W_shape': H.shape[:2] + V.shape[2:] + atom_shape,
-            'H_strided_W_strides': H.strides + H.strides[2:],
             'H_strided_W_labels': ['n', 'm'] + [s + str(i) for s, i in product(['d', 'a'], shift_dim_idx)],
         })
 
         return W, H
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        H_strided = as_strided(H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
+        H_strided_V_strides = H.strides + H.strides[2:]  # do NOT put these strides into self._cache as H layout can change
+        H_strided = as_strided(H, self._cache['H_strided_V_shape'], H_strided_V_strides, writeable=False)
         R = self.reconstruct(W, H)
 
         neg = np.flip(contract(
@@ -79,15 +74,16 @@ class NumPy_Backend(NumPyBackend):
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         V_padded = self._cache['V_padded']
-        R_padded = np.pad(self.reconstruct(W, H), pad_width=self._cache['pad_width'])
-
-        V_strided = as_strided(V_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
+        V_strided_W_strides = V_padded.strides + V_padded.strides[2:]  # do NOT put these strides into self._cache
+        V_strided = as_strided(V_padded, self._cache['X_strided_W_shape'], V_strided_W_strides, writeable=False)
         neg = contract(
             W, self._cache['W_labels'],
             V_strided, self._cache['X_strided_W_labels'],
             self._cache['H_labels'], optimize='optimal')
 
-        R_strided = as_strided(R_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
+        R_padded = np.pad(self.reconstruct(W, H), pad_width=self._cache['pad_width'])
+        R_strided_W_strides = R_padded.strides + R_padded.strides[2:]  # do NOT put these strides into self._cache
+        R_strided = as_strided(R_padded, self._cache['X_strided_W_shape'], R_strided_W_strides, writeable=False)
         pos = contract(
             W, self._cache['W_labels'],
             R_strided, self._cache['X_strided_W_labels'],
@@ -95,7 +91,8 @@ class NumPy_Backend(NumPyBackend):
         return neg, pos
 
     def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
-        H_strided = as_strided(H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
+        H_strided_W_strides = H.strides + H.strides[2:]  # do NOT put these strides into self._cache as H layout can change
+        H_strided = as_strided(H, self._cache['H_strided_W_shape'], H_strided_W_strides, writeable=False)
         R = contract(
             H_strided, self._cache['H_strided_W_labels'],
             np.flip(W, self._shift_axes), self._cache['W_labels'],
