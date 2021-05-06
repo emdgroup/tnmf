@@ -398,8 +398,11 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		"""Initializes the activation matrix and dictionary matrix."""
 		# TODO: inherit docstring from superclass
 		self._normalization_dims = self.shift_dimensions
-		self.W = normalize(np.random.random([*[self.atom_size] * self.n_shift_dimensions, self.n_channels, self.n_components]).astype(self.V.dtype), axis=self._normalization_dims)
-		self.H = np.random.random([*self.n_transforms, self.n_components, self.n_signals]).astype(self.V.dtype)
+		self.H = 1 - np.random.random((self.n_signals, self.n_components, *self.n_transforms)).astype(self.V.dtype)
+		self.H = self.H.transpose((2,3,1,0)).copy()
+		self.W = 1 - np.random.random((self.n_components, self.n_channels, *[self.atom_size] * self.n_shift_dimensions)).astype(self.V.dtype)
+		self.W = self.W.transpose((2,3,1,0)).copy()
+		self.W = normalize(self.W, axis=self._normalization_dims)
 
 	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
 		"""Computes the positive and the negative parts of the energy gradient w.r.t. the activation tensor."""

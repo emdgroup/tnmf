@@ -46,9 +46,9 @@ def do_test(use_fft: bool, expected_error: float):
 
 def test_numpy():
     np.random.seed(seed=42)
-    do_test(use_fft=False, expected_error=339.97078)
+    do_test(use_fft=False, expected_error=345.39105)
 
 
 def test_numpy_fft():
     np.random.seed(seed=42)
-    do_test(use_fft=False, expected_error=339.97078)
+    do_test(use_fft=False, expected_error=345.39105)
