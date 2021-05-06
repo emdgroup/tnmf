@@ -37,7 +37,8 @@ class Backend(metaclass=abc.ABCMeta):
         self._set_dimensions(V, atom_shape)
         return self._initialize_matrices(V, atom_shape, n_atoms, W)
 
-    @abc.abstractstaticmethod
+    @staticmethod
+    @abc.abstractmethod
     def to_ndarray(arr) -> np.ndarray:
         raise NotImplementedError
 
