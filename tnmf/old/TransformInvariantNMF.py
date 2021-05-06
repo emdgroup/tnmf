@@ -399,9 +399,9 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 		# TODO: inherit docstring from superclass
 		self._normalization_dims = self.shift_dimensions
 		self.H = 1 - np.random.random((self.n_signals, self.n_components, *self.n_transforms)).astype(self.V.dtype)
-		self.H = self.H.transpose((2,3,1,0)).copy()
+		self.H = self.H.transpose([*range(-self.n_shift_dimensions, 0), 1, 0]).copy()
 		self.W = 1 - np.random.random((self.n_components, self.n_channels, *[self.atom_size] * self.n_shift_dimensions)).astype(self.V.dtype)
-		self.W = self.W.transpose((2,3,1,0)).copy()
+		self.W = self.W.transpose([*range(-self.n_shift_dimensions, 0), 1, 0]).copy()
 		self.W = normalize(self.W, axis=self._normalization_dims)
 
 	def _gradient_H(self, sparsity: bool = True) -> (np.array, np.array):
