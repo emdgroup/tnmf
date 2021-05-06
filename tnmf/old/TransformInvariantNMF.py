@@ -382,17 +382,14 @@ class BaseShiftInvariantNMF(TransformInvariantNMF):
 
 			# dimension info for striding in gradient_H computation
 			cache['X_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.H.shape[:-2] + self.V.shape[-2:]
-			cache['X_strided_W_strides'] = cache['V_padded'].strides[:self.n_shift_dimensions] + cache['V_padded'].strides
 			cache['X_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['c', 'n']
 
 			# dimension info for striding in gradient_W computation
 			cache['H_strided_V_shape'] = self.V.shape[:self.n_shift_dimensions] + (self.atom_size,) * self.n_shift_dimensions + self.H.shape[-2:]
-			cache['H_strided_V_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
 			cache['H_strided_V_labels'] = [s + str(i) for s, i in product(['d', 'a'], self.shift_dimensions)] + ['m', 'n']
 
 			# dimension info for striding in reconstruction computation
 			cache['H_strided_W_shape'] = (self.atom_size,) * self.n_shift_dimensions + self.V.shape[:-2] + self.H.shape[-2:]
-			cache['H_strided_W_strides'] = self.H.strides[:self.n_shift_dimensions] + self.H.strides
 			cache['H_strided_W_labels'] = [s + str(i) for s, i in product(['a', 'd'], self.shift_dimensions)] + ['m', 'n']
 
 		self._cache = cache
@@ -505,7 +502,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 		if self._use_fft:
 			R = self._fft_convolve('W', 'H')
 		else:
-			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], self._cache['H_strided_W_strides'], writeable=False)
+			H_strided_W_strides = self.H.strides[:self.n_shift_dimensions] + self.H.strides
+			H_strided = as_strided(self.H, self._cache['H_strided_W_shape'], H_strided_W_strides, writeable=False)
 			R = contract(H_strided, self._cache['H_strided_W_labels'], np.flip(self.W, self.shift_dimensions), self._cache['W_labels'], self._cache['V_labels'], optimize='optimal')
 		return R
 
@@ -517,10 +515,13 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			denum = self._fft_convolve('R', 'W', flip_second=True)
 		else:
 			V_padded = self._cache['V_padded']
-			R_padded = np.pad(self.R, pad_width=self._cache['pad_width'])
-			V_strided = as_strided(V_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
-			R_strided = as_strided(R_padded, self._cache['X_strided_W_shape'], self._cache['X_strided_W_strides'], writeable=False)
+			V_strided_W_strides = V_padded.strides[:self.n_shift_dimensions] + V_padded.strides
+			V_strided = as_strided(V_padded, self._cache['X_strided_W_shape'], V_strided_W_strides, writeable=False)
 			numer = contract(self.W, self._cache['W_labels'], V_strided, self._cache['X_strided_W_labels'], self._cache['H_labels'], optimize='optimal')
+
+			R_padded = np.pad(self.R, pad_width=self._cache['pad_width'])
+			R_strided_W_strides = R_padded.strides[:self.n_shift_dimensions] + R_padded.strides
+			R_strided = as_strided(R_padded, self._cache['X_strided_W_shape'], R_strided_W_strides, writeable=False)
 			denum = contract(self.W, self._cache['W_labels'], R_strided, self._cache['X_strided_W_labels'], self._cache['H_labels'], optimize='optimal')
 		return numer, denum
 
@@ -531,7 +532,8 @@ class ImplicitShiftInvariantNMF(BaseShiftInvariantNMF):
 			numer = self._fft_convolve('V', 'H', flip_second=True)
 			denum = self._fft_convolve('R', 'H', flip_second=True)
 		else:
-			H_strided = as_strided(self.H, self._cache['H_strided_V_shape'], self._cache['H_strided_V_strides'], writeable=False)
+			H_strided_V_strides = self.H.strides[:self.n_shift_dimensions] + self.H.strides
+			H_strided = as_strided(self.H, self._cache['H_strided_V_shape'], H_strided_V_strides, writeable=False)
 			numer = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.V, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
 			denum = np.flip(contract(H_strided, self._cache['H_strided_V_labels'], self.R, self._cache['V_labels'], self._cache['W_labels'], optimize='optimal'), axis=self.shift_dimensions)
 		return numer, denum
