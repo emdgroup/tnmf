@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(m
 
 def do_test(backend: str, expected_error: float):
     img = racoon_image(gray=False, scale=0.1)
-    V = np.repeat(img.transpose((2, 0, 1))[None, ...], 2, axis=0)
+    V = np.repeat(img.transpose((2, 0, 1))[np.newaxis, ...], 2, axis=0)
 
     nmf = TransformInvariantNMF(
         n_atoms=10,

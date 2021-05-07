@@ -66,7 +66,8 @@ class PyTorch_Backend(PyTorchBackend):
 
         for i_atom in range(n_atoms):
             for i_channel in range(W_flipped.shape[1]):
-                R[:, i_channel] += conv_fun(H[:, i_atom, None], W_flipped[None, None, i_atom, i_channel])[:, 0]
+                R[:, i_channel] += conv_fun(H[:, i_atom, np.newaxis],
+                                            W_flipped[np.newaxis, np.newaxis, i_atom, i_channel])[:, 0]
 
         return R
 
