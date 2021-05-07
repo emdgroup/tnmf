@@ -52,9 +52,6 @@ class PyTorch_Backend(PyTorchBackend):
         # TODO: remove for-loops
         # TODO: consider transposed convolution as alternative
 
-        n_samples = H.shape[0]
-        n_atoms = W.shape[0]
-        n_channels = W.shape[1]
         n_shift_dimensions = W.ndim - 2
 
         assert n_shift_dimensions <= 3
@@ -62,13 +59,7 @@ class PyTorch_Backend(PyTorchBackend):
         flip_dims = list(range(-n_shift_dimensions, 0))
         W_flipped = torch.flip(W, flip_dims)
 
-        R = torch.zeros((n_samples, n_channels, *self._sample_shape), dtype=W.dtype)
-
-        for i_atom in range(n_atoms):
-            for i_channel in range(W_flipped.shape[1]):
-                R[:, i_channel] += conv_fun(H[:, i_atom, np.newaxis],
-                                            W_flipped[np.newaxis, np.newaxis, i_atom, i_channel])[:, 0]
-
+        R = conv_fun(H, torch.swapaxes(W_flipped, 0, 1))
         return R
 
     def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:
