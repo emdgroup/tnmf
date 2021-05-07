@@ -1,6 +1,6 @@
 # pylint: disable=abstract-method
 
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional
 
 import numpy as np
 import torch
@@ -16,14 +16,14 @@ class PyTorchBackend(Backend):
         V: np.ndarray,
         atom_shape: Tuple[int, ...],
         n_atoms: int,
-        W: Optional[Union[np.ndarray, Tensor]] = None,
+        W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
 
-        W, H = super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
-        H = torch.from_numpy(H)
-        if W is not None:
-            W = torch.as_tensor(W)
+        H = torch.from_numpy(h)
+        if W is None:
+            W = torch.from_numpy(w)
 
         return W, H
 
