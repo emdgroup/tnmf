@@ -49,7 +49,7 @@ class PyTorch_Backend(PyTorchBackend):
 
     def reconstruct(self, W: Tensor, H: Tensor) -> Tensor:
         # TODO: support dimensions > 3
-        # TODO: remove atom for loop
+        # TODO: remove for-loops
         # TODO: consider transposed convolution as alternative
 
         n_samples = H.shape[0]
@@ -63,8 +63,10 @@ class PyTorch_Backend(PyTorchBackend):
         W_flipped = torch.flip(W, flip_dims)
 
         R = torch.zeros((n_samples, n_channels, *self._sample_shape), dtype=W.dtype)
+
         for i_atom in range(n_atoms):
-            R += conv_fun(H[:, i_atom, None], W_flipped[i_atom, None])
+            for i_channel in range(W_flipped.shape[1]):
+                R[:, i_channel] += conv_fun(H[:, i_atom, None], W_flipped[None, None, i_atom, i_channel])[:, 0]
 
         return R
 
