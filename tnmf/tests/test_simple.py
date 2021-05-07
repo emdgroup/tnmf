@@ -5,7 +5,6 @@ Test if a single sample decomposition works
 import logging
 
 import numpy as np
-import torch
 from scipy.misc import face
 
 from tnmf.TransformInvariantNMF import TransformInvariantNMF

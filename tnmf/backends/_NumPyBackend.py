@@ -1,7 +1,5 @@
 # pylint: disable=abstract-method
 
-from typing import Tuple, Optional
-
 import numpy as np
 
 from ._Backend import Backend
