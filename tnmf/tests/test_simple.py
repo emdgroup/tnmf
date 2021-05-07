@@ -5,7 +5,6 @@ Test if a single sample decomposition works
 import logging
 
 import numpy as np
-import torch
 from scipy.misc import face
 
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
@@ -60,5 +59,5 @@ def test_numpy_caching_fft():
 
 
 def test_pytorch():
-    torch.manual_seed(42)
-    do_test('pytorch', 347.09467)
+    np.random.seed(seed=42)
+    do_test('pytorch', 345.39105)

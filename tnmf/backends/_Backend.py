@@ -1,7 +1,6 @@
 # TODO: generalize n_transforms from numpy_fft to all backends
 # TODO: all backends need to support self._mode_R et al
 # TODO: do we need self._input_padding ? If yes, all backends have to support it.
-# TODO: fix numpy to torch dtype
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 import abc
@@ -67,7 +66,6 @@ class Backend(metaclass=abc.ABCMeta):
     def normalize(arr: np.ndarray, axis: Optional[Union[int, Tuple[int, ...]]] = None):
         arr /= (arr.sum(axis=axis, keepdims=True))
 
-    @abc.abstractmethod
     def _initialize_matrices(
         self,
         V: np.ndarray,
@@ -75,7 +73,13 @@ class Backend(metaclass=abc.ABCMeta):
         n_atoms: int,
         W: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
-        raise NotImplementedError
+
+        H = np.asarray(1 - np.random.rand(self.n_samples, n_atoms, *self._transform_shape), dtype=V.dtype)
+
+        if W is None:
+            W = np.asarray(1 - np.random.rand(n_atoms, self.n_channels, *atom_shape), dtype=V.dtype)
+
+        return W, H
 
     @abc.abstractmethod
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
