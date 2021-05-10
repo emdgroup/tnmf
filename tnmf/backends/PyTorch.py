@@ -22,6 +22,11 @@ conv_dict = {
 
 class PyTorch_Backend(PyTorchBackend):
 
+    def __init__(self, reconstruction_mode: str = 'valid'):
+        if reconstruction_mode != 'valid':
+            raise NotImplementedError
+        super().__init__(reconstruction_mode)
+
     @staticmethod
     def normalize(arr: Tensor, axis: Optional[Union[int, Tuple[int, ...]]] = None):
         arr.divide_(arr.sum(dim=axis, keepdim=True))
@@ -49,7 +54,6 @@ class PyTorch_Backend(PyTorchBackend):
 
     def reconstruct(self, W: Tensor, H: Tensor) -> Tensor:
         # TODO: support dimensions > 3
-        # TODO: remove for-loops
         # TODO: consider transposed convolution as alternative
 
         n_shift_dimensions = W.ndim - 2
