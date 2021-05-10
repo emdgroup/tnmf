@@ -1,43 +1,34 @@
 """
-Test if a single sample decomposition works
+Test the decomposition on two identical images.
 """
 
 import logging
 
 import numpy as np
-from scipy.misc import face
 
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
+from tnmf.tests.utils import racoon_image
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
 
 def do_test(backend: str, expected_error: float):
-    img = face(gray=True) / 255
-
-    # downsample for higher speed
-    img = img[::4, ::4] + img[1::4, ::4] + img[::4, 1::4] + img[1::4, 1::4]
-    img /= 4.0
-
-    img = img[np.newaxis, np.newaxis, ...]
-
-    patch_shape = (7, 7)
+    img = racoon_image(gray=False, scale=0.1)
+    V = np.repeat(img.transpose((2, 0, 1))[np.newaxis, ...], 2, axis=0)
 
     nmf = TransformInvariantNMF(
         n_atoms=10,
-        atom_shape=patch_shape,
-        n_iterations=25,
+        atom_shape=(7, 7),
+        n_iterations=10,
         backend=backend,
-        logger=None,
         verbose=3,
     )
 
-    nmf.fit(img)
+    nmf.fit(V)
 
-    assert np.isclose(nmf._energy_function(img), expected_error)  # pylint: disable=protected-access
+    assert np.isclose(nmf._energy_function(V), expected_error)  # pylint: disable=protected-access
 
-    img_r = nmf.R
-    assert np.isclose(0.5 * np.sum(np.square(img_r - img)), expected_error)
+    assert np.isclose(0.5 * np.sum(np.square(nmf.R - V)), expected_error)
 
     norm_W = np.sum(nmf.W, axis=(-1, -2))
     assert np.allclose(norm_W, 1.)
@@ -45,19 +36,19 @@ def do_test(backend: str, expected_error: float):
 
 def test_numpy():
     np.random.seed(seed=42)
-    do_test('numpy', 345.39105)
+    do_test('numpy', 268.14423)
 
 
 def test_numpy_fft():
     np.random.seed(seed=42)
-    do_test('numpy_fft', 345.39105)
+    do_test('numpy_fft', 268.14423)
 
 
 def test_numpy_caching_fft():
     np.random.seed(seed=42)
-    do_test('numpy_caching_fft', 345.39105)
+    do_test('numpy_caching_fft', 268.14423)
 
 
 def test_pytorch():
     np.random.seed(seed=42)
-    do_test('pytorch', 345.39105)
+    do_test('pytorch', 268.14423)
