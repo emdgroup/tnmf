@@ -4,16 +4,15 @@
 # TODO: add device option
 # TODO: use torch.fft.rfftn() to generalize for more dimensions and improve performance
 
+from itertools import chain
 from typing import Tuple, Union, Optional
 
 import numpy as np
 import torch
 from torch import Tensor
+from torch.nn.functional import pad
 
 from ._PyTorchBackend import PyTorchBackend
-from torch.nn.functional import pad
-from itertools import chain
-
 
 conv_dict = {
     1: torch.nn.functional.conv1d,

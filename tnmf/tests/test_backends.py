@@ -3,13 +3,13 @@ Test the decomposition on two identical images and ensure that all backends yiel
 """
 
 import logging
-import pytest
+from typing import Tuple
 
 import numpy as np
+import pytest
 
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.tests.utils import racoon_image
-from typing import Tuple
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
@@ -70,8 +70,7 @@ def test_expected_energy(backend: str, reconstruction_mode: str, expected_factor
     except NotImplementedError as e:
         if raise_not_implemented_errors:
             raise AssertionError from e
-        else:
-            return
+        return
 
     # check if the expected energy level is reached
     assert np.isclose(nmf._energy_function(V), expected_energy)  # pylint: disable=protected-access
