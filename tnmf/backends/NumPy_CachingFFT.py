@@ -1,4 +1,5 @@
 # TODO: consider adding shape getters to CachingFFT
+# TODO: this backend has a logger member but the other backends don't
 
 import logging
 from typing import Tuple, Optional, Union
@@ -106,9 +107,11 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         self,
         logger: logging.Logger = None,
         verbose: int = 0,
-        **kwargs
+        reconstruction_mode: str = 'valid',
     ):
-        super().__init__(**kwargs)
+        if reconstruction_mode != 'valid':
+            raise NotImplementedError
+        super().__init__(reconstruction_mode=reconstruction_mode)
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
         self._V = None

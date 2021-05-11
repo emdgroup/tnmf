@@ -21,7 +21,7 @@ expected_energies = {
 }
 
 # define all test settings
-backends = ['numpy_fft', 'pytorch']
+backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch']
 reconstruction_modes = ['valid', 'full', 'circular']
 
 # temporarily ignore failed tests due to unimplemented features
