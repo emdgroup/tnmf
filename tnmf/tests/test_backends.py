@@ -43,18 +43,16 @@ def fit_nmf(backend, reconstruction_mode):
             verbose=3,
             reconstruction_mode=reconstruction_mode,
         )
-    except NotImplementedError:
+    except NotImplementedError as e:
         if raise_not_implement_errors:
-            raise AssertionError
-        else:
-            return
+            raise AssertionError from e
     nmf.fit(V)
 
     return nmf
 
 
-@pytest.fixture()
-def expected_factorization():
+@pytest.fixture(name='expected_factorization')
+def fixture_expected_factorization():
     nmf = fit_nmf('numpy', 'valid')
     return nmf.W, nmf.H
 
