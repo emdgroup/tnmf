@@ -4,14 +4,15 @@
 # TODO: add device option
 # TODO: use torch.fft.rfftn() to generalize for more dimensions and improve performance
 
+from itertools import chain
 from typing import Tuple, Union, Optional
 
 import numpy as np
 import torch
 from torch import Tensor
+from torch.nn.functional import pad
 
 from ._PyTorchBackend import PyTorchBackend
-
 
 conv_dict = {
     1: torch.nn.functional.conv1d,
@@ -21,6 +22,11 @@ conv_dict = {
 
 
 class PyTorch_Backend(PyTorchBackend):
+
+    def __init__(self, reconstruction_mode: str = 'valid'):
+        if reconstruction_mode not in ('valid', 'full', 'circular'):
+            raise NotImplementedError
+        super().__init__(reconstruction_mode=reconstruction_mode)
 
     @staticmethod
     def normalize(arr: Tensor, axis: Optional[Union[int, Tuple[int, ...]]] = None):
@@ -49,7 +55,6 @@ class PyTorch_Backend(PyTorchBackend):
 
     def reconstruct(self, W: Tensor, H: Tensor) -> Tensor:
         # TODO: support dimensions > 3
-        # TODO: remove for-loops
         # TODO: consider transposed convolution as alternative
 
         n_shift_dimensions = W.ndim - 2
@@ -59,7 +64,16 @@ class PyTorch_Backend(PyTorchBackend):
         flip_dims = list(range(-n_shift_dimensions, 0))
         W_flipped = torch.flip(W, flip_dims)
 
-        R = conv_fun(H, torch.swapaxes(W_flipped, 0, 1))
+        pad_shape = np.array(W.shape[-n_shift_dimensions:]) - 1
+        if self._reconstruction_mode == 'valid':
+            H_padded = H
+        elif self._reconstruction_mode == 'full':
+            padding = tuple(np.repeat(pad_shape[::-1], n_shift_dimensions))
+            H_padded = pad(H, padding)
+        elif self._reconstruction_mode == 'circular':
+            padding = tuple(chain(*((s, 0) for s in pad_shape[::-1])))
+            H_padded = pad(H, padding, 'circular')
+        R = conv_fun(H_padded, torch.swapaxes(W_flipped, 0, 1))
         return R
 
     def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:

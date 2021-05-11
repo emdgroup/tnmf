@@ -17,8 +17,7 @@ class Backend(metaclass=abc.ABCMeta):
         input_padding: Dict = None,
     ):
         self._input_padding = input_padding if input_padding is not None else dict(mode='constant', constant_values=0)
-        self._mode_R = reconstruction_mode
-        self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
+        self._reconstruction_mode = reconstruction_mode
         self.n_samples = None
         self.n_channels = None
         self._sample_shape = None
@@ -50,14 +49,15 @@ class Backend(metaclass=abc.ABCMeta):
         self._shift_dimensions = tuple(range(-1, -len(atom_shape) - 1, -1))
 
     def n_transforms(self, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
+        # TODO: remove or rename this function
         """Number of dictionary transforms in each dimension"""
-        if self._mode_R == 'valid':
+        if self._reconstruction_mode == 'valid':
             return tuple(np.array(sample_shape) + np.array(atom_shape) - 1)
 
-        if self._mode_R == 'full':
+        if self._reconstruction_mode == 'full':
             return tuple(np.array(sample_shape) - np.array(atom_shape) + 1)
 
-        if self._mode_R == 'same':
+        if self._reconstruction_mode in ('same', 'circular'):
             return tuple(np.array(sample_shape))
 
         raise ValueError

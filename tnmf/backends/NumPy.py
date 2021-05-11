@@ -12,9 +12,11 @@ class NumPy_Backend(NumPyBackend):
 
     def __init__(
         self,
-        **kwargs
+        reconstruction_mode: str = 'valid',
     ):
-        super().__init__(**kwargs)
+        if reconstruction_mode != 'valid':
+            raise NotImplementedError
+        super().__init__(reconstruction_mode=reconstruction_mode)
         self._shift_axes = None
         self._cache = {}
 
