@@ -56,7 +56,6 @@ def fixture_expected_factorization(reconstruction_mode):
     return nmf.W, nmf.H
 
 
-@pytest.mark.parametrize('expected_factorization', reconstruction_modes, indirect=True)
 @pytest.mark.parametrize('reconstruction_mode', reconstruction_modes)
 @pytest.mark.parametrize('backend', backends)
 def test_expected_energy(backend: str, reconstruction_mode: str, expected_factorization: Tuple[np.ndarray, np.ndarray]):
