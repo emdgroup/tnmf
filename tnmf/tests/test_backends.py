@@ -9,17 +9,19 @@ import numpy as np
 
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.tests.utils import racoon_image
+from typing import Tuple
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
 # hard-coded expected energy levels for the different reconstruction modes
 expected_energies = {
     'valid': 268.14423,
+    'full': 345.82498,
 }
 
 # define all test settings
-backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch']
-reconstruction_modes = ['valid']
+backends = ['numpy_fft', 'pytorch']
+reconstruction_modes = ['valid', 'full']
 
 # temporarily ignore failed tests due to unimplemented features
 raise_not_implement_errors = False
@@ -52,14 +54,15 @@ def fit_nmf(backend, reconstruction_mode):
 
 
 @pytest.fixture(name='expected_factorization')
-def fixture_expected_factorization():
-    nmf = fit_nmf('numpy', 'valid')
+def fixture_expected_factorization(reconstruction_mode):
+    nmf = fit_nmf('numpy_fft', reconstruction_mode)
     return nmf.W, nmf.H
 
 
+@pytest.mark.parametrize('expected_factorization', reconstruction_modes, indirect=True)
 @pytest.mark.parametrize('reconstruction_mode', reconstruction_modes)
 @pytest.mark.parametrize('backend', backends)
-def test_expected_energy(backend: str, reconstruction_mode: str, expected_factorization):
+def test_expected_energy(backend: str, reconstruction_mode: str, expected_factorization: Tuple[np.ndarray, np.ndarray]):
 
     # extract the target tensors and the reconstruction mode dependent expected energy level
     W, H = expected_factorization
