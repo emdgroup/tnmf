@@ -65,13 +65,15 @@ class PyTorch_Backend(PyTorchBackend):
         flip_dims = list(range(-n_shift_dimensions, 0))
         W_flipped = torch.flip(W, flip_dims)
 
-        pad_shape = tuple(np.array(W.shape[-n_shift_dimensions:]) - 1)
+        pad_shape = np.array(W.shape[-n_shift_dimensions:]) - 1
         if self._mode_R == 'valid':
             H_padded = H
         elif self._mode_R == 'full':
-            H_padded = pad(H, pad_shape * n_shift_dimensions)
+            padding = tuple(np.repeat(pad_shape[::-1], n_shift_dimensions))
+            H_padded = pad(H, padding)
         elif self._mode_R == 'circular':
-            H_padded = pad(H, tuple(chain(*((s, 0) for s in pad_shape))), 'circular')
+            padding = tuple(chain(*((s, 0) for s in pad_shape[::-1])))
+            H_padded = pad(H, padding, 'circular')
         R = conv_fun(H_padded, torch.swapaxes(W_flipped, 0, 1))
         return R
 
