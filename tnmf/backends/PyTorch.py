@@ -11,6 +11,8 @@ import torch
 from torch import Tensor
 
 from ._PyTorchBackend import PyTorchBackend
+from torch.nn.functional import pad
+from itertools import chain
 
 
 conv_dict = {
@@ -23,7 +25,7 @@ conv_dict = {
 class PyTorch_Backend(PyTorchBackend):
 
     def __init__(self, reconstruction_mode: str = 'valid'):
-        if reconstruction_mode not in ('valid', 'full'):
+        if reconstruction_mode not in ('valid', 'full', 'circular'):
             raise NotImplementedError
         super().__init__(reconstruction_mode)
 
@@ -63,8 +65,14 @@ class PyTorch_Backend(PyTorchBackend):
         flip_dims = list(range(-n_shift_dimensions, 0))
         W_flipped = torch.flip(W, flip_dims)
 
-        padding = 0 if self._mode_R == 'valid' else np.array(W.shape[-n_shift_dimensions]) - 1
-        R = conv_fun(H, torch.swapaxes(W_flipped, 0, 1), padding=padding)
+        pad_shape = tuple(np.array(W.shape[-n_shift_dimensions:]) - 1)
+        if self._mode_R == 'valid':
+            H_padded = H
+        elif self._mode_R == 'full':
+            H_padded = pad(H, pad_shape * n_shift_dimensions)
+        elif self._mode_R == 'circular':
+            H_padded = pad(H, tuple(chain(*((s, 0) for s in pad_shape))), 'circular')
+        R = conv_fun(H_padded, torch.swapaxes(W_flipped, 0, 1))
         return R
 
     def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:

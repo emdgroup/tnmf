@@ -86,6 +86,11 @@ def fftconvolve_sum(
 
 class NumPy_FFT_Backend(NumPyBackend):
 
+    def __init__(self, reconstruction_mode: str = 'valid'):
+        if reconstruction_mode not in ('valid', 'full', 'same'):
+            raise NotImplementedError
+        super().__init__(reconstruction_mode)
+
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self.reconstruct(W, H)
         assert R.shape == V.shape
