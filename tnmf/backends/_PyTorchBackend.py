@@ -49,6 +49,11 @@ class PyTorchBackend(Backend):
                     pad=tuple(chain(*((s, 0) for s in pad_shape[::-1]))),
                     mode=self._reconstruction_mode
                 )
+            elif self._reconstruction_mode == 'reflect':
+                self._padding = dict(
+                    pad=tuple(chain(*((s, 0) for s in pad_shape[::-1]))),
+                    mode='reflect'
+                )
             else:
                 raise NotImplementedError
 
