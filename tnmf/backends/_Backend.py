@@ -55,20 +55,21 @@ class Backend(ABC):
         self.n_samples = V.shape[0]
         self.n_channels = V.shape[1]
         self._sample_shape = V.shape[2:]
-        self._transform_shape = self.n_transforms(self._sample_shape, atom_shape)
+        self._transform_shape = self._n_transforms(self._reconstruction_mode, self._sample_shape, atom_shape)
         self._n_shift_dimensions = len(atom_shape)
         self._shift_dimensions = tuple(range(-1, -len(atom_shape) - 1, -1))
 
-    def n_transforms(self, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
+    @staticmethod
+    def _n_transforms(reconstruction_mode: str, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
         # TODO: remove or rename this function
         """Number of dictionary transforms in each dimension"""
-        if self._reconstruction_mode == 'valid':
+        if reconstruction_mode == 'valid':
             return tuple(np.array(sample_shape) + np.array(atom_shape) - 1)
 
-        if self._reconstruction_mode == 'full':
+        if reconstruction_mode == 'full':
             return tuple(np.array(sample_shape) - np.array(atom_shape) + 1)
 
-        if self._reconstruction_mode in ('same', 'circular'):
+        if reconstruction_mode in ('same', 'circular', 'reflect'):
             return tuple(np.array(sample_shape))
 
         raise ValueError
