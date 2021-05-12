@@ -51,6 +51,7 @@ class Backend(ABC):
         raise NotImplementedError
 
     def _set_dimensions(self, V, atom_shape):
+        self.atom_shape = atom_shape
         self.n_samples = V.shape[0]
         self.n_channels = V.shape[1]
         self._sample_shape = V.shape[2:]

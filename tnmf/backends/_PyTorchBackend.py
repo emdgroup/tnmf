@@ -3,6 +3,7 @@ A module that provides some specializations and utilities for all PyTorch based 
 """
 
 from typing import Tuple, Optional
+from itertools import chain
 
 import numpy as np
 import torch
@@ -20,6 +21,10 @@ class PyTorchBackend(Backend):
     They provide the functionality to evaluate the gradients of the factorization model via automatic differentiation
     using :mod:`torch.autograd`.
     """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._padding = None
+
     def _initialize_matrices(
         self,
         V: np.ndarray,
@@ -27,6 +32,25 @@ class PyTorchBackend(Backend):
         n_atoms: int,
         W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
+
+        if self._reconstruction_mode == 'valid':
+            self._padding = None
+        else:
+            pad_shape = np.array(self.atom_shape) - 1
+
+            if self._reconstruction_mode == 'full':
+                self._padding = dict(
+                    pad=tuple(np.repeat(pad_shape[::-1], self._n_shift_dimensions)),
+                    mode='constant',
+                    value=0
+                )
+            elif self._reconstruction_mode in ('circular', 'reflect'):
+                self._padding = dict(
+                    pad=tuple(chain(*((s, 0) for s in pad_shape[::-1]))),
+                    mode=self._reconstruction_mode
+                )
+            else:
+                raise NotImplementedError
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
