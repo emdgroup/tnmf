@@ -3,6 +3,9 @@
 [![Pytest](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml)
 [![Build Documentation](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml)
 
-# PyTorch Transform-Invariant Non-Negative Matrix Factorization
+.. image:: doc/logos/tnmf_header.svg
+  :target: https://github.com/emdgroup/tnmf
+
+# Transform-Invariant Non-Negative Matrix Factorization
 
 A comprehensive transform-invariant NMF using Pytorch
