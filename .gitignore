@@ -16,3 +16,6 @@ _build
 .vscode
 workspace.code-workspace
 .coverage
+*.egg-info
+build
+dist
