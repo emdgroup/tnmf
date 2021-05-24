@@ -42,7 +42,8 @@ class TransformInvariantNMF:
         # default inhibition range = minimal range to cover the atom size
         self._inhibition_range = tuple(np.ceil(a / 2) for a in atom_shape) if inhibition_range is None else inhibition_range
         assert len(self._inhibition_range) == len(atom_shape)
-        self._inhibition_kernel = np.array([1 - ((np.arange(-i, i + 1) / i) ** 2) for i in self._inhibition_range])
+        inhibition_kernels_1D = list([1 - ((np.arange(-i, i + 1) / i) ** 2) for i in self._inhibition_range])
+        self._inhibition_kernel = np.prod(np.array(np.meshgrid(*inhibition_kernels_1D)), axis=0)
         self.n_atoms = n_atoms
         self.n_iterations = n_iterations
         self._axes_W_normalization = tuple(range(-len(atom_shape), 0))
@@ -109,8 +110,9 @@ class TransformInvariantNMF:
         # add the inhibition gradient component
         if inhibition > 0:
             # TODO: maybe also add cross-channel/cross-atom inhibition?
-            convolve_axes = range(-len(self.atom_shape, 0))
-            inhibition_gradient = convolvend(self.H, self._inhibition_kernel, mode='same', axes=convolve_axes)
+            convolve_axes = range(-len(self.atom_shape), 0)
+            inhibition_gradient = convolvend(
+                self.H, self._inhibition_kernel[np.newaxis, np.newaxis, :], mode='same', axes=convolve_axes)
             inhibition_gradient -= self.H
             inhibition_gradient *= inhibition
             pos += inhibition_gradient
@@ -139,7 +141,7 @@ class TransformInvariantNMF:
 
         for self.n_iterations_done in range(self.n_iterations):
             if update_H:
-                self._update_H(V, sparsity_H)
+                self._update_H(V, sparsity_H, inhibition_strength)
 
             if update_W:
                 self._update_W(V)
