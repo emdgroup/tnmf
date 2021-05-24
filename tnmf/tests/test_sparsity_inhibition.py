@@ -62,13 +62,13 @@ def test_expected_energy(backend: str, params: Dict):
     nmf = fit_nmf(backend, params[0])
     H = nmf.H
 
-    energy = nmf._energy_function(V)
+    energy = nmf._energy_function(V)  # pylint: disable=protected-access
     norm_H_1 = np.sum(np.abs(H))
     norm_H_0 = np.sum(H/H.max() > 1e-7)
 
-    nmf._logger.debug(f'energy={energy}, norm_H_1={norm_H_1}, norm_H_0={norm_H_0}')
+    nmf._logger.debug(f'energy={energy}, norm_H_1={norm_H_1}, norm_H_0={norm_H_0}')  # pylint: disable=protected-access
 
     expectation = params[1]
-    assert np.isclose(energy, expectation['energy'])  # pylint: disable=protected-access
+    assert np.isclose(energy, expectation['energy'])
     assert np.isclose(norm_H_1, expectation['norm_H_1'])
     assert np.isclose(norm_H_0, expectation['norm_H_0'])

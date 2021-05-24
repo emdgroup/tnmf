@@ -42,7 +42,7 @@ class TransformInvariantNMF:
         # default inhibition range = minimal range to cover the atom size
         self._inhibition_range = tuple(np.ceil(a / 2) for a in atom_shape) if inhibition_range is None else inhibition_range
         assert len(self._inhibition_range) == len(atom_shape)
-        inhibition_kernels_1D = list([1 - ((np.arange(-i, i + 1) / i) ** 2) for i in self._inhibition_range])
+        inhibition_kernels_1D = list((1 - ((np.arange(-i, i + 1) / i) ** 2) for i in self._inhibition_range))
         self._inhibition_kernel = np.prod(np.array(np.meshgrid(*inhibition_kernels_1D)), axis=0)
         self.n_atoms = n_atoms
         self.n_iterations = n_iterations
