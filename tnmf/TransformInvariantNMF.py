@@ -160,7 +160,7 @@ class TransformInvariantNMF:
             update_H: bool = True,
             update_W: bool = True,
             sparsity_H: float = 0.1,
-            inhibition_strength: float = 0.1,
+            inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
         self._do_fit(V, update_H, update_W, sparsity_H, inhibition_strength, False, progress_callback)
@@ -171,7 +171,7 @@ class TransformInvariantNMF:
             update_H: bool = True,
             update_W: bool = True,
             sparsity_H: float = 0.1,
-            inhibition_strength: float = 0.1,
+            inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
         self._do_fit(V, update_H, update_W, sparsity_H, inhibition_strength, self.n_iterations_done > 0, progress_callback)
