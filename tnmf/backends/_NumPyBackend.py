@@ -18,7 +18,7 @@ class NumPyBackend(Backend):
     def convolve_multi_1d(arr: np.ndarray, kernels: Tuple[np.array], axes: Tuple[int, ...]) -> np.array:
         assert len(kernels) == len(axes)
 
-        convolved = arr.copy()
+        convolved = arr
         for a, kernel in zip(axes, kernels):
             convolved = convolve1d(convolved, kernel, axis=a, mode='constant', cval=0.0)
 
