@@ -1,5 +1,8 @@
-# TODO: move file to demo folder once everything is packaged
-
+# TODO: remove path extension once everything is packaged
+import sys
+from pathlib import Path
+p = Path(__file__).absolute().parent.parent
+sys.path.append(str(p))
 import torch
 import numpy as np
 import streamlit as st
