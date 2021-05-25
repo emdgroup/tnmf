@@ -66,6 +66,10 @@ class Backend(metaclass=abc.ABCMeta):
     def normalize(arr: np.ndarray, axis: Optional[Union[int, Tuple[int, ...]]] = None):
         arr /= (arr.sum(axis=axis, keepdims=True))
 
+    @staticmethod
+    def convolve_multi_1d(arr: np.ndarray, kernels: Tuple[np.array], axes: Tuple[int, ...]) -> np.array:
+        raise NotImplementedError
+
     def _initialize_matrices(
         self,
         V: np.ndarray,
