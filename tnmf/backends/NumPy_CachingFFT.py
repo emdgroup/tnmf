@@ -3,9 +3,11 @@
 
 import logging
 from typing import Tuple, Optional, Union
+from copy import copy
 
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
+from scipy.ndimage import convolve1d
 from opt_einsum import contract_expression
 
 from ._NumPyBackend import NumPyBackend
@@ -34,11 +36,19 @@ class CachingFFT():
         self._field_name = field_name
 
     def __imul__(self, other):
-        self.c *= other
+        self.c *= other.c if isinstance(other, CachingFFT) else other
+        return self
+
+    def __isub__(self, other):
+        self.c -= other.c if isinstance(other, CachingFFT) else other
+        return self
+
+    def __iadd__(self, other):
+        self.c += other.c if isinstance(other, CachingFFT) else other
         return self
 
     def __itruediv__(self, other):
-        self.c /= other
+        self.c /= other.c if isinstance(other, CachingFFT) else other
         return self
 
     def set_fft_params(self, fft_axes: Tuple[int, ...], fft_shape: Tuple[int, ...]):
@@ -199,10 +209,22 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         #   a common "array type" that can handle both np.ndarray and CachingFFT objects
         arr.c /= arr.c.sum(axis=axis, keepdims=True)
 
+    @staticmethod
+    def convolve_multi_1d(arr: CachingFFT, kernels: Tuple[np.array], axes: Tuple[int, ...]) -> np.array:
+        assert len(kernels) == len(axes)
+
+        convolved = copy(arr)
+        for a, kernel in zip(axes, kernels):
+            # TODO: it should be possible to formulate this in Fourier space
+            convolved.c = convolve1d(convolved.c, kernel, axis=a, mode='constant', cval=0.0)
+
+        return convolved
+
     def _fft_convolve(self, arr1_fft, arr2_fft, contraction, slices):
         result = CachingFFT('fft_convolve', fft_axes=self._cache['fft_axes'], fft_shape=self._cache['fft_shape'])
         result.f = contraction(arr1_fft, arr2_fft)
-        return result.c[slices]
+        result.c = result.c[slices]
+        return result
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self.reconstruct(W, H)
@@ -219,7 +241,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         return neg, pos
 
     def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
-        self._R.c = self._fft_convolve(W.f, H.f, **self._cache['params_reconstruct'])
+        self._R = self._fft_convolve(W.f, H.f, **self._cache['params_reconstruct'])
         return self._R
 
     def partial_reconstruct(self, W: np.ndarray, H: np.ndarray, i_atom: int) -> np.ndarray:
