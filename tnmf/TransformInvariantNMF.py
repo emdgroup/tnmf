@@ -159,7 +159,7 @@ class TransformInvariantNMF:
             V: np.ndarray,
             update_H: bool = True,
             update_W: bool = True,
-            sparsity_H: float = 0.1,
+            sparsity_H: float = 0,
             inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
@@ -170,7 +170,7 @@ class TransformInvariantNMF:
             V: np.ndarray,
             update_H: bool = True,
             update_W: bool = True,
-            sparsity_H: float = 0.1,
+            sparsity_H: float = 0,
             inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):

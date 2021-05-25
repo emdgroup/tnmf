@@ -45,7 +45,7 @@ def fit_nmf(backend, reconstruction_mode):
         verbose=3,
         reconstruction_mode=reconstruction_mode,
     )
-    nmf.fit(V)
+    nmf.fit(V, sparsity_H=0.1)
 
     return nmf
 
