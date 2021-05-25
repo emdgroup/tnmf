@@ -17,7 +17,7 @@ import logging
 from typing import Tuple, Callable
 
 import numpy as np
-from scipy.signal import oaconvolve as convolvend
+from scipy.ndimage import convolve1d
 
 from .backends.NumPy import NumPy_Backend
 from .backends.NumPy_FFT import NumPy_FFT_Backend
@@ -42,8 +42,7 @@ class TransformInvariantNMF:
         # default inhibition range = minimal range to cover the atom size
         self._inhibition_range = tuple(np.ceil(a / 2) for a in atom_shape) if inhibition_range is None else inhibition_range
         assert len(self._inhibition_range) == len(atom_shape)
-        inhibition_kernels_1D = list((1 - ((np.arange(-i, i + 1) / i) ** 2) for i in self._inhibition_range))
-        self._inhibition_kernel = np.prod(np.array(np.meshgrid(*inhibition_kernels_1D)), axis=0)
+        self._inhibition_kernels_1D = list((1 - ((np.arange(-i, i + 1) / i) ** 2) for i in self._inhibition_range))
         self.n_atoms = n_atoms
         self.n_iterations = n_iterations
         self._axes_W_normalization = tuple(range(-len(atom_shape), 0))
@@ -111,8 +110,10 @@ class TransformInvariantNMF:
         if inhibition > 0:
             # TODO: maybe also add cross-channel/cross-atom inhibition?
             convolve_axes = range(-len(self.atom_shape), 0)
-            inhibition_gradient = convolvend(
-                self.H, self._inhibition_kernel[np.newaxis, np.newaxis, :], mode='same', axes=convolve_axes)
+            inhibition_gradient = self.H.copy()
+            for a, kernel in zip(convolve_axes, self._inhibition_kernels_1D):
+                inhibition_gradient = convolve1d(inhibition_gradient, kernel, axis=a, mode='constant', cval=0.0)
+
             inhibition_gradient -= self.H
             inhibition_gradient *= inhibition
             pos += inhibition_gradient
