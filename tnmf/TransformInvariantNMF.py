@@ -17,7 +17,6 @@ import logging
 from typing import Tuple, Callable
 
 import numpy as np
-from scipy.ndimage import convolve1d
 
 from .backends.NumPy import NumPy_Backend
 from .backends.NumPy_FFT import NumPy_FFT_Backend
@@ -110,11 +109,8 @@ class TransformInvariantNMF:
         if inhibition > 0:
             # TODO: maybe also add cross-channel/cross-atom inhibition?
             convolve_axes = range(-len(self.atom_shape), 0)
-            inhibition_gradient = self.H.copy()
-            for a, kernel in zip(convolve_axes, self._inhibition_kernels_1D):
-                inhibition_gradient = convolve1d(inhibition_gradient, kernel, axis=a, mode='constant', cval=0.0)
-
-            inhibition_gradient -= self.H
+            inhibition_gradient = self._backend.convolve_multi_1d(self._H, self._inhibition_kernels_1D, convolve_axes)
+            inhibition_gradient -= self._H
             inhibition_gradient *= inhibition
             pos += inhibition_gradient
 
