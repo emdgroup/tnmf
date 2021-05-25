@@ -72,6 +72,7 @@ def _do_test(backend, params):
 def test_sparsity(backend: str, params: Dict):
     _do_test(backend, params)
 
+
 @pytest.mark.parametrize('params', test_params_inhibition)
 @pytest.mark.parametrize('backend', backends)
 def test_inhibition(backend: str, params: Dict):
