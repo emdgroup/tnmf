@@ -70,13 +70,16 @@ class TransformInvariantNMF:
     def R(self) -> np.ndarray:
         return self._backend.to_ndarray(self._reconstruct())
 
+    def R_partial(self, i_atom: int) -> np.ndarray:
+        return self._backend.to_ndarray(self._backend.partial_reconstruct(self._W, self._H, i_atom))
+
     def _reconstruct(self) -> np.ndarray:
         return self._backend.reconstruct(self._W, self._H)
 
     def _energy_function(self, V: np.ndarray) -> float:
         return self._backend.reconstruction_energy(V, self._W, self._H)
 
-    def _multiplicative_update(self, arr: np.ndarray, neg, pos, sparsity: float = 0):
+    def _multiplicative_update(self, arr: np.ndarray, neg, pos, sparsity: float = 0.):
         assert sparsity >= 0
 
         regularization = self.eps

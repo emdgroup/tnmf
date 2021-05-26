@@ -6,7 +6,7 @@ import logging
 import numpy as np
 
 from tnmf.old.TransformInvariantNMF import ShiftInvariantNMF
-from tnmf.tests.utils import racoon_image
+from tnmf.utils.data_loading import racoon_image
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
