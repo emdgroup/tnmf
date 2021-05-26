@@ -224,5 +224,5 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
     def partial_reconstruct(self, W: np.ndarray, H: np.ndarray, i_atom: int) -> np.ndarray:
         self._R_partial.c = self._fft_convolve(
-            W.f[i_atom:i_atom+1], H.f[:1, i_atom:i_atom+1], **self._cache['params_reconstruct'])
+            W.f[i_atom:i_atom+1], H.f[:, i_atom:i_atom+1], **self._cache['params_reconstruct'])
         return self._R_partial
