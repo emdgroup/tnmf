@@ -103,6 +103,7 @@ class TransformInvariantNMF:
         self._backend.normalize(self._W, axis=self._axes_W_normalization)
 
     def _update_H(self, V: np.ndarray, sparsity: float = 0., inhibition: float = 0.):
+        # TODO: sparsity and inhibition should be handled by the backends
         neg, pos = self._backend.reconstruction_gradient_H(V, self._W, self._H)
 
         # add the inhibition gradient component

@@ -1,5 +1,6 @@
 """
 Test the decomposition on two identical images and ensure that all backends yield the same factorization.
+# TODO: separate backend comparison from inhibition test and adjust docstring accordingly
 """
 
 import logging
