@@ -33,7 +33,7 @@ class PyTorchBackend(Backend):
         return arr.detach().numpy()
 
     @staticmethod
-    def convolve_multi_1d(arr: Tensor, kernels: Tuple[np.array], axes: Tuple[int, ...]) -> Tensor:
+    def convolve_multi_1d(arr: Tensor, kernels: Tuple[np.ndarray, ...], axes: Tuple[int, ...]) -> Tensor:
         assert len(kernels) == len(axes)
 
         convolved = arr.detach().clone()

@@ -210,7 +210,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         arr.c /= arr.c.sum(axis=axis, keepdims=True)
 
     @staticmethod
-    def convolve_multi_1d(arr: CachingFFT, kernels: Tuple[np.array], axes: Tuple[int, ...]) -> np.array:
+    def convolve_multi_1d(arr: CachingFFT, kernels: Tuple[np.ndarray, ...], axes: Tuple[int, ...]) -> np.ndarray:
         assert len(kernels) == len(axes)
 
         convolved = copy(arr)

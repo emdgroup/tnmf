@@ -15,7 +15,7 @@ class NumPyBackend(Backend):
         return arr
 
     @staticmethod
-    def convolve_multi_1d(arr: np.ndarray, kernels: Tuple[np.array], axes: Tuple[int, ...]) -> np.array:
+    def convolve_multi_1d(arr: np.ndarray, kernels: Tuple[np.ndarray, ...], axes: Tuple[int, ...]) -> np.ndarray:
         assert len(kernels) == len(axes)
 
         convolved = arr
