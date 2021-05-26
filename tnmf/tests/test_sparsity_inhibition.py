@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
-from tnmf.tests.utils import racoon_image
+from tnmf.utils.data_loading import racoon_image
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s: %(message)s')
 
