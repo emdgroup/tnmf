@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 p = Path(__file__).absolute().parent.parent
 sys.path.append(str(p))
-import torch
 import numpy as np
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -17,7 +16,7 @@ scale = st.sidebar.slider('Image rescaling factor', min_value=0., max_value=1., 
 color = st.sidebar.checkbox('Color channels', False)
 
 st.sidebar.markdown('# NMF options')
-backend = st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'pytorch'], 1)
+backend = st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch'], 1)
 n_atoms = st.sidebar.number_input('Number of atoms', min_value=1, value=10)
 atom_size = st.sidebar.number_input('Atom size', min_value=1, value=10)
 sparsity_H = st.sidebar.number_input('Activation sparsity', min_value=0., value=0., step=0.1)
@@ -64,10 +63,7 @@ for i_atom in range(n_atoms):
         plt.imshow(nmf.H[0, i_atom])
         st.pyplot(fig)
     with col3:
-        # TODO: add partial reconstruction function
         fig = plt.figure()
-        partial_R = nmf._backend.reconstruct(nmf._W[i_atom:i_atom+1], nmf._H[:1, i_atom:i_atom+1])
-        if torch.is_tensor(partial_R):
-            partial_R = partial_R.detach().numpy()
+        partial_R = nmf.R_partial(i_atom)
         plt.imshow(partial_R[0].transpose((1, 2, 0)) / partial_R[0].max(), cmap=img_cmap)
         st.pyplot(fig)

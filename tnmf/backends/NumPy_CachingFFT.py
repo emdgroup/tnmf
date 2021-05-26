@@ -116,6 +116,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
         self._V = None
         self._R = None
+        self._R_partial = None
         self._cache = {}
 
     def _initialize_matrices(
@@ -129,6 +130,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
         self._R = CachingFFT('R', logger=self._logger)
+        self._R_partial = CachingFFT('R_partial', logger=self._logger)
         self._V = CachingFFT('V', logger=self._logger)
         self._V.c = V
         sample_shape = V.shape[2:]
@@ -219,3 +221,8 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
     def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         self._R.c = self._fft_convolve(W.f, H.f, **self._cache['params_reconstruct'])
         return self._R
+
+    def partial_reconstruct(self, W: np.ndarray, H: np.ndarray, i_atom: int) -> np.ndarray:
+        self._R_partial.c = self._fft_convolve(
+            W.f[i_atom:i_atom+1], H.f[:1, i_atom:i_atom+1], **self._cache['params_reconstruct'])
+        return self._R_partial

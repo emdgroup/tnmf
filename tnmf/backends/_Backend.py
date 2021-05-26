@@ -93,6 +93,9 @@ class Backend(metaclass=abc.ABCMeta):
     def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
+    def partial_reconstruct(self, W: np.ndarray, H: np.ndarray, i_atom: int) -> np.ndarray:
+        return self.reconstruct(W[i_atom:i_atom+1], H[:1, i_atom:i_atom+1])
+
     def reconstruction_energy(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> float:
         R = self.to_ndarray(self.reconstruct(W, H))
         assert R.shape == V.shape
