@@ -1,6 +1,6 @@
 """
-Test the decomposition on two identical images and ensure that all backends yield the same factorization.
-# TODO: separate backend comparison from inhibition test and adjust docstring accordingly
+Test the decomposition on two identical images with different values for sparsity and inhibition and
+ensure that all backends yield the same reconstruction energy and L0 and L1 norm for the activations H
 """
 
 import logging
@@ -34,6 +34,7 @@ test_params_inhibition = [
     {'fit': dict(inhibition_strength=5.0), 'nmf': dict(), 'res': dict(energy=3618.33671, norm_H_1=1947.1969, norm_H_0=129929)},
     {'fit': dict(inhibition_strength=10.), 'nmf': dict(), 'res': dict(energy=3779.64954, norm_H_1=1926.9570, norm_H_0=118795)},
     # no sparsity, increasing inhibition, smaller inhibition range
+    # pylint: disable=line-too-long
     {'fit': dict(inhibition_strength=0.1), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=234.838968, norm_H_1=6730.89543, norm_H_0=176347)},
     {'fit': dict(inhibition_strength=0.5), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=680.585424, norm_H_1=5177.87844, norm_H_0=174277)},
     {'fit': dict(inhibition_strength=1.0), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=1119.00855, norm_H_1=4657.19574, norm_H_0=168777)},

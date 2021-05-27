@@ -6,10 +6,10 @@ from typing import Tuple, Optional, Union
 from copy import copy
 
 import numpy as np
+from opt_einsum import contract_expression
 from opt_einsum.contract import ContractExpression
 from scipy.fft import next_fast_len, rfftn, irfftn
 from scipy.ndimage import convolve1d
-from opt_einsum import contract_expression
 
 from ._NumPyBackend import NumPyBackend
 
