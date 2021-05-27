@@ -21,6 +21,12 @@ n_atoms = st.sidebar.number_input('Number of atoms', min_value=1, value=10)
 atom_size = st.sidebar.number_input('Atom size', min_value=1, value=10)
 sparsity_H = st.sidebar.number_input('Activation sparsity', min_value=0., value=0., step=0.1)
 inhibition = st.sidebar.number_input('Activation lateral inhibition', min_value=0., value=0., step=0.1)
+if inhibition > 0:
+    inhibition_range = st.sidebar.selectbox('Inhibition Range', [f'default ({atom_size-1})', ] + list(range(1, atom_size)), 0)
+    inhibition_range = None if isinstance(inhibition_range, str) else (inhibition_range, ) * 2
+else:
+    inhibition_range = None
+
 n_iterations = st.sidebar.number_input('Number of iterations', min_value=1, value=100)
 
 img = racoon_image(gray=not color, scale=scale)
@@ -31,6 +37,7 @@ nmf = TransformInvariantNMF(
     atom_shape=(atom_size, atom_size),
     n_iterations=n_iterations,
     backend=backend,
+    inhibition_range=inhibition_range,
 )
 
 nmf.fit(
