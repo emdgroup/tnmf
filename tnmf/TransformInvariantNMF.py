@@ -14,7 +14,7 @@ Authors: Adrian Sosic, Mathias Winkel
 # TODO: add support for inhibition
 
 import logging
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Union
 
 import numpy as np
 
@@ -30,7 +30,7 @@ class TransformInvariantNMF:
             self,
             n_atoms: int,
             atom_shape: Tuple[int, ...],
-            inhibition_range: Tuple[int, ...] = None,
+            inhibition_range: Union[int, Tuple[int, ...]] = None,
             n_iterations: int = 1000,
             backend: str = 'numpy_fft',
             logger: logging.Logger = None,
@@ -38,8 +38,15 @@ class TransformInvariantNMF:
             **kwargs,
     ):
         self.atom_shape = atom_shape
-        # default inhibition range = minimal range to cover the atom size
-        self._inhibition_range = tuple(a-1 for a in atom_shape) if inhibition_range is None else inhibition_range
+
+        if inhibition_range is None:
+            # default inhibition range = minimal range to cover the atom size
+            self._inhibition_range = tuple(a-1 for a in atom_shape)
+        elif isinstance(inhibition_range, int):
+            self._inhibition_range = (inhibition_range, ) * len(atom_shape)
+        else:
+            self._inhibition_range = inhibition_range
+
         assert len(self._inhibition_range) == len(atom_shape)
         self._inhibition_kernels_1D = tuple((1 - ((np.arange(-i, i + 1) / (i+1)) ** 2) for i in self._inhibition_range))
         self.n_atoms = n_atoms
