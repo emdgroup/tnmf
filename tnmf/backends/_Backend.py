@@ -9,7 +9,7 @@ from typing import Tuple, Optional, Dict, Union
 import numpy as np
 
 
-class Backend(metaclass=abc.ABCMeta):
+class Backend(abc.ABC):
 
     def __init__(
         self,
