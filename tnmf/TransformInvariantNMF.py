@@ -30,6 +30,7 @@ class TransformInvariantNMF:
             self,
             n_atoms: int,
             atom_shape: Tuple[int, ...],
+            inhibition_range: Tuple[int, ...] = None,
             n_iterations: int = 1000,
             backend: str = 'numpy_fft',
             logger: logging.Logger = None,
@@ -37,6 +38,10 @@ class TransformInvariantNMF:
             **kwargs,
     ):
         self.atom_shape = atom_shape
+        # default inhibition range = minimal range to cover the atom size
+        self._inhibition_range = tuple(a-1 for a in atom_shape) if inhibition_range is None else inhibition_range
+        assert len(self._inhibition_range) == len(atom_shape)
+        self._inhibition_kernels_1D = tuple((1 - ((np.arange(-i, i + 1) / (i+1)) ** 2) for i in self._inhibition_range))
         self.n_atoms = n_atoms
         self.n_iterations = n_iterations
         self._axes_W_normalization = tuple(range(-len(atom_shape), 0))
@@ -97,8 +102,19 @@ class TransformInvariantNMF:
         self._multiplicative_update(self._W, neg, pos)
         self._backend.normalize(self._W, axis=self._axes_W_normalization)
 
-    def _update_H(self, V: np.ndarray, sparsity: float = 0):
+    def _update_H(self, V: np.ndarray, sparsity: float = 0., inhibition: float = 0.):
+        # TODO: sparsity and inhibition should be handled by the backends
         neg, pos = self._backend.reconstruction_gradient_H(V, self._W, self._H)
+
+        # add the inhibition gradient component
+        if inhibition > 0:
+            # TODO: maybe also add cross-channel/cross-atom inhibition?
+            convolve_axes = range(-len(self.atom_shape), 0)
+            inhibition_gradient = self._backend.convolve_multi_1d(self._H, self._inhibition_kernels_1D, convolve_axes)
+            inhibition_gradient -= self._H
+            inhibition_gradient *= inhibition
+            pos += inhibition_gradient
+
         self._multiplicative_update(self._H, neg, pos, sparsity)
 
     def _do_fit(
@@ -107,10 +123,13 @@ class TransformInvariantNMF:
             update_H: bool,
             update_W: bool,
             sparsity_H: float,
+            inhibition_strength: float,
             keep_W: bool,
             progress_callback: Callable[['TransformInvariantNMF', int], bool],
     ):
         assert update_H or update_W
+        assert sparsity_H >= 0
+        assert inhibition_strength >= 0
 
         self._W, self._H = self._backend.initialize(
             V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
@@ -120,7 +139,7 @@ class TransformInvariantNMF:
 
         for self.n_iterations_done in range(self.n_iterations):
             if update_H:
-                self._update_H(V, sparsity_H)
+                self._update_H(V, sparsity_H, inhibition_strength)
 
             if update_W:
                 self._update_W(V)
@@ -138,17 +157,19 @@ class TransformInvariantNMF:
             V: np.ndarray,
             update_H: bool = True,
             update_W: bool = True,
-            sparsity_H: float = 0.1,
+            sparsity_H: float = 0.,
+            inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
-        self._do_fit(V, update_H, update_W, sparsity_H, False, progress_callback)
+        self._do_fit(V, update_H, update_W, sparsity_H, inhibition_strength, False, progress_callback)
 
     def partial_fit(
             self,
             V: np.ndarray,
             update_H: bool = True,
             update_W: bool = True,
-            sparsity_H: float = 0.1,
+            sparsity_H: float = 0.,
+            inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
-        self._do_fit(V, update_H, update_W, sparsity_H, self.n_iterations_done > 0, progress_callback)
+        self._do_fit(V, update_H, update_W, sparsity_H, inhibition_strength, self.n_iterations_done > 0, progress_callback)

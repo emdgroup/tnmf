@@ -5,6 +5,7 @@ from typing import Tuple, Optional
 import numpy as np
 import torch
 from torch import Tensor
+from torch.nn.functional import conv1d
 
 from ._Backend import Backend
 
@@ -30,3 +31,24 @@ class PyTorchBackend(Backend):
     @staticmethod
     def to_ndarray(arr: Tensor) -> np.ndarray:
         return arr.detach().numpy()
+
+    @staticmethod
+    def convolve_multi_1d(arr: Tensor, kernels: Tuple[np.ndarray, ...], axes: Tuple[int, ...]) -> Tensor:
+        assert len(kernels) == len(axes)
+
+        convolved = arr.detach().clone()
+        for a, kernel in zip(axes, kernels):
+            pad = (len(kernel) - 1) // 2
+            kernel_view = torch.as_tensor(kernel).view(1, 1, -1)
+            # axis to be convolve across has to be the last one
+            convolved = torch.movedim(convolved, a, -1)
+            convolved_shape = convolved.size()
+            # all other non-singleton axes have to be aggregated into the batch_size axis (0th axis)
+            convolved = torch.reshape(convolved, (-1, 1, convolved.size()[-1]))
+            convolved = conv1d(convolved, kernel_view, padding=pad)
+            # restore original shape
+            convolved = torch.reshape(convolved, convolved_shape)
+            # restore original axis order
+            convolved = torch.movedim(convolved, -1, a)
+
+        return convolved
