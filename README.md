@@ -57,7 +57,9 @@ git checkout https://github.com/emdgroup/tnmf.git ./tnmf
 cd tmnf
 python3 -m virtualenv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e .
 ```
 
 Now, you should be able to execute the unit tests by calling `pytest` to verify that the code is running as expected.
