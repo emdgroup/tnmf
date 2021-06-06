@@ -17,6 +17,8 @@ workspace.code-workspace
 
 # Builds
 _build
+build
+dist
 *.egg-info
 
 # Package Version
