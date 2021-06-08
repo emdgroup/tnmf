@@ -1,3 +1,8 @@
+"""
+A module that provides a PyTorch based backend for computing the gradients of the factorization model.
+Shift-invariance is implemented via explicit convolution operations in the coordinate space.
+"""
+
 # TODO: it should be possible to reformulate the gradients using
 #       https://pytorch.org/docs/stable/autograd.html#torch.autograd.functional.jacobian
 # TODO: merge gradient functions into one
@@ -14,7 +19,9 @@ from torch.nn.functional import pad
 
 from ._PyTorchBackend import PyTorchBackend
 
-conv_dict = {
+
+#: Lookup table for the convolution function with different dimensionality
+_CONV_DICT = {
     1: torch.nn.functional.conv1d,
     2: torch.nn.functional.conv2d,
     3: torch.nn.functional.conv3d,
@@ -22,7 +29,11 @@ conv_dict = {
 
 
 class PyTorch_Backend(PyTorchBackend):
+    r"""
+    A PyTorch based backend that uses :func:`torch.autograd.grad` for computing the gradients of the factorization model.
 
+    Reconstruction is performed via an explicit convolution in coordinate space.
+    """
     def __init__(self, reconstruction_mode: str = 'valid'):
         if reconstruction_mode not in ('valid', 'full', 'circular'):
             raise NotImplementedError
@@ -60,7 +71,7 @@ class PyTorch_Backend(PyTorchBackend):
         n_shift_dimensions = W.ndim - 2
 
         assert n_shift_dimensions <= 3
-        conv_fun = conv_dict[n_shift_dimensions]
+        conv_fun = _CONV_DICT[n_shift_dimensions]
         flip_dims = list(range(-n_shift_dimensions, 0))
         W_flipped = torch.flip(W, flip_dims)
 

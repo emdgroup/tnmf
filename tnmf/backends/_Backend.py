@@ -1,16 +1,27 @@
+"""
+A module that defines a common interface for all backends.
+"""
+
 # TODO: generalize n_transforms from numpy_fft to all backends
 # TODO: all backends need to support self._mode_R et al
 # TODO: do we need self._input_padding ? If yes, all backends have to support it.
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
-import abc
+from abc import ABC, abstractmethod
 from typing import Tuple, Optional, Dict, Union
 
 import numpy as np
 
 
-class Backend(abc.ABC):
+class Backend(ABC):
+    r"""
+    The base class for all backends.
 
+    It exists to define a generic functional interface that is shared by all backends through inheritance, which allows a
+    clear separation between algorithmic steps and their actual numerical implementation.
+
+    Some common functionality between all backends is already defined inside this class but can be overridden if necessary.
+    """
     def __init__(
         self,
         reconstruction_mode: str = 'valid',
@@ -36,7 +47,7 @@ class Backend(abc.ABC):
         return self._initialize_matrices(V, atom_shape, n_atoms, W)
 
     @staticmethod
-    @abc.abstractmethod
+    @abstractmethod
     def to_ndarray(arr) -> np.ndarray:
         raise NotImplementedError
 
@@ -85,15 +96,15 @@ class Backend(abc.ABC):
 
         return W, H
 
-    @abc.abstractmethod
+    @abstractmethod
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 

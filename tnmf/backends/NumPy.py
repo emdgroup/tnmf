@@ -1,3 +1,7 @@
+"""
+A module that provides a NumPy based backend for computing the gradients of the factorization model.
+Shift-invariance is implemented via explicit convolution operations in the coordinate space.
+"""
 from itertools import product
 from typing import Tuple, Optional
 
@@ -9,7 +13,11 @@ from ._NumPyBackend import NumPyBackend
 
 
 class NumPy_Backend(NumPyBackend):
+    r"""
+    A plain NumPy backend for computing the gradients of the factorization model in coordinate space (no FFT, no PyTorch).
 
+    Convolutions are computed efficiently as contractions of properly strided arrays.
+    """
     def __init__(
         self,
         reconstruction_mode: str = 'valid',

@@ -1,3 +1,9 @@
+"""
+A module that provides a NumPy based backend for computing the gradients of the factorization model.
+Shift-invariance is implemented via fast convolution in the Fourier domain using :func:`scipy.fft.rfftn`
+and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed arrays compared to
+:mod:`tnmf.backends.NumPy_FFT`.
+"""
 # TODO: consider adding shape getters to CachingFFT
 # TODO: this backend has a logger member but the other backends don't
 
@@ -14,12 +20,11 @@ from scipy.ndimage import convolve1d
 from ._NumPyBackend import NumPyBackend
 
 
-class CachingFFT():
+class CachingFFT:
     """
-    Wrapper class for conveniently caching and switching back and forth
-    between fields in coordinate space and fourier space
+    Wrapper class for conveniently caching and switching back and forth between arrays in coordinate space and their
+    representations in Fourier space.
     """
-
     def __init__(
         self,
         field_name: str,
@@ -113,7 +118,11 @@ class CachingFFT():
 
 
 class NumPy_CachingFFT_Backend(NumPyBackend):
-
+    r"""
+    A NumPy based backend that performs convolutions and contractions for computing the gradients of the factorization model
+    via FFT, similar to :class:`.NumPy_FFT_Backend`. However, the Fourier representations of the associated arrays are cached
+    in order to reduce the number of Fourier transformations involved to a minimum.
+    """
     def __init__(
         self,
         logger: logging.Logger = None,

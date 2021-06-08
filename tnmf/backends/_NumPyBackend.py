@@ -1,4 +1,6 @@
-# pylint: disable=abstract-method
+"""
+A module that provides some specializations and utilities for all NumPy based backends.
+"""
 
 from typing import Tuple
 
@@ -8,8 +10,13 @@ from scipy.ndimage import convolve1d
 from ._Backend import Backend
 
 
+# pylint: disable=abstract-method
 class NumPyBackend(Backend):
+    r"""
+    The parent class for all NumPy based backends.
 
+    They provide the functionality to evaluate the analytic gradients of the factorization model.
+    """
     @staticmethod
     def to_ndarray(arr: np.ndarray) -> np.ndarray:
         return arr

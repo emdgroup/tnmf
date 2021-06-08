@@ -35,8 +35,12 @@ extensions = [
 
 autoapi_type = 'python'
 autoapi_dirs = ['../tnmf', ]
-autoapi_options = [ 'members', 'undoc-members', 'no-private-members', 'show-inheritance', 'show-module-summary', 'special-members', 'imported-members', ]
+autoapi_options = ['members', 'undoc-members', 'no-private-members', 'show-inheritance',
+                   'show-module-summary', 'special-members', 'imported-members', ]
 
+napoleon_attr_annotations = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = False
 
 m2r_parse_relative_links = True
 
