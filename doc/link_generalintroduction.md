@@ -1,1 +1,1 @@
-.. mdinclude:: ../GeneralIntroduction.md
+.. mdinclude:: ./GeneralIntroduction.md

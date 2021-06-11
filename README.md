@@ -12,7 +12,7 @@ A comprehensive Python package for **Non-Negative Matrix Factorization (NMF)** w
 The packages supports multiple optimization backends and can be easily extended to handle application-specific types of transforms.
 
 # General Introduction
-A general introduction to Non-Negative Matrix Factorization and the purpose of this package can be found [here](GeneralIntroduction.md) and on the package's [PyPI page](https://pypi.org/project/tnmf/).
+A general introduction to Non-Negative Matrix Factorization and the purpose of this package can be found [here](doc/GeneralIntroduction.md) and on the package's [PyPI page](https://pypi.org/project/tnmf/).
 
 # Installation
 For using this package, you will at least need Python version 3.6 (or higher).

@@ -10,9 +10,11 @@ The packages supports multiple optimization backends and can be easily extended 
    :caption: Contents
 
    link_generalintroduction
+   autoapi/index
    link_changelog
    link_license
-   autoapi/index
+   Installation <https://github.com/emdgroup/tnmf/tree/main#installation>
+   Contributing <https://github.com/emdgroup/tnmf/tree/main#contributing>
 
 Indices and tables
 ==================
