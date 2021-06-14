@@ -31,6 +31,7 @@ extensions = [
     'autoapi.extension',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',    # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#module-sphinx.ext.napoleon
+    'm2r2',
 ]
 
 autoapi_type = 'python'
