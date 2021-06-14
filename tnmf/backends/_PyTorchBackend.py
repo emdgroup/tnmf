@@ -1,4 +1,6 @@
-# pylint: disable=abstract-method
+"""
+A module that provides some specializations and utilities for all PyTorch based backends.
+"""
 
 from typing import Tuple, Optional
 
@@ -10,8 +12,14 @@ from torch.nn.functional import conv1d
 from ._Backend import Backend
 
 
+# pylint: disable=abstract-method
 class PyTorchBackend(Backend):
+    r"""
+    The parent class for all PyTorch based backends.
 
+    They provide the functionality to evaluate the gradients of the factorization model via automatic differentiation
+    using :mod:`torch.autograd`.
+    """
     def _initialize_matrices(
         self,
         V: np.ndarray,

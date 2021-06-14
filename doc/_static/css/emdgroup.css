@@ -1,0 +1,19 @@
+body {
+    font-family: Calibri,Lato,proxima-nova,Helvetica Neue,Arial,sans-serif;
+}
+
+body, .wy-side-nav-search, .wy-nav-top {
+    background: #FFDCB9;
+}
+
+body, .math, .math span, .MathJax, .MathJax_Display, .wy-menu-vertical a, .wy-side-nav-search .wy-dropdown>a, .wy-side-nav-search>a, .wy-menu-vertical header, .wy-menu-vertical p.caption, .wy-nav-side, .wy-menu-vertical li.current>a, .wy-menu-vertical li.on a, .wy-menu-vertical li.toctree-l2 a, .wy-menu-vertical li.toctree-l3 a, .wy-menu-vertical li.toctree-l4 a, .wy-menu-vertical li.toctree-l5 a, .wy-menu-vertical li.toctree-l6 a, .wy-menu-vertical li.toctree-l7 a, .wy-menu-vertical li.toctree-l8 a, .wy-menu-vertical li.toctree-l9 a, .wy-menu-vertical li.toctree-l10 a {
+    color: #503291;
+}
+
+.wy-nav-side {
+    background: #E1C3CD;
+}
+
+.wy-menu-vertical li.current>a, .wy-menu-vertical li.on a, .wy-menu-vertical a:hover {
+    background: #96D7D2;
+}

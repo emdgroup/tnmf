@@ -1,0 +1,28 @@
+# This workflow uses git diff to count the added lines to CHANGELOG.md in a pull request
+# and ensure that it is larger than zero.
+name: Analyze Changelog
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze-changelog:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Analyze Changelog
+      run: |
+        git fetch origin main:main
+        NUM_ADDED=`git diff --numstat main CHANGELOG.md | cut -d$'\t' -f1`
+        if [ "$NUM_ADDED" -gt "0" ]; then
+          echo "$NUM_ADDED lines have been added to CHANGELOG.md"
+          exit 0
+        else
+          echo "Nothing has been added to CHANGELOG.md"
+          exit 1
+        fi

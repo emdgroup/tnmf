@@ -1,6 +1,7 @@
 """
 Transform-Invariant Non-Negative Matrix Factorization
-Authors: Adrian Sosic, Mathias Winkel
+
+Authors: Adrian Šošić, Mathias Winkel
 """
 
 # TODO: backend-specific return types
@@ -25,6 +26,84 @@ from .backends.NumPy_CachingFFT import NumPy_CachingFFT_Backend
 
 
 class TransformInvariantNMF:
+    r"""
+    Transform Invariant Non-Negative Matrix Factorization.
+
+    Finds non-negative tensors :attr:`W` (dictionary) and :attr:`H` (activations) that approximate the non-negative tensor
+    :attr:`V` (samples) for a given transform operator`. # TODO: add link to TNMF model
+
+    .. note::
+        Currently, only a single transform type, corresponding to *shift invariance*, is supported and hard-coded. In contrast
+        to other *generic* types of transforms, shift invariance can be efficiently achieved through convolution operations
+        (or, equivalently, multiplication in Fourier domain). Therefore, shift invariance will remain hard-coded and retained
+        as an optional transform type even when additional transforms become supported in future releases.
+
+    Optimization is performed via multiplicative updates to :attr:`W` and :attr:`H`, see [1]_.
+    Different backend implementations (NumPy, PyTorch, with/without FFT, etc.) can be selected by the user.
+
+    Parameters
+    ----------
+    n_atoms : int
+        Number of elementary atoms. The shape of :attr:`W` will be ``(n_atoms, n_channels, *atom_shape)``.
+    atom_shape : Tuple[int, ...]
+        Shape of the elementary atoms. The shape of :attr:`W` will be ``(n_atoms, n_channels, *atom_shape)``.
+    inhibition_range: Union[int, Tuple[int, ...]], default = None
+        Lateral inhibition range. If set to None, the value is set to ``*atom_shape``, which ensures
+        that activations are pairwise sufficiently far apart, that the corresponding atoms do not overlap
+        in the reconstruction.
+    n_iterations : int, default = 1000
+        Maximum number of iterations (:attr:`W` and :attr:`H` updates) to be performed.
+    backend : {'numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch'}, default = 'numpy_fft'
+        Defines the optimization backend.
+
+        * `'numpy'`: Selects the :class:`.NumPy_Backend`.
+        * `'numpy_fft'` (default): Selects the :class:`.NumPy_FFT_Backend`.
+        * `'numpy_caching_fft'`: Selects the :class:`.NumPy_CachingFFT_Backend`.
+        * `'pytorch'`: Selects the :class:`.PyTorch_Backend`.
+
+    logger : logging.Logger, default = None
+        Logger instance used for intermediate output. If None, an internal logger instance will be created.
+    verbose : {0, 1, 2, 3}, default = 0
+        Verbosity level.
+
+        * 0: Show only errors.
+        * 1: Include warnings.
+        * 2: Include info.
+        * 3: Include debug messages.
+
+    **kwargs
+        Keyword arguments that are handed to the constructor of the backend class.
+
+    Attributes
+    ----------
+    W : np.ndarray
+        The dictionary tensor of shape ``(n_atoms, num_channels, *atom_shape)``.
+    H : np.ndarray
+        The activation tensor of shape ``(num_samples, num_atoms, *shift_shape)``.
+    R : np.ndarray
+        The reconstruction of the sample tensor using the current :attr:`W` and :attr:`H`.
+
+    Examples
+    --------
+        TODO: add examples
+
+    Notes
+    -----
+    Planned features:
+
+        * Batch processing
+        * Arbitrary transform types
+        * Nested transformations
+        * Additional reconstruction norms
+
+    References
+    ----------
+    # TODO: add bibtex file
+
+    .. [1] Lee, D.D., Seung, H.S., 2000. Algorithms for Non-negative Matrix Factorization,
+        in: Proceedings of the 13th International Conference on Neural Information
+        Processing Systems. pp. 535–541. https://doi.org/10.5555/3008751.3008829
+    """
 
     def __init__(
             self,
@@ -168,6 +247,32 @@ class TransformInvariantNMF:
             inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
+        r"""
+        Perform non-negative matrix factorization of samples :attr:`V`, i.e. optimization of dictionary :attr:`W` and
+        activations :attr:`H`.
+
+        Parameters
+        ----------
+        V : np.ndarray
+            Samples to be reconstructed. The shape of the sample tensor is ``(n_samples, n_channels, *sample_shape)``,
+            where `sample_shape` is the shape of the individual samples and each sample consists of `n_channels`
+            individual channels.
+        update_H : bool, default = True
+            If False, the activation tensor :attr:`H` will not be updated.
+        update_W : bool, default = True
+            If False, the dictionary tensor :attr:`W' will not be updated.
+        sparsity_H : float, default = 0.
+            Sparsity enforcing regularization for the :attr:`H` update.
+        inhibition_strength : float, default = 0.
+            Lateral inhibition regularization factor for the :attr:`H` update.
+        progress_callback : Callable[['TransformInvariantNMF', int], bool], default = None
+            If provided, this function will be called after every iteration, i.e. after every update to :attr:`H` and
+            :attr:`W`. The first parameter to the function is the calling :class:`TransformInvariantNMF` instance, which can be
+            used to inspect intermediate results, etc. The second parameter is the current iteration step.
+
+            If the `progress_callback` function returns False, iteration will be aborted, which allows to implement
+            specialized convergence criteria.
+        """
         self._do_fit(V, update_H, update_W, sparsity_H, inhibition_strength, False, progress_callback)
 
     def partial_fit(

@@ -1,16 +1,20 @@
-.. TransformInvariantNMF documentation master file, created by
-   sphinx-quickstart on Fri Apr 23 15:08:06 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to TransformInvariantNMF's documentation!
 =================================================
+A comprehensive Python package for **Non-Negative Matrix Factorization (NMF)** with a focus on learning *transform-invariant representations*.
+
+The packages supports multiple optimization backends and can be easily extended to handle application-specific types of transforms.
+
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
+   link_generalintroduction
    autoapi/index
+   link_changelog
+   link_license
+   Installation <https://github.com/emdgroup/tnmf/tree/main#installation>
+   Contributing <https://github.com/emdgroup/tnmf/tree/main#contributing>
 
 Indices and tables
 ==================

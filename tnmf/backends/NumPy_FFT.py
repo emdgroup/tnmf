@@ -1,3 +1,8 @@
+"""
+A module that provides a NumPy based backend for computing the gradients of the factorization model.
+Shift-invariance is implemented via fast convolution in the Fourier domain using :func:`scipy.fft.rfftn`
+and :func:`scipy.fft.irfftn`.
+"""
 from typing import Tuple, Dict
 
 import numpy as np
@@ -85,7 +90,13 @@ def fftconvolve_sum(
 
 
 class NumPy_FFT_Backend(NumPyBackend):
+    r"""
+    A NumPy based backend that performs convolutions and contractions for computing the gradients of the factorization model
+    via FFT:
 
+    Arrays to be convolved are transformed to Fourier space, multiplied and accumulated across the free indices (e.g. for the
+    sum over all atoms in the reconstruction), and transformed back to coordinate space.
+    """
     def __init__(self, reconstruction_mode: str = 'valid'):
         if reconstruction_mode not in ('valid', 'full', 'same'):
             raise NotImplementedError
