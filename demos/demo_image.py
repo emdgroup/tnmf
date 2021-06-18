@@ -1,11 +1,7 @@
-# TODO: remove path extension once everything is packaged
-import sys
-from pathlib import Path
-p = Path(__file__).absolute().parent.parent
-sys.path.append(str(p))
+import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
-import matplotlib.pyplot as plt
+
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.utils.data_loading import racoon_image
 
