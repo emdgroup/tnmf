@@ -23,7 +23,7 @@ Installation is easiest using pip:
 
 # Demos and Examples
 
-The package comes with a streamlit demo and a number examples that demonstrate the capabilities of the TNMF model and 
+The package comes with a [streamlit](https://streamlit.io) demo and a number examples that demonstrate the capabilities of the TNMF model and 
 provide a good starting point for your own experiments. Once the package is installed, they can be conveniently executed
 using the `tnmf` command:
 * To execute the demo, run `tnmf demo`.
