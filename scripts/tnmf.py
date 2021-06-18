@@ -27,9 +27,9 @@ def main():
 
     # create subparsers for the `example` and `demo` commands
     subparsers = parser.add_subparsers(dest='command')
-    demo_parser = subparsers.add_parser("demo", help='Runs the streamlit demo.')
-    example_parser = subparsers.add_parser("example",
-        help='Runs a specific example. Type `tnmf example -h` to show the list of available examples.')
+    demo_parser = subparsers.add_parser("demo", help='Runs the streamlit demo.')  # noqa: F841
+    example_parser = subparsers.add_parser("example", help='Runs a specific example. Type `tnmf example -h` to show the list '
+                                                           'of available examples.')
 
     examples = get_examples()
     example_parser.add_argument("example_name", choices=[e.stem for e in examples], help='Name of the example.')
@@ -41,8 +41,8 @@ def main():
     if args.command == 'example':
         args_example = parser.parse_args()
         example = [e for e in examples if e.stem == args_example.example_name][0]
-        os.system(f'python {example}')
+        os.system(f'python {example}')  # noqa: S605
 
     # run the demo
     elif args.command == 'demo':
-        os.system(f'streamlit run {DEMO_FILE}')
+        os.system(f'streamlit run {DEMO_FILE}')  # noqa: S605

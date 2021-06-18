@@ -1,3 +1,4 @@
+# pylint: skip-file
 from importlib.metadata import version, PackageNotFoundError
 
 try:

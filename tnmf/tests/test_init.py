@@ -2,7 +2,7 @@
 Test if `from tnmf import *` does not fail
 """
 
-# pylint: disable=broad-except, wildcard-import
+# pylint: disable=broad-except, wildcard-import, unused-wildcard-import
 
 _import_error = None
 
