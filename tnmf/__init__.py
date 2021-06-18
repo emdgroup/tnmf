@@ -4,3 +4,6 @@ try:
     __version__ = version("tnmf")
 except PackageNotFoundError:
     pass
+
+del version
+del PackageNotFoundError
