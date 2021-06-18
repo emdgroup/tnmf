@@ -23,10 +23,13 @@ Installation is easiest using pip:
 
 # Demos and Examples
 
-The package comes with a number of demos and examples that demonstrate the capabilities of the TNMF model and provide a
-good starting point for your own experiments.
-* To execute a particular streamlit demo, run `streamlit run demos/<demo_name>`.
-* A specific example can be executed by calling `python examples/<example_name>`.
+The package comes with a [streamlit](https://streamlit.io) demo and a number examples that demonstrate the capabilities of the TNMF model and 
+provide a good starting point for your own experiments. Once the package is installed, they can be conveniently executed
+using the `tnmf` command:
+* To execute the demo, run `tnmf demo`.
+* A specific example can be executed by calling `tnmf example <example_name>`.
+
+To show the list of available examples, type `tnmf example --help`.
 
 # License
 Copyright (c) 2021 Merck KGaA, Darmstadt, Germany
@@ -57,7 +60,9 @@ git checkout https://github.com/emdgroup/tnmf.git ./tnmf
 cd tmnf
 python3 -m virtualenv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e .
 ```
 
 Now, you should be able to execute the unit tests by calling `pytest` to verify that the code is running as expected.
