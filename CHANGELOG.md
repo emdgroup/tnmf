@@ -12,3 +12,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add tnmf console entry point
 - Add packaging information
 - Add Github workflow for publishing to PyPI and TestPyPI
+- Add support for 'circular' boundary conditions in the Numpy_FFT backend
