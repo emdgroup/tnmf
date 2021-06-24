@@ -77,14 +77,12 @@ def fftconvolve_sum(
 
     # compute how to undo the padding
     fslice = (slice(None), ) * (ndim - len(axes))
-    if mode == 'same':
-        fslice += tuple(slice(s2[a] - 1, s2[a] + s1[a] - 1) for a in axes)
-    elif mode == 'valid':
+    if mode == 'valid':
         fslice += tuple(slice(min(padded_shape[a], s2[a]) - 1, max(padded_shape[a], s2[a])) for a in axes)
     elif mode == 'full':
         fslice += tuple(slice(0, s2[a] + s1[a] - 1) for a in axes)
     else:
-        raise ValueError(f'Unsupported mode {mode}. Please use "same", "valid", or "full".')
+        raise ValueError(f'Unsupported mode {mode}. Please use "valid" or "full".')
 
     # Fourier transform (for real data)
     sp1 = tuple(padded_rfftn(in1i, fft_shape, axes, pad_mode, pad_shape) for in1i in in1)

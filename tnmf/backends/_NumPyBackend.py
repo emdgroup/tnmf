@@ -48,12 +48,12 @@ class NumPyBackend(Backend):
             self._mode_R = 'full'
         elif self._reconstruction_mode == 'circular':
             self._pad_mode = dict(mode='wrap')
-            self._mode_H = 'same'
-            self._mode_R = 'same'
+            self._mode_H = 'valid'
+            self._mode_R = 'valid'
         elif self._reconstruction_mode == 'reflect':
             self._pad_mode = dict(mode='reflect', reflect_type='even')
-            self._mode_H = 'same'
-            self._mode_R = 'same'
+            self._mode_H = 'valid'
+            self._mode_R = 'valid'
         else:
             raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
                              f'Please choose "valid", "full", "circular", or "reflect".')
