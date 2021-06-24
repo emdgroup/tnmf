@@ -130,7 +130,7 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         reconstruction_mode: str = 'valid',
     ):
         if reconstruction_mode != 'valid':
-            raise NotImplementedError
+            raise NotImplementedError('This backend only supports the "valid" reconstruction mode.')
         super().__init__(reconstruction_mode=reconstruction_mode)
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])

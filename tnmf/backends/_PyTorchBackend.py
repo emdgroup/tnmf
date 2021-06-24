@@ -54,7 +54,8 @@ class PyTorchBackend(Backend):
                 mode=self._reconstruction_mode
             )
         else:
-            raise NotImplementedError
+            raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
+                             f'Please choose "valid", "full", "circular", or "reflect".')
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 

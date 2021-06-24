@@ -23,7 +23,7 @@ class NumPy_Backend(NumPyBackend):
         reconstruction_mode: str = 'valid',
     ):
         if reconstruction_mode != 'valid':
-            raise NotImplementedError
+            raise NotImplementedError('This backend only supports the "valid" reconstruction mode.')
         super().__init__(reconstruction_mode=reconstruction_mode)
         self._shift_axes = None
         self._cache = {}
