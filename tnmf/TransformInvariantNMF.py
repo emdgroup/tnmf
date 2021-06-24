@@ -22,6 +22,7 @@ import numpy as np
 from .backends.NumPy import NumPy_Backend
 from .backends.NumPy_FFT import NumPy_FFT_Backend
 from .backends.PyTorch import PyTorch_Backend
+from .backends.PyTorch_FFT import PyTorch_FFT_Backend
 from .backends.NumPy_CachingFFT import NumPy_CachingFFT_Backend
 
 
@@ -60,6 +61,7 @@ class TransformInvariantNMF:
         * `'numpy_fft'` (default): Selects the :class:`.NumPy_FFT_Backend`.
         * `'numpy_caching_fft'`: Selects the :class:`.NumPy_CachingFFT_Backend`.
         * `'pytorch'`: Selects the :class:`.PyTorch_Backend`.
+        * `'pytorch_fft'`: Selects the :class:`.PyTorch_FFT_Backend`.
 
     logger : logging.Logger, default = None
         Logger instance used for intermediate output. If None, an internal logger instance will be created.
@@ -138,6 +140,7 @@ class TransformInvariantNMF:
             'numpy_fft': NumPy_FFT_Backend,
             'numpy_caching_fft': NumPy_CachingFFT_Backend,
             'pytorch': PyTorch_Backend,
+            'pytorch_fft': PyTorch_FFT_Backend,
         }
 
         self._backend = backend_map[backend.lower()](**kwargs)

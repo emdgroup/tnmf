@@ -12,7 +12,7 @@ scale = st.sidebar.slider('Image rescaling factor', min_value=0., max_value=1., 
 color = st.sidebar.checkbox('Color channels', False)
 
 st.sidebar.markdown('# NMF options')
-backend = st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch'], 1)
+backend = st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft'], 1)
 n_atoms = st.sidebar.number_input('Number of atoms', min_value=1, value=10)
 atom_size = st.sidebar.number_input('Atom size', min_value=1, value=10)
 sparsity_H = st.sidebar.number_input('Activation sparsity', min_value=0., value=0., step=0.1)

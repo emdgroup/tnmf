@@ -15,7 +15,7 @@ from tnmf.utils.data_loading import racoon_image
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s: %(message)s')
 
 # define all test settings
-backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch']
+backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft']
 # hard-coded expected energy levels for the different reconstruction modes
 test_params_sparsity = [
     # increasing sparsity, no inhibition
