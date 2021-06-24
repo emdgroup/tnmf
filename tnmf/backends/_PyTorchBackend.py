@@ -2,7 +2,12 @@
 A module that provides some specializations and utilities for all PyTorch based backends.
 """
 
-from typing import Tuple, Optional
+# TODO: it should be possible to reformulate the gradients using
+#       https://pytorch.org/docs/stable/autograd.html#torch.autograd.functional.jacobian
+# TODO: merge gradient functions into one
+# TODO: add device option
+
+from typing import Tuple, Optional, Union
 from itertools import chain
 
 import numpy as np
@@ -89,3 +94,34 @@ class PyTorchBackend(Backend):
             convolved = torch.movedim(convolved, -1, a)
 
         return convolved
+
+    @staticmethod
+    def normalize(arr: Tensor, axis: Optional[Union[int, Tuple[int, ...]]] = None):
+        arr.divide_(arr.sum(dim=axis, keepdim=True))
+
+    def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
+        W_grad = W.detach().requires_grad_()
+        neg_energy, pos_energy = self._energy_terms(V, W_grad, H)
+        neg = torch.autograd.grad(neg_energy, W_grad, retain_graph=True)[0]
+        pos = torch.autograd.grad(pos_energy, W_grad)[0]
+        return neg.detach(), pos.detach()
+
+    def reconstruction_gradient_H(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
+        H_grad = H.detach().requires_grad_()
+        neg_energy, pos_energy = self._energy_terms(V, W, H_grad)
+        neg = torch.autograd.grad(neg_energy, H_grad, retain_graph=True)[0]
+        pos = torch.autograd.grad(pos_energy, H_grad)[0]
+        return neg.detach(), pos.detach()
+
+    def _energy_terms(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
+        V = torch.as_tensor(V)
+        R = self.reconstruct(W, H)
+        neg = (R * V).sum()
+        pos = 0.5 * (V.square().sum() + R.square().sum())
+        return neg, pos
+
+    def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:
+        V = torch.as_tensor(V)
+        R = self.reconstruct(W, H)
+        energy = 0.5 * torch.sum(torch.square(V - R))
+        return float(energy)
