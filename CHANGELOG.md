@@ -10,4 +10,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example: convergence control
 - Example: shift-invariant decomposition
 - Add tnmf console entry point
-- Add packaging information and Github workflow for publishing to PyPI
+- Add packaging information
+- Add Github workflow for publishing to PyPI and TestPyPI
