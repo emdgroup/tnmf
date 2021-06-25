@@ -2,7 +2,12 @@
 A module that provides some specializations and utilities for all PyTorch based backends.
 """
 
-from typing import Tuple, Optional
+# TODO: it should be possible to reformulate the gradients using
+#       https://pytorch.org/docs/stable/autograd.html#torch.autograd.functional.jacobian
+# TODO: merge gradient functions into one
+# TODO: add device option
+
+from typing import Tuple, Optional, Union
 from itertools import chain
 
 import numpy as np
@@ -33,29 +38,24 @@ class PyTorchBackend(Backend):
         W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
 
+        pad_shape = np.array(self.atom_shape) - 1
+
         if self._reconstruction_mode == 'valid':
             self._padding = None
+        elif self._reconstruction_mode == 'full':
+            self._padding = dict(
+                pad=tuple(np.repeat(pad_shape[::-1], self._n_shift_dimensions)),
+                mode='constant',
+                value=0
+            )
+        elif self._reconstruction_mode in ('circular', 'reflect'):
+            self._padding = dict(
+                pad=tuple(chain(*((s, 0) for s in pad_shape[::-1]))),
+                mode=self._reconstruction_mode
+            )
         else:
-            pad_shape = np.array(self.atom_shape) - 1
-
-            if self._reconstruction_mode == 'full':
-                self._padding = dict(
-                    pad=tuple(np.repeat(pad_shape[::-1], self._n_shift_dimensions)),
-                    mode='constant',
-                    value=0
-                )
-            elif self._reconstruction_mode in ('circular', 'reflect'):
-                self._padding = dict(
-                    pad=tuple(chain(*((s, 0) for s in pad_shape[::-1]))),
-                    mode=self._reconstruction_mode
-                )
-            elif self._reconstruction_mode == 'reflect':
-                self._padding = dict(
-                    pad=tuple(chain(*((s, 0) for s in pad_shape[::-1]))),
-                    mode='reflect'
-                )
-            else:
-                raise NotImplementedError
+            raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
+                             f'Please choose "valid", "full", "circular", or "reflect".')
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
@@ -89,3 +89,34 @@ class PyTorchBackend(Backend):
             convolved = torch.movedim(convolved, -1, a)
 
         return convolved
+
+    @staticmethod
+    def normalize(arr: Tensor, axis: Optional[Union[int, Tuple[int, ...]]] = None):
+        arr.divide_(arr.sum(dim=axis, keepdim=True))
+
+    def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
+        W_grad = W.detach().requires_grad_()
+        neg_energy, pos_energy = self._energy_terms(V, W_grad, H)
+        neg = torch.autograd.grad(neg_energy, W_grad, retain_graph=True)[0]
+        pos = torch.autograd.grad(pos_energy, W_grad)[0]
+        return neg.detach(), pos.detach()
+
+    def reconstruction_gradient_H(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
+        H_grad = H.detach().requires_grad_()
+        neg_energy, pos_energy = self._energy_terms(V, W, H_grad)
+        neg = torch.autograd.grad(neg_energy, H_grad, retain_graph=True)[0]
+        pos = torch.autograd.grad(pos_energy, H_grad)[0]
+        return neg.detach(), pos.detach()
+
+    def _energy_terms(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
+        V = torch.as_tensor(V)
+        R = self.reconstruct(W, H)
+        neg = (R * V).sum()
+        pos = 0.5 * (V.square().sum() + R.square().sum())
+        return neg, pos
+
+    def reconstruction_energy(self, V: Tensor, W: Tensor, H: Tensor) -> float:
+        V = torch.as_tensor(V)
+        R = self.reconstruct(W, H)
+        energy = 0.5 * torch.sum(torch.square(V - R))
+        return float(energy)
