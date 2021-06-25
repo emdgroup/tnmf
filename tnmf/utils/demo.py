@@ -71,22 +71,15 @@ class SignalTool(ABC):
             The NMF reconstruction of the input.
         """
         st.markdown('# Global signal reconstruction')
-        mode = st.radio('Visualization mode', ['Compare', 'Difference'])
 
-        # show the input and its reconstruction as images next to each other
-        if mode == 'Compare':
-            cols = st.beta_columns(2)
-            for col, X in zip(cols, [V, R]):
-                with col:
-                    fig = plt.figure()
-                    plt.imshow(X.reshape(X.shape[0], -1), aspect='auto', interpolation='none')
-                    st.pyplot(fig)
-
-        # show the difference between the input and its reconstruction as an image
-        else:
-            fig = plt.figure()
-            plt.imshow((V - R).reshape(V.shape[0], -1), cmap='RdBu', aspect='auto', interpolation='none')
-            st.pyplot(fig)
+        # show the input, its reconstruction, and the reconstruction error as images next to each other
+        cols = st.beta_columns(3)
+        for col, X, title in zip(cols, [V, R, V-R], ['Input', 'Reconstruction', 'Error']):
+            with col:
+                fig = plt.figure()
+                plt.imshow(X.reshape(X.shape[0], -1), aspect='auto', interpolation='none')
+                plt.title(title)
+                st.pyplot(fig)
 
     @classmethod
     def st_compare_individual_signals(cls, V: np.ndarray, R: np.ndarray):
@@ -101,7 +94,7 @@ class SignalTool(ABC):
             The NMF reconstruction of the input.
         """
         st.markdown('# Individual signal reconstruction')
-        i_signal = st.slider('Signal number', 0, V.shape[0] - 1)
+        i_signal = st.slider('Signal number', 1, V.shape[0]) - 1
         cls._st_compare_individual_signals(V[i_signal], R[i_signal])
 
     @classmethod
@@ -203,8 +196,9 @@ class SignalTool2D(SignalTool):
     @classmethod
     def _st_compare_individual_signals(cls, V_i: np.ndarray, R_i: np.ndarray):
         cols = st.beta_columns(2)
-        for col, X in zip(cols, [V_i, R_i]):
+        for col, X, title in zip(cols, [V_i, R_i], ['Input', 'Reconstruction']):
             with col:
                 fig = plt.figure()
                 plt.imshow(X.transpose((1, 2, 0)))
+                plt.title(title)
                 st.pyplot(fig)
