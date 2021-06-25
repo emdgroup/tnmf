@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
-from tnmf.utils.signals import generate_pulse_train
+from tnmf.utils.signals import generate_pulse_train, generate_block_image
 
 
 def st_define_nmf_params(n_dims: int) -> dict:
@@ -47,7 +47,7 @@ class SignalTool(ABC):
         if n_dims == 1:
             return super(SignalTool, cls).__new__(SignalTool1D)
         else:
-            raise ValueError
+            return super(SignalTool, cls).__new__(SignalTool2D)
 
     @classmethod
     def st_generate_input(cls) -> np.ndarray:
@@ -169,3 +169,42 @@ class SignalTool1D(SignalTool):
             ax.plot(R_i[i_channel], '--', label='reconstruction', color='tab:red')
         plt.legend()
         st.pyplot(fig)
+
+
+class SignalTool2D(SignalTool):
+
+    @classmethod
+    def st_define_signal_params(cls) -> dict:
+
+        # choose between grayscale or color images, select the number of symbols per dimension and their size
+        n_channels = 1 if st.sidebar.radio('Image type', ['Grayscale', 'Color'], 1) == 'Grayscale' else 3
+        n_symbols = st.sidebar.number_input('# Patches', min_value=1, value=5)
+        symbol_size = st.sidebar.number_input('Patch size', min_value=1, value=10)
+
+        # create all possible combinations of shapes and color
+        shapes = ['+', 'x', 's']
+        colors = ['r', 'g', 'b', 'y', 'm', 'c', 'w'] if n_channels == 3 else ['']
+        symbols = [''.join(spec) for spec in product(shapes, colors)]
+
+        # create the parameter dictionary
+        signal_params = dict(
+            n_symbols=n_symbols,
+            symbol_size=symbol_size,
+            symbols=st.sidebar.multiselect('Symbols', symbols, symbols),
+        )
+
+        return signal_params
+
+    @classmethod
+    def generate_signal(cls, signal_params: dict) -> np.ndarray:
+        signal, _ = generate_block_image(**signal_params)
+        return signal
+
+    @classmethod
+    def _st_compare_individual_signals(cls, V_i: np.ndarray, R_i: np.ndarray):
+        cols = st.beta_columns(2)
+        for col, X in zip(cols, [V_i, R_i]):
+            with col:
+                fig = plt.figure()
+                plt.imshow(X.transpose((1, 2, 0)))
+                st.pyplot(fig)
