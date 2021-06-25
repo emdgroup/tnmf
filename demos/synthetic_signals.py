@@ -1,5 +1,15 @@
+import streamlit as st
+from streamlit.delta_generator import DeltaGenerator
+
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.utils.demo import SignalTool, st_define_nmf_params
+
+
+@st.cache(hash_funcs={DeltaGenerator: lambda _: None})
+def fit_nmf_model(V, nmf_params, progress_bar):
+    nmf = TransformInvariantNMF(**nmf_params)
+    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / nmf_params['n_iterations']))
+    return nmf
 
 
 def main(progress_bar, n_dims: int):
@@ -21,8 +31,7 @@ def main(progress_bar, n_dims: int):
 
     # define the NMF parameters and fit the model
     nmf_params = st_define_nmf_params(n_dims=n_dims)
-    nmf = TransformInvariantNMF(**nmf_params)
-    nmf.fit(V, progress_callback= lambda _, x: progress_bar.progress((x + 1) / nmf_params['n_iterations']))
+    nmf = fit_nmf_model(V, nmf_params, progress_bar)
 
     # visualize the results
     tool.st_compare_signals(V, nmf.R)
