@@ -144,6 +144,7 @@ class TransformInvariantNMF:
 
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
+        self._logger.debug(f'Using {backend} backend.')
 
         self.n_iterations_done = 0
         self._W = None

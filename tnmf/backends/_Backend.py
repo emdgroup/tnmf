@@ -8,7 +8,7 @@ A module that defines a common interface for all backends.
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional, Dict, Union
+from typing import Tuple, Optional, Union
 
 import numpy as np
 
@@ -25,10 +25,9 @@ class Backend(ABC):
     def __init__(
         self,
         reconstruction_mode: str = 'valid',
-        input_padding: Dict = None,
     ):
-        self._input_padding = input_padding if input_padding is not None else dict(mode='constant', constant_values=0)
         self._reconstruction_mode = reconstruction_mode
+        self.atom_shape = None
         self.n_samples = None
         self.n_channels = None
         self._sample_shape = None
@@ -52,23 +51,25 @@ class Backend(ABC):
         raise NotImplementedError
 
     def _set_dimensions(self, V, atom_shape):
+        self.atom_shape = atom_shape
         self.n_samples = V.shape[0]
         self.n_channels = V.shape[1]
         self._sample_shape = V.shape[2:]
-        self._transform_shape = self.n_transforms(self._sample_shape, atom_shape)
+        self._transform_shape = self._n_transforms(self._reconstruction_mode, self._sample_shape, atom_shape)
         self._n_shift_dimensions = len(atom_shape)
         self._shift_dimensions = tuple(range(-1, -len(atom_shape) - 1, -1))
 
-    def n_transforms(self, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
+    @staticmethod
+    def _n_transforms(reconstruction_mode: str, sample_shape: Tuple[int, ...], atom_shape: Tuple[int, ...]) -> Tuple[int, ...]:
         # TODO: remove or rename this function
         """Number of dictionary transforms in each dimension"""
-        if self._reconstruction_mode == 'valid':
+        if reconstruction_mode == 'valid':
             return tuple(np.array(sample_shape) + np.array(atom_shape) - 1)
 
-        if self._reconstruction_mode == 'full':
+        if reconstruction_mode == 'full':
             return tuple(np.array(sample_shape) - np.array(atom_shape) + 1)
 
-        if self._reconstruction_mode in ('same', 'circular'):
+        if reconstruction_mode in ('same', 'circular', 'reflect'):
             return tuple(np.array(sample_shape))
 
         raise ValueError

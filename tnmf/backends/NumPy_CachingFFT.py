@@ -179,10 +179,10 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         upper_idx = np.array(sample_shape) + np.array(atom_shape) - 1
         self._cache['params_reconstruct'] = {
             'slices': (slice(None, None, 1),) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
-            #              sum_m W[m, c, ...] * H[n, m, ... ] --> R[n, c, ...]
-            'contraction': contract_expression('mc...,nm...->nc...',
-                                               W.f.shape,
-                                               H.f.shape),
+            #              sum_m H[n, m, ... ] * W[m, c, ...] --> R[n, c, ...]
+            'contraction': contract_expression('nm...,mc...->nc...',
+                                               H.f.shape,
+                                               W.f.shape),
         }
 
         # fft details: gradient H computation
@@ -201,10 +201,10 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         # TODO: understand why pylint triggers a warning for H.f_reversed.shape but not for W.f_reversed or H.f
         self._cache['params_reconstruction_gradient_W'] = {
             'slices': (slice(None, None, 1),) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
-            #              sum_n V|R[n, c, ... ] * H[n , m, ...]   --> dR / dW[m, c, ...]
-            'contraction': contract_expression('nc...,nm...->mc...',
-                                               self._V.f.shape,
-                                               H.f_reversed.shape),  # pylint: disable=no-member
+            #              sum_n H[n, m, ...] * V|R[n, c, ... ]   --> dR / dW[m, c, ...]
+            'contraction': contract_expression('nm...,nc...->mc...',
+                                               H.f_reversed.shape,  # pylint: disable=no-member
+                                               self._V.f.shape)
         }
 
         return W, H
@@ -246,8 +246,8 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
     def reconstruction_gradient_W(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
         R = self.reconstruct(W, H)
         assert R.c.shape == V.shape
-        neg = self._fft_convolve('neg_W', self._V.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
-        pos = self._fft_convolve('pos_W', self._R.f, H.f_reversed, **self._cache['params_reconstruction_gradient_W'])
+        neg = self._fft_convolve('neg_W', H.f_reversed, self._V.f, **self._cache['params_reconstruction_gradient_W'])
+        pos = self._fft_convolve('pos_W', H.f_reversed, self._R.f, **self._cache['params_reconstruction_gradient_W'])
         return neg, pos
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
@@ -258,10 +258,10 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         return neg, pos
 
     def reconstruct(self, W: CachingFFT, H: CachingFFT) -> CachingFFT:
-        self._R = self._fft_convolve('R', W.f, H.f, **self._cache['params_reconstruct'])
+        self._R = self._fft_convolve('R', H.f, W.f, **self._cache['params_reconstruct'])
         return self._R
 
     def partial_reconstruct(self, W: np.ndarray, H: np.ndarray, i_atom: int) -> np.ndarray:
         self._R_partial = self._fft_convolve(
-            'R_partial', W.f[i_atom:i_atom+1], H.f[:, i_atom:i_atom+1], **self._cache['params_reconstruct'])
+            'R_partial', H.f[:, i_atom:i_atom+1], W.f[i_atom:i_atom+1], **self._cache['params_reconstruct'])
         return self._R_partial

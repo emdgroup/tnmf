@@ -17,12 +17,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(m
 expected_energies = {
     'valid': 268.14423,
     'full': 345.82498,
-    'circular': 265.35091,  # TODO: needs to be verified against another backend
+    'circular': 265.35091,
+    'reflect': 272.13762,  # TODO: needs to be verified against another backend
 }
 
 # define all test settings
 backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch']
-reconstruction_modes = ['valid', 'full', 'circular']
+reconstruction_modes = ['valid', 'full', 'circular', ]  # 'reflect']
 
 # temporarily ignore failed tests due to unimplemented features
 raise_not_implemented_errors = False

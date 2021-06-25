@@ -9,7 +9,6 @@ Shift-invariance is implemented via explicit convolution operations in the coord
 # TODO: add device option
 # TODO: use torch.fft.rfftn() to generalize for more dimensions and improve performance
 
-from itertools import chain
 from typing import Tuple, Union, Optional
 
 import numpy as np
@@ -30,15 +29,8 @@ _CONV_DICT = {
 
 class PyTorch_Backend(PyTorchBackend):
     r"""
-    A PyTorch based backend that uses :func:`torch.autograd.grad` for computing the gradients of the factorization model.
-
     Reconstruction is performed via an explicit convolution in coordinate space.
     """
-    def __init__(self, reconstruction_mode: str = 'valid'):
-        if reconstruction_mode not in ('valid', 'full', 'circular'):
-            raise NotImplementedError
-        super().__init__(reconstruction_mode=reconstruction_mode)
-
     @staticmethod
     def normalize(arr: Tensor, axis: Optional[Union[int, Tuple[int, ...]]] = None):
         arr.divide_(arr.sum(dim=axis, keepdim=True))
@@ -75,15 +67,11 @@ class PyTorch_Backend(PyTorchBackend):
         flip_dims = list(range(-n_shift_dimensions, 0))
         W_flipped = torch.flip(W, flip_dims)
 
-        pad_shape = np.array(W.shape[-n_shift_dimensions:]) - 1
-        if self._reconstruction_mode == 'valid':
+        if self._padding is None:
             H_padded = H
-        elif self._reconstruction_mode == 'full':
-            padding = tuple(np.repeat(pad_shape[::-1], n_shift_dimensions))
-            H_padded = pad(H, padding)
-        elif self._reconstruction_mode == 'circular':
-            padding = tuple(chain(*((s, 0) for s in pad_shape[::-1])))
-            H_padded = pad(H, padding, 'circular')
+        else:
+            H_padded = pad(H, **self._padding)
+
         R = conv_fun(H_padded, torch.swapaxes(W_flipped, 0, 1))
         return R
 
