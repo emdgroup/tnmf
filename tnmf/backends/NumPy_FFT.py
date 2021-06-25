@@ -74,7 +74,7 @@ def fftconvolve_sum(
         del s2[sum_axis]
 
     ret = irfftn(sp1sp2, np.array(fshape)[axes], axes=axes)
-    ret = ret[tuple(fslice)]  # pylint: disable=invalid-sequence-index
+    ret = ret[fslice]  # pylint: disable=invalid-sequence-index
 
     if mode == "full":
         ret = ret.copy()
@@ -97,11 +97,6 @@ class NumPy_FFT_Backend(NumPyBackend):
     Arrays to be convolved are transformed to Fourier space, multiplied and accumulated across the free indices (e.g. for the
     sum over all atoms in the reconstruction), and transformed back to coordinate space.
     """
-    def __init__(self, reconstruction_mode: str = 'valid'):
-        if reconstruction_mode not in ('valid', 'full', 'same'):
-            raise NotImplementedError
-        super().__init__(reconstruction_mode=reconstruction_mode)
-        self._mode_H = {'full': 'valid', 'valid': 'full', 'same': 'same', }[reconstruction_mode]
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         R = self.reconstruct(W, H)

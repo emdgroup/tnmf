@@ -17,6 +17,21 @@ class NumPyBackend(Backend):
 
     They provide the functionality to evaluate the analytic gradients of the factorization model.
     """
+    def __init__(self, reconstruction_mode: str = 'valid'):
+
+        super().__init__(reconstruction_mode=reconstruction_mode)
+
+        try:
+            self._mode_H, self._input_padding = {
+                'full': ('valid', dict(mode='constant', constant_values=0)),
+                'valid': ('full', dict(mode='constant', constant_values=0)),
+                'same': ('same', dict(mode='constant', constant_values=0)),
+                'circular': ('same', dict(mode='wrap')),
+                'reflect': ('same', dict(mode='reflect', reflect_type='even')),
+                }[reconstruction_mode]
+        except KeyError as e:
+            raise NotImplementedError from e
+
     @staticmethod
     def to_ndarray(arr: np.ndarray) -> np.ndarray:
         return arr

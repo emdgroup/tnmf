@@ -8,7 +8,7 @@ A module that defines a common interface for all backends.
 # TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional, Dict, Union
+from typing import Tuple, Optional, Union
 
 import numpy as np
 
@@ -25,10 +25,9 @@ class Backend(ABC):
     def __init__(
         self,
         reconstruction_mode: str = 'valid',
-        input_padding: Dict = None,
     ):
-        self._input_padding = input_padding if input_padding is not None else dict(mode='constant', constant_values=0)
         self._reconstruction_mode = reconstruction_mode
+        self.atom_shape = None
         self.n_samples = None
         self.n_channels = None
         self._sample_shape = None
