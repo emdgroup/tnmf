@@ -25,7 +25,7 @@ def generate_pulse(shape: str, length: int = 20) -> np.ndarray:
     Returns
     -------
     pulse : np.ndarray
-        The signal pulse as a 1-D numpy array.
+        The signal pulse as a 1-D array.
     """
     # used for ramp-shaped pulses
     l1, l2 = np.ceil(length / 2), np.floor(length / 2)
@@ -83,9 +83,9 @@ def generate_pulse_train(
     Returns
     -------
     signal : np.ndarray
-        A 2-D array of shape (n_pulses * pulse_length, n_channels) containing the signal.
+        A 2-D array of shape (n_channels, n_pulses * pulse_length) containing the signal.
     W : np.ndarray
-        A 3-D array of shape (pulse_length, n_channels, len(symbols)) representing the pulse shape dictionary.
+        A 3-D array of shape (n_symbols, n_channels, pulse_length) representing the pulse shape dictionary.
     """
     # default pulse shapes
     if symbols is None:
@@ -97,11 +97,11 @@ def generate_pulse_train(
             raise ValueError('all symbols must have the same number of channels')
 
     # generate all pulse shapes
-    W = np.dstack([np.vstack([generate_pulse(shape, pulse_length) for shape in symbol]).T for symbol in symbols])
+    W = np.stack([np.stack([generate_pulse(shape, pulse_length) for shape in symbol]) for symbol in symbols])
 
     # generate a random sequence of pulse indices and synthesize the signal
     sequence = np.random.choice(range(len(symbols)), n_pulses)
-    signal = np.vstack([W[:, :, symbol_idx] for symbol_idx in sequence])
+    signal = np.hstack([W[symbol_idx] for symbol_idx in sequence])
 
     return signal, W
 
@@ -122,7 +122,7 @@ def generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) ->
     Returns
     -------
     patch : np.ndarray
-        The image patch as a 3-D array, where the last dimension indexes the color channel.
+        The image patch as a 3-D array, where the first dimension indexes the color channel.
     """
     # generate the grayscale version of the image patch
     if pattern == 'x':
@@ -142,12 +142,12 @@ def generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) ->
 
     # convert the grayscale image to RGB
     if color:
-        patch = np.zeros([size, size, 3])
+        patch = np.zeros([3, size, size])
         color_dict = {'r': [0], 'g': [1], 'b': [2], 'y': [0, 1], 'm': [0, 2], 'c': [1, 2], 'w': [0, 1, 2]}
         channels = color_dict[color]
-        patch[:, :, channels] = np.tile(im[:, :, None], [1, 1, len(channels)])
+        patch[channels] = np.tile(im[None], [len(channels), 1, 1])
     else:
-        patch = im[:, :, None]
+        patch = im[None]
 
     return patch
 
@@ -176,9 +176,9 @@ def generate_block_image(
     Returns
     -------
     image : np.ndarray
-        A 3-D array of shape (n_symbols * symbol_size, n_symbols * symbol_size, 3) containing the image.
+        A 3-D array of shape (3, n_symbols * symbol_size, n_symbols * symbol_size) containing the image.
     W : np.ndarray
-        A 3-D array of shape (symbols_size, symbol_size, 3) containing the image patch dictionary.
+        A 3-D array of shape (3, symbols_size, symbol_size) containing the image patch dictionary.
     """
     # default symbols
     if symbols is None:
@@ -196,11 +196,11 @@ def generate_block_image(
     sequence = np.random.choice(range(len(symbols)), n_symbols ** 2)
 
     # generate all patch types
-    W = np.stack([generate_patch(shape, symbol_size, color) for shape, color in zip(shapes, colors)], axis=-1)
+    W = np.stack([generate_patch(shape, symbol_size, color) for shape, color in zip(shapes, colors)])
 
     # turn the sequence of patch indices into a sequence patches and stack them into an image
-    patches = [W[..., idx].transpose(2, 0, 1) for idx in sequence]
-    image = np.block(list(chunked(patches, n_symbols))).transpose((1, 2, 0))
+    patches = [W[patch_idx] for patch_idx in sequence]
+    image = np.block(list(chunked(patches, n_symbols)))
 
     return image, W
 
