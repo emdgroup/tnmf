@@ -8,9 +8,10 @@ and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed 
 # TODO: this backend has a logger member but the other backends don't
 
 import logging
-from typing import Tuple, Optional, Union
+from typing import Dict, Tuple, Optional, Union
 from copy import copy
 
+from torch import as_tensor
 import numpy as np
 from opt_einsum import contract_expression
 from opt_einsum.contract import ContractExpression
@@ -34,6 +35,7 @@ class CachingFFT:
     ):
         self._c = None  # field in coordinate space
         self._f = None  # field in fourier space
+        self._f_padded = None  # fourier transform of padded field
         self._f_reversed = None  # time-reversed field in fourier space
         self._fft_axes = fft_axes
         self._fft_shape = fft_shape
@@ -64,6 +66,7 @@ class CachingFFT:
     def _invalidate(self):
         self._c = None
         self._f = None
+        self._f_padded = None
         self._f_reversed = None
 
     def has_c(self) -> bool:
@@ -73,6 +76,14 @@ class CachingFFT:
     def has_f(self) -> bool:
         """Check if the field in fourier space has already been computed"""
         return self._f is not None
+
+    @property
+    def shape(self) -> Tuple[int]:
+        return self._c.shape
+
+    @property
+    def ndim(self) -> int:
+        return self._c.ndim
 
     @property
     def c(self) -> np.ndarray:
@@ -98,6 +109,18 @@ class CachingFFT:
             assert self.has_c()
             self._f = rfftn(self._c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
         return self._f
+
+    def f_padded(self, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], ...] = None,) -> np.ndarray:
+        """Getter for padded field in fourier space"""
+        if self._f_padded is None:
+            self._logger.debug(f'Computing {self._field_name}_padded(f) = FFT[ {self._field_name}_padded(x) ]')
+            assert self.has_c()
+
+            unpadded = ((0, 0), ) * (self._c.ndim - len(self._fft_axes))
+            c = np.pad(self._c, unpadded + pad_width, **pad_mode)
+            # TODO: we should actually make sure that the padding does not change between calls
+            self._f_padded = rfftn(c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
+        return self._f_padded
 
     @f.setter
     def f(self, f: np.ndarray):
@@ -127,17 +150,16 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         self,
         logger: logging.Logger = None,
         verbose: int = 0,
-        reconstruction_mode: str = 'valid',
+        **kwargs,
     ):
-        if reconstruction_mode != 'valid':
-            raise NotImplementedError('This backend only supports the "valid" reconstruction mode.')
-        super().__init__(reconstruction_mode=reconstruction_mode)
+        super().__init__(**kwargs)
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
         self._V = None
-        self._R = None
-        self._R_partial = None
         self._cache = {}
+
+        from .PyTorch import PyTorch_Backend
+        self._dbg = PyTorch_Backend(**kwargs)
 
     def _initialize_matrices(
         self,
@@ -147,38 +169,39 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         W: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
+        self._dbg.initialize(V, atom_shape, n_atoms, W)
+        np.random.seed(42)
+
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
-
-        self._R = CachingFFT('R', logger=self._logger)
-        self._R_partial = CachingFFT('R_partial', logger=self._logger)
-        self._V = CachingFFT('V', logger=self._logger)
-        self._V.c = V
-        sample_shape = V.shape[2:]
-
-        H = CachingFFT('H', logger=self._logger)
-        H.c = h
-
-        if W is None:
-            W = CachingFFT('W', logger=self._logger)
-            W.c = w
 
         # fft shape and functions
         fft_axes = self._shift_dimensions
-        fft_shape = tuple(next_fast_len(s) for s in np.array(sample_shape) + np.array(self._transform_shape) - 1)
+        fft_shape = tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1)
 
+        self._V = CachingFFT('V', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
+        self._V.c = V
+
+        if self._reconstruction_mode == 'full':
+            self._pad_mode = dict(mode='constant', constant_values=0.)
+
+        H = CachingFFT('H', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
+        H.c = h
+
+        if W is None:
+            W = CachingFFT('W', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
+            W.c = w
+
+        #################
         self._cache['fft_axes'] = fft_axes
         self._cache['fft_shape'] = fft_shape
 
-        self._V.set_fft_params(fft_axes, fft_shape)
-        self._R.set_fft_params(fft_axes, fft_shape)
-        W.set_fft_params(fft_axes, fft_shape)
-        H.set_fft_params(fft_axes, fft_shape)
-
         # fft details: reconstruction
         lower_idx = np.array(atom_shape) - 1
-        upper_idx = np.array(sample_shape) + np.array(atom_shape) - 1
+        upper_idx = np.array(self._sample_shape) + np.array(atom_shape) - 1
         self._cache['params_reconstruct'] = {
-            'slices': (slice(None, None, 1),) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
+            'pad_mode': self._pad_mode,
+            'pad_width': self._padding_left,
+            'slices': (slice(None), ) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
             #              sum_m H[n, m, ... ] * W[m, c, ...] --> R[n, c, ...]
             'contraction': contract_expression('nm...,mc...->nc...',
                                                H.f.shape,
@@ -186,9 +209,13 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         }
 
         # fft details: gradient H computation
-        upper_idx = np.array(self._transform_shape)
-        self._cache['params_reconstruction_gradient_H'] = {
-            'slices': (slice(None, None, 1),) * 2 + tuple(slice(upper) for upper in upper_idx),
+        lower_idx = np.zeros_like(self._transform_shape) if self._pad_mode is None else np.asarray(self._padding_left)[:, 0]
+        upper_idx = np.array(self._transform_shape) + lower_idx
+        self._cache['params_grad_H'] = {
+            'pad_mode': self._pad_mode,
+            'pad_width': self._padding_right,
+            'correlate': True,
+            'slices': (slice(None), ) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
             #              sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
             'contraction': contract_expression('nc...,mc...->nm...',
                                                self._V.f.shape,
@@ -196,15 +223,17 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         }
 
         # fft details: gradient W computation
-        lower_idx = np.array(sample_shape) - 1
-        upper_idx = np.array(sample_shape) + np.array(atom_shape) - 1
-        # TODO: understand why pylint triggers a warning for H.f_reversed.shape but not for W.f_reversed or H.f
-        self._cache['params_reconstruction_gradient_W'] = {
-            'slices': (slice(None, None, 1),) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
-            #              sum_n H[n, m, ...] * V|R[n, c, ... ]   --> dR / dW[m, c, ...]
-            'contraction': contract_expression('nm...,nc...->mc...',
-                                               H.f_reversed.shape,  # pylint: disable=no-member
-                                               self._V.f.shape)
+        lower_idx = np.array(self._sample_shape) - 1
+        upper_idx = np.array(self._sample_shape) + np.array(atom_shape) - 1
+        self._cache['params_grad_W'] = {
+            'pad_mode': self._pad_mode,
+            'pad_width': self._padding_right,
+            'correlate': True,
+            'slices': (slice(None), ) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
+            #              sum_n V|R[n, c, ... ] * H[n, m, ...]   --> dR / dW[m, c, ...]
+            'contraction': contract_expression('nc...,nm...->mc...',
+                                               self._V.f.shape,
+                                               H.f_reversed.shape)  # pylint: disable=no-member  # TODO: why is this necessary?
         }
 
         return W, H
@@ -232,36 +261,68 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
     def _fft_convolve(
         self,
-        name: str,
-        arr1_fft: np.ndarray,
-        arr2_fft: np.ndarray,
+        name: Tuple[str, ...],
+        arr1: Tuple[np.ndarray, ...],
+        arr2: np.ndarray,
         contraction: ContractExpression,
-        slices: Tuple[slice, ...]
+        slices: Tuple[slice, ...],
+        pad_mode: Dict = None,
+        pad_width: Tuple[Tuple[int, int], ...] = None,
+        correlate: bool = False,
+        arr1_slice: Tuple[slice, ...] = None,
+        arr2_slice: Tuple[slice, ...] = None,
     ) -> CachingFFT:
-        result = CachingFFT(name, fft_axes=self._cache['fft_axes'], fft_shape=self._cache['fft_shape'])
-        result.f = contraction(arr1_fft, arr2_fft)
-        result.c = result.c[slices]
-        return result
+        arr1_fft = (a.f if pad_mode is None else a.f_padded(pad_mode, pad_width) for a in arr1)
+        arr2_fft = arr2.f_reversed if correlate else arr2.f
+
+        arr1_slice = slice(None) if arr1_slice is None else arr1_slice
+        arr2_slice = slice(None) if arr2_slice is None else arr2_slice
+
+        ret = tuple()
+        for a, n in zip(arr1_fft, name):
+            result = CachingFFT(n, fft_axes=self._cache['fft_axes'], fft_shape=self._cache['fft_shape'])
+            result.f = contraction(a[arr1_slice], arr2_fft[arr2_slice])
+            result.c = result.c[slices]
+            ret += (result, )
+        return ret
 
     def reconstruction_gradient_W(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
         R = self.reconstruct(W, H)
         assert R.c.shape == V.shape
-        neg = self._fft_convolve('neg_W', H.f_reversed, self._V.f, **self._cache['params_reconstruction_gradient_W'])
-        pos = self._fft_convolve('pos_W', H.f_reversed, self._R.f, **self._cache['params_reconstruction_gradient_W'])
+        neg_dbg, pos_dbg = self._dbg.reconstruction_gradient_W(as_tensor(V), as_tensor(W.c), as_tensor(H.c))
+        neg_dbg = neg_dbg.detach().numpy()
+        pos_dbg = pos_dbg.detach().numpy()
+
+        neg, pos = self._fft_convolve(('neg_W', 'pos_W'), (self._V, R), H, **self._cache['params_grad_W'])
+        assert np.allclose(neg.c, neg_dbg)
+        assert np.allclose(pos.c, pos_dbg)
+
         return neg, pos
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
         R = self.reconstruct(W, H)
         assert R.c.shape == V.shape
-        neg = self._fft_convolve('neg_H', self._V.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
-        pos = self._fft_convolve('pos_H', self._R.f, W.f_reversed, **self._cache['params_reconstruction_gradient_H'])
+        neg_dbg, pos_dbg = self._dbg.reconstruction_gradient_H(as_tensor(V), as_tensor(W.c), as_tensor(H.c))
+        neg_dbg = neg_dbg.detach().numpy()
+        pos_dbg = pos_dbg.detach().numpy()
+
+        neg, pos = self._fft_convolve(('neg_H', 'pos_H'), (self._V, R), W, **self._cache['params_grad_H'])
+        assert np.allclose(neg.c, neg_dbg)
+        assert np.allclose(pos.c, pos_dbg)
+
         return neg, pos
 
     def reconstruct(self, W: CachingFFT, H: CachingFFT) -> CachingFFT:
-        self._R = self._fft_convolve('R', H.f, W.f, **self._cache['params_reconstruct'])
-        return self._R
+        R, = self._fft_convolve(('R', ), (H, ), W, **self._cache['params_reconstruct'])
+        R_dbg = self._dbg.reconstruct(as_tensor(W.c), as_tensor(H.c)).detach().numpy()
+
+        assert np.allclose(R.c, R_dbg)
+        return R
 
     def partial_reconstruct(self, W: np.ndarray, H: np.ndarray, i_atom: int) -> np.ndarray:
-        self._R_partial = self._fft_convolve(
-            'R_partial', H.f[:, i_atom:i_atom+1], W.f[i_atom:i_atom+1], **self._cache['params_reconstruct'])
-        return self._R_partial
+        R_partial, = self._fft_convolve(
+            ('R_partial', ), (H, ), W, **self._cache['params_reconstruct'],
+            arr1_slice=(slice(None), slice(i_atom, i_atom+1)),
+            arr2_slice=(slice(i_atom, i_atom+1)),
+            )
+        return R_partial
