@@ -2,7 +2,7 @@
 [![Pylint Linter](https://github.com/emdgroup/tnmf/actions/workflows/pylint.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pylint.yml)
 [![Pytest](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml)
 [![Build Documentation](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml)
-[![Publish to TestPyPI](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-test-pypi.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-test-pypi.yml)
+[![Publish to PyPI](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml)
 
 [![Logo](doc/logos/tnmf_header.svg)](https://github.com/emdgroup/tnmf)
 
