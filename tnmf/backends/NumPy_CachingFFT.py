@@ -166,9 +166,6 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
-        if self._reconstruction_mode == 'full':
-            self._pad_mode = dict(mode='constant', constant_values=0.)
-
         # fft shape and functions
         fft_axes = self._shift_dimensions
         fft_shape = np.array(self._sample_shape) + np.array(self._transform_shape) - 1

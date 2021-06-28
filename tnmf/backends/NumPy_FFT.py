@@ -15,7 +15,9 @@ def fftconvolve_sum(
         in1: Union[np.ndarray, Tuple[np.ndarray, ...]],
         in2: Union[np.ndarray, Tuple[np.ndarray, ...]],
         convolve_axes: Tuple[int, ...],
-        mode: str,
+        output_lower_index: Tuple[int, ...],
+        output_shape: Tuple[int, ...],
+        mode: str = 'valid',
         pad_mode: Dict = None,
         pad_width: Tuple[Tuple[int, int], ...] = None,
         sum_axis: Tuple[int, ...] = None,
@@ -77,12 +79,7 @@ def fftconvolve_sum(
 
     # compute how to undo the padding
     fslice = (slice(None), ) * (ndim - len(axes))
-    if mode == 'valid':
-        fslice += tuple(slice(min(padded_shape[a], s2[a]) - 1, max(padded_shape[a], s2[a])) for a in axes)
-    elif mode == 'full':
-        fslice += tuple(slice(0, s2[a] + s1[a] - 1) for a in axes)
-    else:
-        raise ValueError(f'Unsupported mode {mode}. Please use "valid" or "full".')
+    fslice += tuple(slice(f, f + s) for f, s in zip(output_lower_index, output_shape))
 
     # Fourier transform (for real data)
     sp1 = tuple(padded_rfftn(in1i, fft_shape, axes, pad_mode, pad_shape) for in1i in in1)
@@ -138,7 +135,8 @@ class NumPy_FFT_Backend(NumPyBackend):
             H_reversed[:, :, np.newaxis, ...],
             (V[:, np.newaxis, :, ...], R[:, np.newaxis, :, ...]),
             sum_axis=0,
-            mode='valid',
+            output_lower_index=np.minimum(np.array(self._sample_shape), np.array(self._transform_shape)) - 1,
+            output_shape=self.atom_shape,
             pad_mode=self._pad_mode,
             pad_width=self._padding_right,
             convolve_axes=self._shift_dimensions)
@@ -162,6 +160,8 @@ class NumPy_FFT_Backend(NumPyBackend):
             (V[:, np.newaxis, :, ...], R[:, np.newaxis, :, ...]),
             W_reversed[np.newaxis, :, :, ...],
             sum_axis=2,
+            output_lower_index=np.asarray(self._padding_right)[:, 1] if self._pad_mode is not None else np.zeros_like(self._transform_shape),
+            output_shape=self._transform_shape,
             mode=self._mode_H,
             pad_mode=self._pad_mode,
             pad_width=self._padding_right,
@@ -178,7 +178,8 @@ class NumPy_FFT_Backend(NumPyBackend):
             H[:, :, np.newaxis, ...],
             W[np.newaxis, :, ...],
             sum_axis=1,
-            mode=self._mode_R,
+            output_lower_index=np.array(self.atom_shape) - 1,
+            output_shape=self._sample_shape,
             pad_mode=self._pad_mode,
             pad_width=self._padding_left,
             convolve_axes=self._shift_dimensions)
