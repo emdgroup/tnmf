@@ -11,7 +11,6 @@ import logging
 from typing import Dict, Tuple, Optional, Union
 from copy import copy
 
-from torch import as_tensor
 import numpy as np
 from opt_einsum import contract_expression
 from opt_einsum.contract import ContractExpression
@@ -157,9 +156,6 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         self._V = None
         self._cache = {}
 
-        from .PyTorch import PyTorch_Backend
-        self._dbg = PyTorch_Backend(**kwargs)
-
     def _initialize_matrices(
         self,
         V: np.ndarray,
@@ -167,9 +163,6 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         n_atoms: int,
         W: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
-
-        self._dbg.initialize(V, atom_shape, n_atoms, W)
-        np.random.seed(42)
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
@@ -291,34 +284,15 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
     def reconstruction_gradient_W(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
         R = self.reconstruct(W, H)
         assert R.c.shape == V.shape
-        neg_dbg, pos_dbg = self._dbg.reconstruction_gradient_W(as_tensor(V), as_tensor(W.c), as_tensor(H.c))
-        neg_dbg = neg_dbg.detach().numpy()
-        pos_dbg = pos_dbg.detach().numpy()
-
-        neg, pos = self._fft_convolve(('neg_W', 'pos_W'), (self._V, R), H, **self._cache['params_grad_W'])
-        assert np.allclose(neg.c, neg_dbg)
-        assert np.allclose(pos.c, pos_dbg)
-
-        return neg, pos
+        return self._fft_convolve(('neg_W', 'pos_W'), (self._V, R), H, **self._cache['params_grad_W'])
 
     def reconstruction_gradient_H(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
         R = self.reconstruct(W, H)
         assert R.c.shape == V.shape
-        neg_dbg, pos_dbg = self._dbg.reconstruction_gradient_H(as_tensor(V), as_tensor(W.c), as_tensor(H.c))
-        neg_dbg = neg_dbg.detach().numpy()
-        pos_dbg = pos_dbg.detach().numpy()
-
-        neg, pos = self._fft_convolve(('neg_H', 'pos_H'), (self._V, R), W, **self._cache['params_grad_H'])
-        assert np.allclose(neg.c, neg_dbg)
-        assert np.allclose(pos.c, pos_dbg)
-
-        return neg, pos
+        return self._fft_convolve(('neg_H', 'pos_H'), (self._V, R), W, **self._cache['params_grad_H'])
 
     def reconstruct(self, W: CachingFFT, H: CachingFFT) -> CachingFFT:
         R, = self._fft_convolve(('R', ), (H, ), W, **self._cache['params_reconstruct'])
-        R_dbg = self._dbg.reconstruct(as_tensor(W.c), as_tensor(H.c)).detach().numpy()
-
-        assert np.allclose(R.c, R_dbg)
         return R
 
     def partial_reconstruct(self, W: np.ndarray, H: np.ndarray, i_atom: int) -> np.ndarray:
