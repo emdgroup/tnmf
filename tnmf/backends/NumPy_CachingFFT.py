@@ -116,8 +116,7 @@ class CachingFFT:
             self._logger.debug(f'Computing {self._field_name}_padded(f) = FFT[ {self._field_name}_padded(x) ]')
             assert self.has_c()
 
-            unpadded = ((0, 0), ) * (self._c.ndim - len(self._fft_axes))
-            c = np.pad(self._c, unpadded + pad_width, **pad_mode)
+            c = np.pad(self._c, pad_width, **pad_mode)
             # TODO: we should actually make sure that the padding does not change between calls
             self._f_padded = rfftn(c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
         return self._f_padded
@@ -174,15 +173,18 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
+        if self._reconstruction_mode == 'full':
+            self._pad_mode = dict(mode='constant', constant_values=0.)
+
         # fft shape and functions
         fft_axes = self._shift_dimensions
+        fft_shape = np.array(self._sample_shape) + np.array(self._transform_shape) - 1
+        if self._pad_mode is not None:
+            fft_shape += np.asarray(self._padding_right).sum(axis=1)
         fft_shape = tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1)
 
         self._V = CachingFFT('V', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
         self._V.c = V
-
-        if self._reconstruction_mode == 'full':
-            self._pad_mode = dict(mode='constant', constant_values=0.)
 
         H = CachingFFT('H', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
         H.c = h
@@ -194,14 +196,14 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         #################
         self._cache['fft_axes'] = fft_axes
         self._cache['fft_shape'] = fft_shape
+        unpadded = ((0, 0), ) * (V.ndim - len(self._shift_dimensions))
 
         # fft details: reconstruction
         lower_idx = np.array(atom_shape) - 1
-        upper_idx = np.array(self._sample_shape) + np.array(atom_shape) - 1
         self._cache['params_reconstruct'] = {
             'pad_mode': self._pad_mode,
-            'pad_width': self._padding_left,
-            'slices': (slice(None), ) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
+            'pad_width': unpadded + self._padding_left,
+            'slices': (slice(None), ) * 2 + tuple(slice(f, f + s) for f, s in zip(lower_idx, self._sample_shape)),
             #              sum_m H[n, m, ... ] * W[m, c, ...] --> R[n, c, ...]
             'contraction': contract_expression('nm...,mc...->nc...',
                                                H.f.shape,
@@ -209,13 +211,14 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         }
 
         # fft details: gradient H computation
-        lower_idx = np.zeros_like(self._transform_shape) if self._pad_mode is None else np.asarray(self._padding_left)[:, 0]
-        upper_idx = np.array(self._transform_shape) + lower_idx
+        lower_idx = np.zeros_like(self._transform_shape)
+        if self._pad_mode is not None:
+            lower_idx += np.asarray(self._padding_right)[:, 1]
         self._cache['params_grad_H'] = {
             'pad_mode': self._pad_mode,
-            'pad_width': self._padding_right,
+            'pad_width': unpadded + self._padding_right,
             'correlate': True,
-            'slices': (slice(None), ) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
+            'slices': (slice(None), ) * 2 + tuple(slice(f, f + s) for f, s in zip(lower_idx, self._transform_shape)),
             #              sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
             'contraction': contract_expression('nc...,mc...->nm...',
                                                self._V.f.shape,
@@ -223,13 +226,12 @@ class NumPy_CachingFFT_Backend(NumPyBackend):
         }
 
         # fft details: gradient W computation
-        lower_idx = np.array(self._sample_shape) - 1
-        upper_idx = np.array(self._sample_shape) + np.array(atom_shape) - 1
+        lower_idx = np.minimum(np.array(self._sample_shape), np.array(self._transform_shape)) - 1
         self._cache['params_grad_W'] = {
             'pad_mode': self._pad_mode,
-            'pad_width': self._padding_right,
+            'pad_width': unpadded + self._padding_right,
             'correlate': True,
-            'slices': (slice(None), ) * 2 + tuple(slice(lower, upper) for lower, upper in zip(lower_idx, upper_idx)),
+            'slices': (slice(None), ) * 2 + tuple(slice(f, f + s) for f, s in zip(lower_idx, atom_shape)),
             #              sum_n V|R[n, c, ... ] * H[n, m, ...]   --> dR / dW[m, c, ...]
             'contraction': contract_expression('nc...,nm...->mc...',
                                                self._V.f.shape,
