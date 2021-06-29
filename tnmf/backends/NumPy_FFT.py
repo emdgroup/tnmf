@@ -17,7 +17,6 @@ def fftconvolve_sum(
         convolve_axes: Tuple[int, ...],
         output_lower_index: Tuple[int, ...],
         output_shape: Tuple[int, ...],
-        mode: str = 'valid',
         pad_mode: Dict = None,
         pad_width: Tuple[Tuple[int, int], ...] = None,
         sum_axis: Tuple[int, ...] = None,
@@ -162,7 +161,6 @@ class NumPy_FFT_Backend(NumPyBackend):
             sum_axis=2,
             output_lower_index=np.asarray(self._padding_right)[:, 1] if self._pad_mode is not None else np.zeros_like(self._transform_shape),
             output_shape=self._transform_shape,
-            mode=self._mode_H,
             pad_mode=self._pad_mode,
             pad_width=self._padding_right,
             convolve_axes=self._shift_dimensions)
