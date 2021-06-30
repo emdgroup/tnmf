@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from itertools import product, repeat
+from typing import List, Iterable
 
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
+from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.utils.signals import generate_pulse_train, generate_block_image
 
 
@@ -98,6 +100,49 @@ class SignalTool(ABC):
         cls._st_compare_individual_signals(V[i_signal], R[i_signal])
 
     @classmethod
+    def st_plot_partial_reconstructions(cls, V: np.ndarray, nmf: TransformInvariantNMF):
+        """
+        Visualizes the partial reconstructions of the given input by the different NMF atoms.
+
+        Parameters
+        ----------
+        V : np.ndarray
+            The input that was factorized via NMF.
+        nmf : TransformInvariantNMF
+            The trained NMF object.
+        """
+        st.markdown('# Partial signal reconstructions')
+        i_signal = st.slider('Signal number', 1, V.shape[0], key='i_signal_partial') - 1
+        for i_atom in range(nmf.n_atoms):
+            R_atom = nmf.R_partial(i_atom)
+            cols = st.beta_columns(2)
+            for col, signals, signal_opts, opts in zip(
+                    cols,
+                    [[nmf.W[i_atom]], [R_atom[i_signal], V[i_signal]]],
+                    [[{}], [{'label': 'Atom contribution', 'color': 'tab:red', 'linestyle': '--'}, {'label': 'Signal'}]],
+                    [{'title': 'Atom'}, {'title': 'Atom contribution'}],
+            ):
+                with col:
+                    cls.plot_signals(signals, signal_opts, opts)
+
+    @classmethod
+    @abstractmethod
+    def plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict] = repeat({}), opts: dict = {}):
+        """
+        Visualizes a given list of signals.
+
+        Parameters
+        ----------
+        signals : List[np.ndarray]
+            The list of signals to be plotted.
+        signal_opts : Iterable[dict]
+            A list of dictionaries containing plotting options for each individual signal.
+        opts : dict
+            A dictionary containing global plotting options.
+        """
+        raise NotImplementedError
+
+    @classmethod
     @abstractmethod
     def st_define_signal_params(cls) -> dict:
         """Defines all signal parameters via streamlit widgets and returns them in a dictionary."""
@@ -154,14 +199,23 @@ class SignalTool1D(SignalTool):
 
     @classmethod
     def _st_compare_individual_signals(cls, V_i: np.ndarray, R_i: np.ndarray):
-        n_channels = V_i.shape[0]
-        fig, axs = plt.subplots(nrows=n_channels)
-        axs = np.atleast_1d(axs)
-        for i_channel, ax in enumerate(axs):
-            ax.plot(V_i[i_channel], label='signal')
-            ax.plot(R_i[i_channel], '--', label='reconstruction', color='tab:red')
-        plt.legend()
-        st.pyplot(fig)
+        signals = [V_i, R_i]
+        opts = [{'label': 'Reconstruction', 'color': 'tab:red', 'linestyle': '--'}, {'label': 'Signal', 'zorder': -1}]
+        cls.plot_signals(signals, opts)
+
+    @classmethod
+    def plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict] = repeat({}), opts: dict = {}):
+        assert len(np.unique([signal.shape[0] for signal in signals])) == 1
+        n_channels = signals[0].shape[0]
+        with plt.style.context('seaborn'):
+            fig, axs = plt.subplots(nrows=n_channels)
+            axs = np.atleast_1d(axs)
+            for signal, signal_opt in zip(signals, signal_opts):
+                for i_channel, ax in enumerate(axs):
+                    ax.plot(signal[i_channel], **signal_opt)
+            plt.legend()
+            fig.suptitle(opts.get('title'))
+            st.pyplot(fig)
 
 
 class SignalTool2D(SignalTool):
@@ -198,7 +252,11 @@ class SignalTool2D(SignalTool):
         cols = st.beta_columns(2)
         for col, X, title in zip(cols, [V_i, R_i], ['Input', 'Reconstruction']):
             with col:
-                fig = plt.figure()
-                plt.imshow(X.transpose((1, 2, 0)))
-                plt.title(title)
-                st.pyplot(fig)
+                cls.plot_signals([X], opts={'title': title})
+
+    @classmethod
+    def plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict] = repeat({}), opts: dict = {}):
+        fig = plt.figure()
+        plt.imshow(signals[0].transpose((1, 2, 0)) / signals[0].max())
+        plt.title(opts.get('title'))
+        st.pyplot(fig)

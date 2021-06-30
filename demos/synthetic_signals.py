@@ -36,3 +36,4 @@ def main(progress_bar, n_dims: int):
     # visualize the results
     tool.st_compare_signals(V, nmf.R)
     tool.st_compare_individual_signals(V, nmf.R)
+    tool.st_plot_partial_reconstructions(V, nmf)
