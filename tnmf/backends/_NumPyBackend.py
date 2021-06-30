@@ -22,10 +22,6 @@ class NumPyBackend(Backend):
         self._pad_mode = None
         self._padding_left = None
         self._padding_right = None
-        # convolution modes when computing the respective quantities
-        self._mode_H = None
-        self._mode_R = None
-        self._mode_W = None
 
     def _initialize_matrices(
         self,
@@ -40,20 +36,12 @@ class NumPyBackend(Backend):
 
         if self._reconstruction_mode == 'valid':
             self._pad_mode = None
-            self._mode_H = 'full'
-            self._mode_R = 'valid'
         elif self._reconstruction_mode == 'full':
-            self._pad_mode = None
-            self._mode_H = 'valid'
-            self._mode_R = 'full'
+            self._pad_mode = dict(mode='constant', constant_values=0.)
         elif self._reconstruction_mode == 'circular':
             self._pad_mode = dict(mode='wrap')
-            self._mode_H = 'same'
-            self._mode_R = 'same'
         elif self._reconstruction_mode == 'reflect':
             self._pad_mode = dict(mode='reflect', reflect_type='even')
-            self._mode_H = 'same'
-            self._mode_R = 'same'
         else:
             raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
                              f'Please choose "valid", "full", "circular", or "reflect".')
