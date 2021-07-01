@@ -27,10 +27,10 @@ def main(progress_bar, n_dims: int):
     tool = SignalTool(n_dims=n_dims)
 
     # generate random input data for the factorization
-    V = tool.st_generate_input()
+    V, opt_nmf_params = tool.st_generate_input()
 
     # define the NMF parameters and fit the model
-    nmf_params = st_define_nmf_params(n_dims=n_dims)
+    nmf_params = st_define_nmf_params(opt_nmf_params)
     nmf = fit_nmf_model(V, nmf_params, progress_bar)
 
     # visualize the results
