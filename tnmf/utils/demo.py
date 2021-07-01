@@ -181,7 +181,7 @@ class SignalTool1D(SignalTool):
 
         # to avoid having too many different symbols, consider only those where all channels are identical
         shapes = ['n', '-', '^', 'v', '_']
-        symbols = [''.join(chars) for chars in product(*repeat(shapes, n_channels))]
+        symbols = [s * n_channels for s in shapes]
 
         # create the parameter dictionary
         signal_params = dict(
