@@ -7,8 +7,9 @@ from tnmf.utils.demo import SignalTool, st_define_nmf_params
 
 @st.cache(hash_funcs={DeltaGenerator: lambda _: None})
 def fit_nmf_model(V, nmf_params, progress_bar):
+    fit_params = {k: nmf_params.pop(k) for k in ('sparsity_H', 'inhibition_strength')}
     nmf = TransformInvariantNMF(**nmf_params)
-    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / nmf_params['n_iterations']))
+    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / nmf_params['n_iterations']), **fit_params)
     return nmf
 
 

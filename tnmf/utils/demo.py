@@ -40,6 +40,10 @@ def st_define_nmf_params(default_params: dict) -> dict:
             '# Atoms', value=default_params['n_atoms'], min_value=1) if not use_default['n_atoms'] else None,
         atom_shape=tuple([st.sidebar.number_input('Atom size', value=default_params['atom_shape'][0], min_value=1)]
                          * n_dims) if not use_default['atom_shape'] else None,
+        sparsity_H=st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.0, step=0.01),
+        inhibition_strength=st.sidebar.number_input('Lateral activation inhibition', min_value=0.0, value=0.1, step=0.01),
+        backend=st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft'], 4),
+        reconstruction_mode=st.sidebar.selectbox('Reconstruction', ['valid', 'full', 'circular'], 2)
     )
 
     # override with selected parameters with defaults
