@@ -1,6 +1,8 @@
+"""Provides certain utilities for the streamlit demo."""
+
 from abc import ABC, abstractmethod
 from itertools import product, repeat
-from typing import List, Iterable, Tuple
+from typing import List, Iterable, Tuple, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,8 +68,9 @@ class SignalTool(ABC):
         """
         if n_dims == 1:
             return super(SignalTool, cls).__new__(SignalTool1D)
-        else:
+        if n_dims == 2:
             return super(SignalTool, cls).__new__(SignalTool2D)
+        raise ValueError("'n_dims' must be in {1, 2}")
 
     @classmethod
     def st_generate_input(cls) -> Tuple[np.ndarray, dict]:
@@ -159,21 +162,18 @@ class SignalTool(ABC):
                     cls.plot_signals(signals, signal_opts, opts)
 
     @classmethod
-    @abstractmethod
-    def plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict] = repeat({}), opts: dict = {}):
-        """
-        Visualizes a given list of signals.
-
-        Parameters
-        ----------
-        signals : List[np.ndarray]
-            The list of signals to be plotted.
-        signal_opts : Iterable[dict]
-            A list of dictionaries containing plotting options for each individual signal.
-        opts : dict
-            A dictionary containing global plotting options.
-        """
-        raise NotImplementedError
+    def plot_signals(
+            cls,
+            signals: List[np.ndarray],
+            signal_opts: Optional[Iterable[dict]] = None,
+            opts: Optional[dict] = None,
+    ):
+        """Wrapper for `_plot_signals` to fill the default arguments."""
+        if signal_opts is None:
+            signal_opts = repeat({})
+        if opts is None:
+            opts = {}
+        cls._plot_signals(signals, signal_opts, opts)
 
     @classmethod
     @abstractmethod
@@ -202,8 +202,26 @@ class SignalTool(ABC):
         """
         raise NotImplementedError
 
+    @classmethod
+    @abstractmethod
+    def _plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict], opts: dict):
+        """
+        Visualizes a given list of signals.
+
+        Parameters
+        ----------
+        signals : List[np.ndarray]
+            The list of signals to be plotted.
+        signal_opts : Iterable[dict]
+            A list of dictionaries containing plotting options for each individual signal.
+        opts : dict
+            A dictionary containing global plotting options.
+        """
+        raise NotImplementedError
+
 
 class SignalTool1D(SignalTool):
+    """A utility class to handle 1-D multi-channel signals (time series data)."""
 
     @classmethod
     def st_define_signal_params(cls) -> dict:
@@ -237,7 +255,7 @@ class SignalTool1D(SignalTool):
         cls.plot_signals(signals, opts)
 
     @classmethod
-    def plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict] = repeat({}), opts: dict = {}):
+    def _plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict], opts: dict):
         assert len(np.unique([signal.shape[0] for signal in signals])) == 1
         n_channels = signals[0].shape[0]
         with plt.style.context('seaborn'):
@@ -252,6 +270,7 @@ class SignalTool1D(SignalTool):
 
 
 class SignalTool2D(SignalTool):
+    """A utility class to handle 2-D multi-channel signals (image data)."""
 
     @classmethod
     def st_define_signal_params(cls) -> dict:
@@ -288,7 +307,7 @@ class SignalTool2D(SignalTool):
                 cls.plot_signals([X], opts={'title': title})
 
     @classmethod
-    def plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict] = repeat({}), opts: dict = {}):
+    def _plot_signals(cls, signals: List[np.ndarray], signal_opts: Iterable[dict], opts: dict):
         fig = plt.figure()
         plt.imshow(signals[0].transpose((1, 2, 0)) / signals[0].max())
         plt.title(opts.get('title'))
