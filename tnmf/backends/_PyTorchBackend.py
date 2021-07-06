@@ -38,21 +38,14 @@ class PyTorchBackend(Backend):
         W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
 
-        pad_shape = np.array(self.atom_shape) - 1
+        pad_shape = tuple(chain.from_iterable((a - 1, 0) for a in reversed(atom_shape)))
 
         if self._reconstruction_mode == 'valid':
             self._padding = None
         elif self._reconstruction_mode == 'full':
-            self._padding = dict(
-                pad=tuple(np.repeat(pad_shape[::-1], self._n_shift_dimensions)),
-                mode='constant',
-                value=0
-            )
+            self._padding = dict(pad=pad_shape, mode='constant', value=0)
         elif self._reconstruction_mode in ('circular', 'reflect'):
-            self._padding = dict(
-                pad=tuple(chain(*((s, 0) for s in pad_shape[::-1]))),
-                mode=self._reconstruction_mode
-            )
+            self._padding = dict(pad=pad_shape, mode=self._reconstruction_mode)
         else:
             raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
                              f'Please choose "valid", "full", "circular", or "reflect".')
