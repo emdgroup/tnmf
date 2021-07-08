@@ -15,15 +15,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(m
 
 # hard-coded expected energy levels for the different reconstruction modes
 expected_energies = {
-    'valid': 268.14423,
-    'full': 345.82498,
-    'circular': 265.35091,
-    'reflect': 272.13762,  # TODO: needs to be verified against another backend
+    'valid': 2.34946,
+    'full': 1.87180,
+    'circular': 3.13228,
+    'reflect': 3.16430,
 }
 
 # define all test settings
 backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft']
-reconstruction_modes = ['valid', 'full', 'circular', ]  # 'reflect']
+reconstruction_modes = ['valid', 'full', 'circular']  # , 'reflect']
 
 # temporarily ignore failed tests due to unimplemented features
 raise_not_implemented_errors = False
@@ -75,6 +75,10 @@ def test_expected_energy(backend: str, reconstruction_mode: str, expected_factor
         if raise_not_implemented_errors:
             raise AssertionError from e
         return
+
+    nmf._logger.debug(f'W:\n{nmf.W}')  # pylint: disable=protected-access
+    nmf._logger.debug(f'H:\n{nmf.H}')  # pylint: disable=protected-access
+    nmf._logger.debug(f'R:\n{nmf.R}')  # pylint: disable=protected-access
 
     # check if the expected energy level is reached
     assert np.isclose(nmf._energy_function(V), expected_energy)  # pylint: disable=protected-access
