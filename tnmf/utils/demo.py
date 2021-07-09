@@ -435,7 +435,7 @@ class SignalTool2D(SignalTool):
     def st_define_signal_params(cls, verbose: bool = True) -> dict:
 
         # choose between grayscale or color images
-        n_channels = st.sidebar.radio('# Channels', ['1 (Grayscale images)', '3 (Color images)'], 1, help=HELP_CHANNEL)
+        n_channels = st.sidebar.radio('# Channels', ['1 (Grayscale images)', '3 (Color images)'], 0, help=HELP_CHANNEL)
         n_channels = 1 if n_channels == '1 (Grayscale images)' else 3
         if verbose:
             st.sidebar.caption(HELP_CHANNEL)
@@ -449,8 +449,9 @@ class SignalTool2D(SignalTool):
         help_symbols = \
             '''The **set of symbols** that form the atom dictionary of image patches for signal generation. The first 
             character defines the visual shape of the corresponding symbol. The second character (only available for color
-            images) defines the color of the symbol.'''
-        symbols = st.sidebar.multiselect('Symbols', all_symbols, all_symbols, help=help_symbols)
+            images) defines the color of the symbol. For color images, a representative subset of symbols is pre-selected.'''
+        symbols = st.sidebar.multiselect('Symbols', all_symbols, ['+r', 'xg', 'sb'] if n_channels == 3 else all_symbols,
+                                         help=help_symbols)
         if verbose:
             st.sidebar.caption(help_symbols)
 
