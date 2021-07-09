@@ -37,7 +37,7 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
 
     # decide if ground truth atom number shall be used
     help_use_n_atoms = \
-        '''If selected, the **number of atoms** used by the model is set to the actual number of atoms used 
+        '''If selected, the **number of atoms** used by the model is set to the actual number of atoms used
         for signal generation.'''
     use_n_atoms = st.sidebar.checkbox('Use ground truth number of atoms', True, help=help_use_n_atoms)
     if verbose:
@@ -58,8 +58,9 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
         st.sidebar.caption(help_use_atom_shape)
 
     help_atom_shape = 'The **size of each atom** dimension. To use the ground truth atom size, tick the checkbox above.'
-    atom_shape = tuple([st.sidebar.number_input('Atom size', value=default_params['atom_shape'][0], min_value=1,
-                                                help=help_atom_shape)] * len(default_params['atom_shape'])) if not use_atom_shape else None
+    atom_shape = tuple([st.sidebar.number_input('Atom size',
+                        value=default_params['atom_shape'][0], min_value=1,
+                        help=help_atom_shape)] * len(default_params['atom_shape'])) if not use_atom_shape else None
     if verbose and not use_atom_shape:
         st.sidebar.caption(help_atom_shape)
 
@@ -71,7 +72,7 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
 
     help_inhibition_strength = \
         '''The strength of the **lateral activation sparsity regularization** imposed on the optimization problem. The
-        parameter controls how strong the activation of an atom at a particular shift location suppresses the activation of 
+        parameter controls how strong the activation of an atom at a particular shift location suppresses the activation of
         the same atom at neighboring locations.'''
     inhibition_strength = st.sidebar.number_input('Lateral activation inhibition', min_value=0.0, value=0.1, step=0.01,
                                                   help=help_inhibition_strength)
@@ -85,7 +86,7 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
 
     help_backend = \
         '''The **optimization backend** for computing the multiplicative gradients.
-            **Note:** All backends yield the same results. Within the scope of this demo, switching between backends is thus 
+            **Note:** All backends yield the same results. Within the scope of this demo, switching between backends is thus
             for speed comparisons only.'''
     backend = st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft'], 4,
                                    help=help_backend)
@@ -94,15 +95,15 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
 
     help_reconstruction_mode = \
         '''Defines the **convolution mode** for the signal reconstruction.\
-        
+
         **valid:** The activation tensor
         is smaller than the input by the atom size along the shift dimensions, so that the convolution of atoms and
         activations matches the size of the input.\
-        
+
         **full:** The activation tensor is larger than the input by the atom size along the shift dimensions. Compared to the
         'valid' reconstruction mode, this also creates shifted versions of each atom that only partially overlap with the input
         array. The convolution result is trimmed to the appropriate size.\
-         
+
         **circular:** The activation tensor is of the same
         size as the input. Other than in 'full' mode, parts of the convolution result that are outside the range of the
         input array are inserted circularly on the respective other side of the array.'''
@@ -174,7 +175,7 @@ class SignalTool(ABC):
 
         # define the number input signals
         help_n_signals = \
-            '''The **number of generated signals** passed as input to the algorithm. 
+            '''The **number of generated signals** passed as input to the algorithm.
             All signals have the same shape and number of channels.'''
         n_signals = st.sidebar.number_input('# Signals', min_value=1, value=10, help=help_n_signals)
         if verbose:
@@ -204,6 +205,8 @@ class SignalTool(ABC):
             The input that was factorized via NMF.
         R : np.ndarray
             The NMF reconstruction of the input.
+        verbose : bool
+            If True, show detailed information.
         """
         st.markdown('# Global signal reconstruction')
 
@@ -211,12 +214,12 @@ class SignalTool(ABC):
         if verbose:
             st.caption('''The visualization below gives a **first impression of the reconstruction accuracy** of the
             learned factorization.\
-            
+
             **Left**: The entire input provided to the algorithm visualized as a matrix. Each row represents a particular input
                 signal, whose channels and remaining dimensions have been stacked into a single vector.\
-                
+
             **Middle**: The reconstruction of the signal obtained through the learned factorization, reshaped in the same way.\
-            
+
             **Right**: The difference between the two matrices.
             ''')
 
@@ -240,14 +243,16 @@ class SignalTool(ABC):
             The input that was factorized via NMF.
         R : np.ndarray
             The NMF reconstruction of the input.
+        verbose : bool
+            If True, show detailed information.
         """
         st.markdown('# Individual signal reconstruction')
 
         # show explanatory text
         if verbose:
             st.caption('''The visualization below shows a **comparison between an individual input signal and its
-            reconstruction** obtained through the learned factorization model. If more than one input signal has been generated,
-            the signal to be visualized can be selected via the **slider**.''')
+            reconstruction** obtained through the learned factorization model. If more than one input signal has been
+            generated, the signal to be visualized can be selected via the **slider**.''')
 
         # select and compare signals
         i_signal = st.slider('Signal number', 1, V.shape[0]) - 1 if V.shape[0] > 1 else 0
@@ -264,6 +269,8 @@ class SignalTool(ABC):
             The input that was factorized via NMF.
         nmf : TransformInvariantNMF
             The trained NMF object.
+        verbose : bool
+            If True, show detailed information.
         """
         st.markdown('# Partial signal reconstructions')
 
@@ -278,12 +285,12 @@ class SignalTool(ABC):
         for i_atom in range(nmf.n_atoms):
             R_atom = nmf.R_partial(i_atom)
             cols = st.beta_columns(2)
-            for i_atom, (col, signals, signal_opts, opts) in enumerate(zip(
+            for col, signals, signal_opts, opts in zip(
                     cols,
                     [[nmf.W[i_atom]], [R_atom[i_signal], V[i_signal]]],
                     [[{}], [{'label': 'Atom contribution', 'color': 'tab:red', 'linestyle': '--'}, {'label': 'Signal'}]],
                     [{'title': f'Atom {i_atom + 1}'}, {'title': 'Atom contribution'}],
-            )):
+            ):
                 with col:
                     cls.plot_signals(signals, signal_opts, opts)
 
@@ -447,7 +454,7 @@ class SignalTool2D(SignalTool):
 
         # select the symbols to be used
         help_symbols = \
-            '''The **set of symbols** that form the atom dictionary of image patches for signal generation. The first 
+            '''The **set of symbols** that form the atom dictionary of image patches for signal generation. The first
             character defines the visual shape of the corresponding symbol. The second character (only available for color
             images) defines the color of the symbol. For color images, a representative subset of symbols is pre-selected.'''
         symbols = st.sidebar.multiselect('Symbols', all_symbols, ['+r', 'xg', 'sb'] if n_channels == 3 else all_symbols,
