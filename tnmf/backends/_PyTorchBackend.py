@@ -38,13 +38,13 @@ class PyTorchBackend(Backend):
         W: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Tensor]:
 
-        pad_shape = tuple(chain.from_iterable((a - 1, 0) for a in reversed(atom_shape)))
-
         if self._reconstruction_mode == 'valid':
             self._padding = None
         elif self._reconstruction_mode == 'full':
+            pad_shape = tuple(chain.from_iterable((a - 1, a - 1) for a in reversed(atom_shape)))
             self._padding = dict(pad=pad_shape, mode='constant', value=0)
         elif self._reconstruction_mode in ('circular', 'reflect'):
+            pad_shape = tuple(chain.from_iterable((a - 1, 0) for a in reversed(atom_shape)))
             self._padding = dict(pad=pad_shape, mode=self._reconstruction_mode)
         else:
             raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'

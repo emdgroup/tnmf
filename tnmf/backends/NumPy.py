@@ -44,7 +44,7 @@ class NumPy_Backend(NumPyBackend):
 
         self._cache = {
             # zero-padding of the signal matrix for full-size correlation
-            'pad_width': ((0, 0), (0, 0)) + tuple((a - 1, 0) for a in atom_shape)
+            'pad_width': ((0, 0), (0, 0)) + tuple((a - 1, a - 1) for a in atom_shape)
         }
 
         self._cache.update({
