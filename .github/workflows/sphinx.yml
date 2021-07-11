@@ -34,6 +34,7 @@ jobs:
         tar -czf html.tar.gz html
         popd
     - name: Upload HTML Documentation
+      if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v2
       with:
         name: HTML Documentation
