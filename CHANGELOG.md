@@ -17,3 +17,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for 'full' and 'circular' convolution in CachingFFT backend
 - Demo: 1-D synthetic signals
 - Demo: 2-D synthetic signals
+- Only uploading Sphinx artifacts from github actions that run on the main branch
