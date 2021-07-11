@@ -15,3 +15,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for 'circular' boundary conditions in the Numpy_FFT backend
 - Add Pytorch_FFT backend that reconstructs the input via FFT
 - Add support for 'full' and 'circular' convolution in CachingFFT backend
+- Demo: 1-D synthetic signals
+- Demo: 2-D synthetic signals

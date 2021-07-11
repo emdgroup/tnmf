@@ -4,7 +4,7 @@ from glob import glob
 from pathlib import Path
 from typing import List
 
-DEMO_FILE = Path(__file__).absolute().parent.parent / 'demos' / 'demo_image.py'
+DEMO_FILE = Path(__file__).absolute().parent.parent / 'demos' / 'demo_selector.py'
 EXAMPLES_FOLDER = Path(__file__).absolute().parent.parent / 'examples'
 
 
