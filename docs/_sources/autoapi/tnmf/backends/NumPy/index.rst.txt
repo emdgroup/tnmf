@@ -1,0 +1,44 @@
+:mod:`tnmf.backends.NumPy`
+==========================
+
+.. py:module:: tnmf.backends.NumPy
+
+.. autoapi-nested-parse::
+
+   A module that provides a NumPy based backend for computing the gradients of the factorization model.
+   Shift-invariance is implemented via explicit convolution operations in the coordinate space.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends.NumPy.NumPy_Backend
+
+
+
+
+.. class:: NumPy_Backend(reconstruction_mode: str = 'valid')
+
+
+   Bases: :py:obj:`tnmf.backends._NumPyBackend.NumPyBackend`
+
+   A plain NumPy backend for computing the gradients of the factorization model in coordinate space (no FFT, no PyTorch).
+
+   Convolutions are computed efficiently as contractions of properly strided arrays.
+
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+
+
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+
+
+   .. method:: reconstruct(self, W: numpy.ndarray, H: numpy.ndarray) -> numpy.ndarray
+
+
+

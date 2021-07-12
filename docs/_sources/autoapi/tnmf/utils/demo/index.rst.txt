@@ -1,0 +1,202 @@
+:mod:`tnmf.utils.demo`
+======================
+
+.. py:module:: tnmf.utils.demo
+
+.. autoapi-nested-parse::
+
+   Provides certain utilities for the streamlit demo.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.utils.demo.SignalTool
+   tnmf.utils.demo.SignalTool1D
+   tnmf.utils.demo.SignalTool2D
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.utils.demo.st_define_nmf_params
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.utils.demo.HELP_CHANNEL
+
+
+.. data:: HELP_CHANNEL
+   :annotation: = Multiline-String
+
+    .. raw:: html
+
+        <details><summary>Show Value</summary>
+
+    .. code-block:: text
+        :linenos:
+
+        The **number of channels** each input signal comprises. In contrast to the remaining signal dimensions, which are
+            treated shift-invariant (meaning that atom placement is flexible), channels represent the inflexible part of the
+            factorization in the sense that each atom always covers all channels.
+
+    .. raw:: html
+
+        </details>
+
+   
+
+.. function:: st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict
+
+   Defines all necessary NMF parameters via streamlit widgets.
+
+   :param default_params: Contains the default parameters that are used if the created streamlit checkbox is True.
+   :type default_params: dict
+   :param verbose: If True, show detailed information.
+   :type verbose: bool
+
+   :returns: **nmf_params** -- A dictionary containing the selected NMF parameters.
+   :rtype: dict
+
+
+.. class:: SignalTool
+
+   Bases: :py:obj:`abc.ABC`
+
+   An abstract base class that serves as a factory for creating specialized objects that facilitate the handling of
+   different signal types.
+
+   .. method:: st_generate_input(cls, verbose: bool = True) -> Tuple[numpy.ndarray, dict]
+      :classmethod:
+
+      Defines all signal parameters via streamlit widgets and returns a generated input matrix V for the NMF together
+      with a dictionary containing details of the used NMF atoms.
+
+      :param verbose: If True, show detailed information.
+      :type verbose: bool
+
+      :returns: * **V** (*np.ndarray*) -- The generated input for the NMF.
+                * **nmf_params** (*dict*) -- Ground truth NMF atom parameters that were used for the signal generation.
+
+
+   .. method:: st_compare_signals(cls, V: numpy.ndarray, R: numpy.ndarray, verbose: bool = True)
+      :classmethod:
+
+      Compares a given input matrix with its NMF reconstruction in streamlit.
+
+      :param V: The input that was factorized via NMF.
+      :type V: np.ndarray
+      :param R: The NMF reconstruction of the input.
+      :type R: np.ndarray
+      :param verbose: If True, show detailed information.
+      :type verbose: bool
+
+
+   .. method:: st_compare_individual_signals(cls, V: numpy.ndarray, R: numpy.ndarray, verbose: bool = True)
+      :classmethod:
+
+      Selects a particular signal and its reconstruction from the given input via a streamlit widget and compares them.
+
+      :param V: The input that was factorized via NMF.
+      :type V: np.ndarray
+      :param R: The NMF reconstruction of the input.
+      :type R: np.ndarray
+      :param verbose: If True, show detailed information.
+      :type verbose: bool
+
+
+   .. method:: st_plot_partial_reconstructions(cls, V: numpy.ndarray, nmf: tnmf.TransformInvariantNMF.TransformInvariantNMF, verbose: bool = True)
+      :classmethod:
+
+      Visualizes the partial reconstructions of the given input by the different NMF atoms.
+
+      :param V: The input that was factorized via NMF.
+      :type V: np.ndarray
+      :param nmf: The trained NMF object.
+      :type nmf: TransformInvariantNMF
+      :param verbose: If True, show detailed information.
+      :type verbose: bool
+
+
+   .. method:: plot_signals(cls, signals: List[numpy.ndarray], signal_opts: Optional[Iterable[dict]] = None, opts: Optional[dict] = None)
+      :classmethod:
+
+      Wrapper for `_plot_signals` to fill the default arguments.
+
+
+   .. method:: st_define_signal_params(cls, verbose: bool = True) -> dict
+      :classmethod:
+      :abstractmethod:
+
+      Defines all signal parameters via streamlit widgets and returns them in a dictionary.
+
+      :param verbose: If True, show detailed information.
+      :type verbose: bool
+
+
+   .. method:: generate_signal(cls, signal_params: dict) -> Tuple[numpy.ndarray, numpy.ndarray]
+      :classmethod:
+      :abstractmethod:
+
+      Creates a single signal using the specified signal parameters. Returns the signal and the used NMF atoms.
+
+
+
+.. class:: SignalTool1D
+
+   Bases: :py:obj:`SignalTool`
+
+   A utility class to handle 1-D multi-channel signals (time series data).
+
+   .. method:: st_define_signal_params(cls, verbose: bool = True) -> dict
+      :classmethod:
+
+      Defines all signal parameters via streamlit widgets and returns them in a dictionary.
+
+      :param verbose: If True, show detailed information.
+      :type verbose: bool
+
+
+   .. method:: generate_signal(cls, signal_params: dict) -> Tuple[numpy.ndarray, numpy.ndarray]
+      :classmethod:
+
+      Creates a single signal using the specified signal parameters. Returns the signal and the used NMF atoms.
+
+
+
+.. class:: SignalTool2D
+
+   Bases: :py:obj:`SignalTool`
+
+   A utility class to handle 2-D multi-channel signals (image data).
+
+   .. method:: st_define_signal_params(cls, verbose: bool = True) -> dict
+      :classmethod:
+
+      Defines all signal parameters via streamlit widgets and returns them in a dictionary.
+
+      :param verbose: If True, show detailed information.
+      :type verbose: bool
+
+
+   .. method:: generate_signal(cls, signal_params: dict) -> Tuple[numpy.ndarray, numpy.ndarray]
+      :classmethod:
+
+      Creates a single signal using the specified signal parameters. Returns the signal and the used NMF atoms.
+
+
+

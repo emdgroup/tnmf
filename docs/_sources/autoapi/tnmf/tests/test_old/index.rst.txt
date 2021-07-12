@@ -1,0 +1,35 @@
+:mod:`tnmf.tests.test_old`
+==========================
+
+.. py:module:: tnmf.tests.test_old
+
+.. autoapi-nested-parse::
+
+   Test the decomposition on two identical images.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_old.do_test
+   tnmf.tests.test_old.test_numpy
+   tnmf.tests.test_old.test_numpy_fft
+
+
+
+.. function:: do_test(use_fft: bool, expected_error: float)
+
+
+.. function:: test_numpy()
+
+
+.. function:: test_numpy_fft()
+
+

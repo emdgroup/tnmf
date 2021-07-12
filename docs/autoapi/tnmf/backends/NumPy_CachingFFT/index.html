@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>tnmf.backends.NumPy_CachingFFT &mdash; TransformInvariantNMF  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/emdgroup.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="tnmf.backends.NumPy_FFT" href="../NumPy_FFT/index.html" />
+    <link rel="prev" title="tnmf.backends.NumPy" href="../NumPy/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> TransformInvariantNMF
+          
+
+          
+            
+            <img src="../../../../_static/tnmf_logo.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_generalintroduction.html">General Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.backends</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../old/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.old</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tests/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.tests</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_license.html">License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#contributing">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">TransformInvariantNMF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">API Reference</a> &raquo;</li>
+        
+          <li><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf</span></code></a> &raquo;</li>
+        
+          <li><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.backends</span></code></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.backends.NumPy_CachingFFT</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/autoapi/tnmf/backends/NumPy_CachingFFT/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tnmf.backends.NumPy_CachingFFT">
+<span id="tnmf-backends-numpy-cachingfft"></span><h1><a class="reference internal" href="#module-tnmf.backends.NumPy_CachingFFT" title="tnmf.backends.NumPy_CachingFFT"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.backends.NumPy_CachingFFT</span></code></a><a class="headerlink" href="#module-tnmf.backends.NumPy_CachingFFT" title="Permalink to this headline">¶</a></h1>
+<p>A module that provides a NumPy based backend for computing the gradients of the factorization model.
+Shift-invariance is implemented via fast convolution in the Fourier domain using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/reference/generated/scipy.fft.rfftn.html#scipy.fft.rfftn" title="(in SciPy v1.7.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.fft.rfftn()</span></code></a>
+and <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/reference/generated/scipy.fft.irfftn.html#scipy.fft.irfftn" title="(in SciPy v1.7.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.fft.irfftn()</span></code></a> with additional caching of the Fourier transformed arrays compared to
+<a class="reference internal" href="../NumPy_FFT/index.html#module-tnmf.backends.NumPy_FFT" title="tnmf.backends.NumPy_FFT"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.backends.NumPy_FFT</span></code></a>.</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CachingFFT</span></code></a></p></td>
+<td><p>Wrapper class for conveniently caching and switching back and forth between arrays in coordinate space and their</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend" title="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NumPy_CachingFFT_Backend</span></code></a></p></td>
+<td><p>A NumPy based backend that performs convolutions and contractions for computing the gradients of the factorization model</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">tnmf.backends.NumPy_CachingFFT.</span></code><code class="sig-name descname"><span class="pre">CachingFFT</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fft_axes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fft_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.9)"><span class="pre">logging.Logger</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper class for conveniently caching and switching back and forth between arrays in coordinate space and their
+representations in Fourier space.</p>
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.__imul__">
+<code class="sig-name descname"><span class="pre">__imul__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.__imul__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.__isub__">
+<code class="sig-name descname"><span class="pre">__isub__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.__isub__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.__iadd__">
+<code class="sig-name descname"><span class="pre">__iadd__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.__iadd__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.__itruediv__">
+<code class="sig-name descname"><span class="pre">__itruediv__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.__itruediv__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.set_fft_params">
+<code class="sig-name descname"><span class="pre">set_fft_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fft_axes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fft_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.set_fft_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.has_c">
+<code class="sig-name descname"><span class="pre">has_c</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.has_c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the field in coordinate space has already been computed</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.has_f">
+<code class="sig-name descname"><span class="pre">has_f</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.has_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the field in fourier space has already been computed</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.shape">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.ndim">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ndim</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.ndim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.c">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">c</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for field in coordinate space</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.f">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">f</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for field in fourier space</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.f_padded">
+<code class="sig-name descname"><span class="pre">f_padded</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_width</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.f_padded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for padded field in fourier space</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.CachingFFT.f_reversed">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">f_reversed</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT.f_reversed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for time-reversed field in fourier space, intentionally no setter for now</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">tnmf.backends.NumPy_CachingFFT.</span></code><code class="sig-name descname"><span class="pre">NumPy_CachingFFT_Backend</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.9)"><span class="pre">logging.Logger</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../_NumPyFFTBackend/index.html#tnmf.backends._NumPyFFTBackend.NumPyFFTBackend" title="tnmf.backends._NumPyFFTBackend.NumPyFFTBackend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tnmf.backends._NumPyFFTBackend.NumPyFFTBackend</span></code></a></p>
+<p>A NumPy based backend that performs convolutions and contractions for computing the gradients of the factorization model
+via FFT, similar to <a class="reference internal" href="../NumPy_FFT/index.html#tnmf.backends.NumPy_FFT.NumPy_FFT_Backend" title="tnmf.backends.NumPy_FFT.NumPy_FFT_Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumPy_FFT_Backend</span></code></a>. However, the Fourier representations of the associated arrays are cached
+in order to reduce the number of Fourier transformations involved to a minimum.</p>
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.to_ndarray">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">to_ndarray</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.to_ndarray" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.normalize">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">normalize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.normalize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.convolve_multi_1d">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">convolve_multi_1d</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.convolve_multi_1d" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.reconstruction_gradient_W">
+<code class="sig-name descname"><span class="pre">reconstruction_gradient_W</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.reconstruction_gradient_W" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.reconstruction_gradient_H">
+<code class="sig-name descname"><span class="pre">reconstruction_gradient_H</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.reconstruction_gradient_H" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.reconstruct">
+<code class="sig-name descname"><span class="pre">reconstruct</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#tnmf.backends.NumPy_CachingFFT.CachingFFT" title="tnmf.backends.NumPy_CachingFFT.CachingFFT"><span class="pre">CachingFFT</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.reconstruct" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.partial_reconstruct">
+<code class="sig-name descname"><span class="pre">partial_reconstruct</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_atom</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="headerlink" href="#tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend.partial_reconstruct" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../NumPy_FFT/index.html" class="btn btn-neutral float-right" title="tnmf.backends.NumPy_FFT" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../NumPy/index.html" class="btn btn-neutral float-left" title="tnmf.backends.NumPy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Adrian Šošić, Mathias Winkel.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

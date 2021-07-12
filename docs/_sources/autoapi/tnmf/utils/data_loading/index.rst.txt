@@ -1,0 +1,22 @@
+:mod:`tnmf.utils.data_loading`
+==============================
+
+.. py:module:: tnmf.utils.data_loading
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.utils.data_loading.racoon_image
+
+
+
+.. function:: racoon_image(gray: bool = True, scale: float = 1.0)
+
+

@@ -1,0 +1,44 @@
+:orphan:
+
+:mod:`tnmf.backends._NumPyBackend`
+==================================
+
+.. py:module:: tnmf.backends._NumPyBackend
+
+.. autoapi-nested-parse::
+
+   A module that provides some specializations and utilities for all NumPy based backends.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends._NumPyBackend.NumPyBackend
+
+
+
+
+.. class:: NumPyBackend(**kwargs)
+
+
+   Bases: :py:obj:`tnmf.backends._Backend.Backend`
+
+   The parent class for all NumPy based backends.
+
+   They provide the functionality to evaluate the analytic gradients of the factorization model.
+
+   .. method:: to_ndarray(arr: numpy.ndarray) -> numpy.ndarray
+      :staticmethod:
+
+
+   .. method:: convolve_multi_1d(arr: numpy.ndarray, kernels: Tuple[numpy.ndarray, Ellipsis], axes: Tuple[int, Ellipsis]) -> numpy.ndarray
+      :staticmethod:
+
+
+

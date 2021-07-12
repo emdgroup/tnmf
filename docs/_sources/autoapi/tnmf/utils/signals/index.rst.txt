@@ -1,0 +1,104 @@
+:mod:`tnmf.utils.signals`
+=========================
+
+.. py:module:: tnmf.utils.signals
+
+.. autoapi-nested-parse::
+
+   Provides functionality to generate certain 1-D and 2-D test signals.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.utils.signals.generate_pulse
+   tnmf.utils.signals.generate_pulse_train
+   tnmf.utils.signals.generate_patch
+   tnmf.utils.signals.generate_block_image
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.utils.signals.n_pulses
+
+
+.. function:: generate_pulse(shape: str, length: int = 20) -> numpy.ndarray
+
+   Generates a short signal pulse of specified shape and length.
+
+   :param shape: Shape of the pulse.
+   :type shape: 'n' | '-' | '^' | 'v' | '_'
+   :param length: Length of the pulse.
+   :type length: int
+
+   :returns: **pulse** -- The signal pulse as a 1-D array.
+   :rtype: np.ndarray
+
+
+.. function:: generate_pulse_train(symbols: Optional[List[str]] = None, pulse_length: int = 20, n_pulses: int = 5) -> Tuple[numpy.ndarray, numpy.ndarray]
+
+   Generates a signal composed of a random sequence of multi-channel pulses.
+
+   :param symbols: A list of symbols (= multi-channel pulse shapes) specified via strings that are used as a dictionary to generate
+                   the signal. If 'None', the following three-channel symbols are used: ['nnn', '---', '^^^', 'vvv', '___'].
+                   See `generate_pulse` for an overview of all available pulse shapes.
+   :type symbols: List[str], optional
+   :param pulse_length: The length of each individual pulse.
+   :type pulse_length: int
+   :param n_pulses: The total number of pulses to be sequenced.
+   :type n_pulses: int
+
+   :returns: * **signal** (*np.ndarray*) -- A 2-D array of shape (n_channels, n_pulses * pulse_length) containing the signal.
+             * **W** (*np.ndarray*) -- A 3-D array of shape (n_symbols, n_channels, pulse_length) representing the pulse shape dictionary.
+
+
+.. function:: generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) -> numpy.ndarray
+
+   Generates a square image patch showing a certain pattern of specified size and color.
+
+   :param pattern: Pattern shown in the image patch.
+   :type pattern: 'x' | '+' | 's'
+   :param size: Size of both dimensions of the image patch.
+   :type size: int
+   :param color: Color of the pattern. If 'None', the generated image patch will be grayscale.
+   :type color: 'r' | 'g' | 'b' | 'y' | 'm' | 'c' | 'w' , optional
+
+   :returns: **patch** -- The image patch as a 3-D array, where the first dimension indexes the color channel.
+   :rtype: np.ndarray
+
+
+.. function:: generate_block_image(symbols: Optional[List[str]] = None, symbol_size: int = 10, n_symbols: int = 10) -> Tuple[numpy.ndarray, numpy.ndarray]
+
+   Generates a block-structured image composed of several image patches, each containing a single random pattern.
+
+   :param symbols: A list of symbols used as a dictionary to generate the image. Each symbol is either a one-character or
+                   two-character string, where the first character specifies the symbol shape and the optional second character
+                   specifies the symbol color. For example: 'x' creates a grayscale cross-shaped patch while 'sr' creates a red square-
+                   shaped patch. If 'None', a certain default set of colored patches will be used as dictionary. See `generate_patch`
+                   for an overview of all available patch shapes and color options.
+   :type symbols: List[str], optional
+   :param symbol_size: The size of both dimensions of each individual image patch.
+   :type symbol_size: int
+   :param n_symbols: The number of image patches to be stacked both horizontally and vertically.
+   :type n_symbols: int
+
+   :returns: * **image** (*np.ndarray*) -- A 3-D array of shape (3, n_symbols * symbol_size, n_symbols * symbol_size) containing the image.
+             * **W** (*np.ndarray*) -- A 3-D array of shape (3, symbols_size, symbol_size) containing the image patch dictionary.
+
+
+.. data:: n_pulses
+   :annotation: = 6
+
+   
+

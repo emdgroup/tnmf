@@ -1,0 +1,107 @@
+:mod:`tnmf.old.signals`
+=======================
+
+.. py:module:: tnmf.old.signals
+
+.. autoapi-nested-parse::
+
+   Author: Adrian Sosic
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.old.signals.generate_pulse
+   tnmf.old.signals.generate_pulse_train
+   tnmf.old.signals.generate_patch
+   tnmf.old.signals.generate_block_image
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.old.signals.n_pulses
+
+
+.. function:: generate_pulse(shape: str, length: int = 20) -> numpy.array
+
+   Generates a short signal pulse of specified length and shape.
+
+   :param shape: Shape of the pulse.
+   :type shape: 'n' | '-' | '^' | 'v' | '_'
+   :param length: Length of the pulse.
+   :type length: int
+
+   :returns:
+   :rtype: The signal pulse as a 1-D numpy array.
+
+
+.. function:: generate_pulse_train(symbols: Optional[List[str]] = None, pulse_length: int = 20, n_pulses: int = 5) -> (numpy.array, numpy.array)
+
+   Generates a signal composed of a random sequence of multi-channel pulses.
+
+   :param symbols: A list of symbols (=multi-channel pulse shapes) specified via strings that are used as a dictionary to generate
+                   the signal. If None, the following three-channel symbols are used: ['nnn', '---', '^^^', 'vvv', '___'].
+   :type symbols: (optional) List[str]
+   :param pulse_length: The length of each individual pulse.
+   :type pulse_length: int
+   :param n_pulses: The total number of pulses to be sequenced.
+   :type n_pulses: int
+
+   :returns: **(signal, W)** --
+
+             - A 2-D array of shape (n_pulses * pulse_length, n_channels) containing the signal.
+             - A 3-D array of shape (pulse_length, n_channels, len(symbols)) containing the pulse shape dictionary.
+   :rtype: (np.array, np.array)
+
+
+.. function:: generate_patch(pattern: str, size: int = 10, color: Optional[str] = None) -> numpy.array
+
+   Generates a square image patch showing a certain pattern of specified size and color.
+
+   :param pattern: Pattern shown in the image patch.
+   :type pattern: 'x' | '+'
+   :param size: Size of both dimensions of the image patch.
+   :type size: int
+   :param color: Color of the pattern. If 'None', the generated image patch will be grayscale.
+   :type color: (optional) 'r' | 'g' | 'b' | 'y' | 'm' | 'c' | 'w'
+
+   :returns:
+   :rtype: The image patch as a 3-D array, where the last dimension indexes the color channel.
+
+
+.. function:: generate_block_image(symbols: Optional[List[str]] = None, symbol_size: int = 10, n_symbols: int = 10) -> (numpy.array, numpy.array)
+
+   Generates an image composed of several image patches, each containing a single random pattern.
+
+   :param symbols: A list of symbols used as a dictionary to generate the image. Each symbol is either a one-character or
+                   two-character string, where the first character specifies the symbol shape and the optional second character
+                   specifies the symbol color.
+   :type symbols: (optional) List[str]
+   :param symbol_size: The size of both dimensions of each individual image patch.
+   :type symbol_size: int
+   :param n_symbols: The number of image patches to be stacked both horizontally and vertically.
+   :type n_symbols: int
+
+   :returns: **(image, W)** --
+
+             - A 3-D array of shape (n_symbols * symbol_size, n_symbols * symbol_size, 3) containing the image.
+             - A 3-D array of shape (symbols_size, symbol_size, 3) containing the image patch dictionary.
+   :rtype: (np.array, np.array)
+
+
+.. data:: n_pulses
+   :annotation: = 6
+
+   
+

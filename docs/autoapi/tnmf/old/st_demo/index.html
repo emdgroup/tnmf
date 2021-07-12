@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>tnmf.old.st_demo &mdash; TransformInvariantNMF  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/emdgroup.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="tnmf.old.utils" href="../utils/index.html" />
+    <link rel="prev" title="tnmf.old.TransformInvariantNMF" href="../TransformInvariantNMF/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> TransformInvariantNMF
+          
+
+          
+            
+            <img src="../../../../_static/tnmf_logo.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_generalintroduction.html">General Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../backends/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.backends</span></code></a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.old</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tests/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.tests</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_license.html">License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#contributing">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">TransformInvariantNMF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">API Reference</a> &raquo;</li>
+        
+          <li><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf</span></code></a> &raquo;</li>
+        
+          <li><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.old</span></code></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.old.st_demo</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/autoapi/tnmf/old/st_demo/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tnmf.old.st_demo">
+<span id="tnmf-old-st-demo"></span><h1><a class="reference internal" href="#module-tnmf.old.st_demo" title="tnmf.old.st_demo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.old.st_demo</span></code></a><a class="headerlink" href="#module-tnmf.old.st_demo" title="Permalink to this headline">¶</a></h1>
+<p>Author: Adrian Sosic</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.old.st_demo.compute_nmf" title="tnmf.old.st_demo.compute_nmf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_nmf</span></code></a>(V, nmf_params)</p></td>
+<td><p>Streamlit caching of NMF fitting.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tnmf.old.st_demo.st_define_signal_params" title="tnmf.old.st_demo.st_define_signal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_define_signal_params</span></code></a>(signal_type)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.old.st_demo.generate_signal" title="tnmf.old.st_demo.generate_signal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_signal</span></code></a>(signal_type, signal_params)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tnmf.old.st_demo.st_define_nmf_params" title="tnmf.old.st_demo.st_define_nmf_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_define_nmf_params</span></code></a>(signal_type, signal_params)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.old.st_demo.st_compare_signals" title="tnmf.old.st_demo.st_compare_signals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_compare_signals</span></code></a>(nmf)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tnmf.old.st_demo.st_compare_single_signals" title="tnmf.old.st_demo.st_compare_single_signals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_compare_single_signals</span></code></a>(nmf, signal_type, signal_number)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.old.st_demo.compare_dictionaries" title="tnmf.old.st_demo.compare_dictionaries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compare_dictionaries</span></code></a>(W_true, W_learned, signal_type)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tnmf.old.st_demo.st_plot_activations" title="tnmf.old.st_demo.st_plot_activations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_plot_activations</span></code></a>(H, nmf_params, signal_type, signal_number)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.old.st_demo.seed" title="tnmf.old.st_demo.seed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seed</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt id="tnmf.old.st_demo.compute_nmf">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">compute_nmf</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmf_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.compute_nmf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Streamlit caching of NMF fitting.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.old.st_demo.st_define_signal_params">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">st_define_signal_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.st_define_signal_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.old.st_demo.generate_signal">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">generate_signal</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.generate_signal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.old.st_demo.st_define_nmf_params">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">st_define_nmf_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.st_define_nmf_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.old.st_demo.st_compare_signals">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">st_compare_signals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.st_compare_signals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.old.st_demo.st_compare_single_signals">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">st_compare_single_signals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.st_compare_single_signals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.old.st_demo.compare_dictionaries">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">compare_dictionaries</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_learned</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.compare_dictionaries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.old.st_demo.st_plot_activations">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">st_plot_activations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmf_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.old.st_demo.st_plot_activations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="tnmf.old.st_demo.seed">
+<code class="sig-prename descclassname"><span class="pre">tnmf.old.st_demo.</span></code><code class="sig-name descname"><span class="pre">seed</span></code><a class="headerlink" href="#tnmf.old.st_demo.seed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../utils/index.html" class="btn btn-neutral float-right" title="tnmf.old.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../TransformInvariantNMF/index.html" class="btn btn-neutral float-left" title="tnmf.old.TransformInvariantNMF" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Adrian Šošić, Mathias Winkel.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

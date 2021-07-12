@@ -1,0 +1,37 @@
+:orphan:
+
+:mod:`tnmf.backends._NumPyFFTBackend`
+=====================================
+
+.. py:module:: tnmf.backends._NumPyFFTBackend
+
+.. autoapi-nested-parse::
+
+   A module that provides some specializations and utilities for all NumPy based backends
+   that are using FFT for performing convolutions.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends._NumPyFFTBackend.NumPyFFTBackend
+
+
+
+
+.. class:: NumPyFFTBackend(**kwargs)
+
+
+   Bases: :py:obj:`tnmf.backends._NumPyBackend.NumPyBackend`
+
+   The parent class for all NumPy based backends that are using FFT for performing convolutions.
+
+   They provide the functionality to evaluate the analytic gradients of the factorization model.
+
+

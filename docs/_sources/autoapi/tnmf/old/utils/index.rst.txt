@@ -1,0 +1,51 @@
+:mod:`tnmf.old.utils`
+=====================
+
+.. py:module:: tnmf.old.utils
+
+.. autoapi-nested-parse::
+
+   Author: Adrian Sosic
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.old.utils.normalize
+   tnmf.old.utils.shift
+
+
+
+.. function:: normalize(arr: numpy.ndarray, axis: Union[int, Tuple[int]] = 0) -> numpy.ndarray
+
+   Normalizes a given array such that the sum of its values along the specified axis sum to one.
+
+   :param arr: The array to be normalized.
+   :type arr: np.ndarray
+   :param axis: The axis (or axes) along which the array shall be normalized.
+   :type axis: int or tuple of int
+
+   :returns:
+   :rtype: The normalized array.
+
+
+.. function:: shift(arr: numpy.ndarray, step: int) -> numpy.ndarray
+
+   Shifts the given array a certain number of steps along the last axis, filling the empty places with zeros.
+
+   :param arr: The array to be shifted.
+   :type arr: np.ndarray
+   :param step: The number of steps the array shall be shifted.
+   :type step: int
+
+   :returns:
+   :rtype: The shifted (and zero-padded) array.
+
+

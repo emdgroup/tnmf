@@ -1,0 +1,69 @@
+:mod:`tnmf.tests.test_sparsity_inhibition`
+==========================================
+
+.. py:module:: tnmf.tests.test_sparsity_inhibition
+
+.. autoapi-nested-parse::
+
+   Test the decomposition on two identical images with different values for sparsity and inhibition and
+   ensure that all backends yield the same reconstruction energy and L0 and L1 norm for the activations H
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_sparsity_inhibition.test_sparsity
+   tnmf.tests.test_sparsity_inhibition.test_inhibition
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_sparsity_inhibition.backends
+   tnmf.tests.test_sparsity_inhibition.test_params_sparsity
+   tnmf.tests.test_sparsity_inhibition.test_params_inhibition
+   tnmf.tests.test_sparsity_inhibition.img
+   tnmf.tests.test_sparsity_inhibition.V
+
+
+.. data:: backends
+   :annotation: = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft']
+
+   
+
+.. data:: test_params_sparsity
+   
+
+   
+
+.. data:: test_params_inhibition
+   
+
+   
+
+.. data:: img
+   
+
+   
+
+.. data:: V
+   
+
+   
+
+.. function:: test_sparsity(backend: str, params: Dict)
+
+
+.. function:: test_inhibition(backend: str, params: Dict)
+
+

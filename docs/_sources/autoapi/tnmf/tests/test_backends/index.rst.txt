@@ -1,0 +1,78 @@
+:mod:`tnmf.tests.test_backends`
+===============================
+
+.. py:module:: tnmf.tests.test_backends
+
+.. autoapi-nested-parse::
+
+   Test the decomposition on two identical images and ensure that all backends yield the same factorization.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_backends.fit_nmf
+   tnmf.tests.test_backends.fixture_expected_factorization
+   tnmf.tests.test_backends.test_expected_energy
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_backends.expected_energies
+   tnmf.tests.test_backends.backends
+   tnmf.tests.test_backends.reconstruction_modes
+   tnmf.tests.test_backends.raise_not_implemented_errors
+   tnmf.tests.test_backends.img
+   tnmf.tests.test_backends.V
+
+
+.. data:: expected_energies
+   
+
+   
+
+.. data:: backends
+   :annotation: = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft']
+
+   
+
+.. data:: reconstruction_modes
+   :annotation: = ['valid', 'full', 'circular']
+
+   
+
+.. data:: raise_not_implemented_errors
+   :annotation: = False
+
+   
+
+.. data:: img
+   
+
+   
+
+.. data:: V
+   
+
+   
+
+.. function:: fit_nmf(backend, reconstruction_mode)
+
+
+.. function:: fixture_expected_factorization(reconstruction_mode)
+
+
+.. function:: test_expected_energy(backend: str, reconstruction_mode: str, expected_factorization: Tuple[numpy.ndarray, numpy.ndarray])
+
+

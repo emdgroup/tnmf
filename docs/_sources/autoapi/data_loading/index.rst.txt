@@ -1,0 +1,22 @@
+:mod:`data_loading`
+===================
+
+.. py:module:: data_loading
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   data_loading.racoon_image
+
+
+
+.. function:: racoon_image(gray: bool = True, scale: float = 1.0)
+
+

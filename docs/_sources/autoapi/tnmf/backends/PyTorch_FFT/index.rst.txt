@@ -1,0 +1,38 @@
+:mod:`tnmf.backends.PyTorch_FFT`
+================================
+
+.. py:module:: tnmf.backends.PyTorch_FFT
+
+.. autoapi-nested-parse::
+
+   A module that provides a PyTorch based backend for computing the gradients of the factorization model.
+   Shift-invariance is implemented via efficient convolution operations in Fourier space.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends.PyTorch_FFT.PyTorch_FFT_Backend
+
+
+
+
+.. class:: PyTorch_FFT_Backend(**kwargs)
+
+
+   Bases: :py:obj:`tnmf.backends._PyTorchBackend.PyTorchBackend`
+
+   Reconstruction is performed via an efficient convolution in Fourier space.
+
+   .. method:: reconstruct(self, W: torch.Tensor, H: torch.Tensor) -> torch.Tensor
+
+      Compute sum_m    H[n, m, _, ... ] * W[_ , m, c, ...]   --> R[n, c, ...]
+
+
+

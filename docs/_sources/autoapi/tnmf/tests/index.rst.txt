@@ -1,0 +1,18 @@
+:mod:`tnmf.tests`
+=================
+
+.. py:module:: tnmf.tests
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   test_backends/index.rst
+   test_init/index.rst
+   test_old/index.rst
+   test_sparsity_inhibition/index.rst
+
+

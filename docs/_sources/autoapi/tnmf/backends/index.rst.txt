@@ -1,0 +1,19 @@
+:mod:`tnmf.backends`
+====================
+
+.. py:module:: tnmf.backends
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   NumPy/index.rst
+   NumPy_CachingFFT/index.rst
+   NumPy_FFT/index.rst
+   PyTorch/index.rst
+   PyTorch_FFT/index.rst
+
+

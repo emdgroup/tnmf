@@ -1,0 +1,58 @@
+:mod:`tnmf.backends.NumPy_FFT`
+==============================
+
+.. py:module:: tnmf.backends.NumPy_FFT
+
+.. autoapi-nested-parse::
+
+   A module that provides a NumPy based backend for computing the gradients of the factorization model.
+   Shift-invariance is implemented via fast convolution in the Fourier domain using :func:`scipy.fft.rfftn`
+   and :func:`scipy.fft.irfftn`.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends.NumPy_FFT.NumPy_FFT_Backend
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends.NumPy_FFT.fftconvolve_sum
+
+
+
+.. function:: fftconvolve_sum(in1: Union[numpy.ndarray, Tuple[numpy.ndarray, Ellipsis]], in2: numpy.ndarray, fft_axes: Tuple[int, Ellipsis], slices: Tuple[slice, Ellipsis], correlate: bool, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], Ellipsis] = None, sum_axis: Tuple[int, Ellipsis] = None, keepdims: bool = False) -> numpy.ndarray
+
+
+.. class:: NumPy_FFT_Backend(**kwargs)
+
+
+   Bases: :py:obj:`tnmf.backends._NumPyFFTBackend.NumPyFFTBackend`
+
+   A NumPy based backend that performs convolutions and contractions for computing the gradients of the factorization model
+   via FFT:
+
+   Arrays to be convolved are transformed to Fourier space, multiplied and accumulated across the free indices (e.g. for the
+   sum over all atoms in the reconstruction), and transformed back to coordinate space.
+
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+
+
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+
+
+   .. method:: reconstruct(self, W: numpy.ndarray, H: numpy.ndarray) -> numpy.ndarray
+
+
+

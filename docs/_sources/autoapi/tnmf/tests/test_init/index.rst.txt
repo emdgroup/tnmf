@@ -1,0 +1,27 @@
+:mod:`tnmf.tests.test_init`
+===========================
+
+.. py:module:: tnmf.tests.test_init
+
+.. autoapi-nested-parse::
+
+   Test if `from tnmf import *` does not fail
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_init.test_import_tinmf
+
+
+
+.. function:: test_import_tinmf()
+
+

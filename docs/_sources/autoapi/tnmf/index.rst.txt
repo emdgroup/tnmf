@@ -1,0 +1,35 @@
+:mod:`tnmf`
+===========
+
+.. py:module:: tnmf
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   backends/index.rst
+   old/index.rst
+   tests/index.rst
+   utils/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   TransformInvariantNMF/index.rst
+
+
+Package Contents
+----------------
+
+.. data:: __version__
+   
+
+   
+

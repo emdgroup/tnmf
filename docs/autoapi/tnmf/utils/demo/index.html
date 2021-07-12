@@ -1,0 +1,468 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>tnmf.utils.demo &mdash; TransformInvariantNMF  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/emdgroup.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="tnmf.utils.signals" href="../signals/index.html" />
+    <link rel="prev" title="tnmf.utils.data_loading" href="../data_loading/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> TransformInvariantNMF
+          
+
+          
+            
+            <img src="../../../../_static/tnmf_logo.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_generalintroduction.html">General Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../backends/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.backends</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../old/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.old</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tests/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.tests</span></code></a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../link_license.html">License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#contributing">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">TransformInvariantNMF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">API Reference</a> &raquo;</li>
+        
+          <li><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf</span></code></a> &raquo;</li>
+        
+          <li><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.utils</span></code></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.utils.demo</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/autoapi/tnmf/utils/demo/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tnmf.utils.demo">
+<span id="tnmf-utils-demo"></span><h1><a class="reference internal" href="#module-tnmf.utils.demo" title="tnmf.utils.demo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tnmf.utils.demo</span></code></a><a class="headerlink" href="#module-tnmf.utils.demo" title="Permalink to this headline">¶</a></h1>
+<p>Provides certain utilities for the streamlit demo.</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.utils.demo.SignalTool" title="tnmf.utils.demo.SignalTool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SignalTool</span></code></a></p></td>
+<td><p>An abstract base class that serves as a factory for creating specialized objects that facilitate the handling of</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tnmf.utils.demo.SignalTool1D" title="tnmf.utils.demo.SignalTool1D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SignalTool1D</span></code></a></p></td>
+<td><p>A utility class to handle 1-D multi-channel signals (time series data).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.utils.demo.SignalTool2D" title="tnmf.utils.demo.SignalTool2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SignalTool2D</span></code></a></p></td>
+<td><p>A utility class to handle 2-D multi-channel signals (image data).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.utils.demo.st_define_nmf_params" title="tnmf.utils.demo.st_define_nmf_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_define_nmf_params</span></code></a>(default_params: dict, verbose: bool = True) → dict</p></td>
+<td><p>Defines all necessary NMF parameters via streamlit widgets.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.utils.demo.HELP_CHANNEL" title="tnmf.utils.demo.HELP_CHANNEL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HELP_CHANNEL</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt id="tnmf.utils.demo.HELP_CHANNEL">
+<code class="sig-prename descclassname"><span class="pre">tnmf.utils.demo.</span></code><code class="sig-name descname"><span class="pre">HELP_CHANNEL</span></code><em class="property"> <span class="pre">=</span> <span class="pre">Multiline-String</span></em><a class="headerlink" href="#tnmf.utils.demo.HELP_CHANNEL" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><details><summary>Show Value</summary><div class="highlight-text notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>The **number of channels** each input signal comprises. In contrast to the remaining signal dimensions, which are
+    treated shift-invariant (meaning that atom placement is flexible), channels represent the inflexible part of the
+    factorization in the sense that each atom always covers all channels.
+</pre></div>
+</td></tr></table></div>
+</details></div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.utils.demo.st_define_nmf_params">
+<code class="sig-prename descclassname"><span class="pre">tnmf.utils.demo.</span></code><code class="sig-name descname"><span class="pre">st_define_nmf_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a><a class="headerlink" href="#tnmf.utils.demo.st_define_nmf_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines all necessary NMF parameters via streamlit widgets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Contains the default parameters that are used if the created streamlit checkbox is True.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>nmf_params</strong> – A dictionary containing the selected NMF parameters.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="tnmf.utils.demo.SignalTool">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">tnmf.utils.demo.</span></code><code class="sig-name descname"><span class="pre">SignalTool</span></code><a class="headerlink" href="#tnmf.utils.demo.SignalTool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>An abstract base class that serves as a factory for creating specialized objects that facilitate the handling of
+different signal types.</p>
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool.st_generate_input">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">st_generate_input</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#tnmf.utils.demo.SignalTool.st_generate_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines all signal parameters via streamlit widgets and returns a generated input matrix V for the NMF together
+with a dictionary containing details of the used NMF atoms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The generated input for the NMF.</p></li>
+<li><p><strong>nmf_params</strong> (<em>dict</em>) – Ground truth NMF atom parameters that were used for the signal generation.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool.st_compare_signals">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">st_compare_signals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.utils.demo.SignalTool.st_compare_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compares a given input matrix with its NMF reconstruction in streamlit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input that was factorized via NMF.</p></li>
+<li><p><strong>R</strong> (<em>np.ndarray</em>) – The NMF reconstruction of the input.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool.st_compare_individual_signals">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">st_compare_individual_signals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.utils.demo.SignalTool.st_compare_individual_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects a particular signal and its reconstruction from the given input via a streamlit widget and compares them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input that was factorized via NMF.</p></li>
+<li><p><strong>R</strong> (<em>np.ndarray</em>) – The NMF reconstruction of the input.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool.st_plot_partial_reconstructions">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">st_plot_partial_reconstructions</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmf</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../TransformInvariantNMF/index.html#tnmf.TransformInvariantNMF.TransformInvariantNMF" title="tnmf.TransformInvariantNMF.TransformInvariantNMF"><span class="pre">tnmf.TransformInvariantNMF.TransformInvariantNMF</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.utils.demo.SignalTool.st_plot_partial_reconstructions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes the partial reconstructions of the given input by the different NMF atoms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input that was factorized via NMF.</p></li>
+<li><p><strong>nmf</strong> (<a class="reference internal" href="../../TransformInvariantNMF/index.html#tnmf.TransformInvariantNMF.TransformInvariantNMF" title="tnmf.TransformInvariantNMF.TransformInvariantNMF"><em>TransformInvariantNMF</em></a>) – The trained NMF object.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool.plot_signals">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">plot_signals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signals</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_opts</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opts</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.utils.demo.SignalTool.plot_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for <cite>_plot_signals</cite> to fill the default arguments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool.st_define_signal_params">
+<em class="property"><span class="pre">abstract</span> <span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">st_define_signal_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a><a class="headerlink" href="#tnmf.utils.demo.SignalTool.st_define_signal_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines all signal parameters via streamlit widgets and returns them in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool.generate_signal">
+<em class="property"><span class="pre">abstract</span> <span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">generate_signal</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#tnmf.utils.demo.SignalTool.generate_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a single signal using the specified signal parameters. Returns the signal and the used NMF atoms.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="tnmf.utils.demo.SignalTool1D">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">tnmf.utils.demo.</span></code><code class="sig-name descname"><span class="pre">SignalTool1D</span></code><a class="headerlink" href="#tnmf.utils.demo.SignalTool1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tnmf.utils.demo.SignalTool" title="tnmf.utils.demo.SignalTool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SignalTool</span></code></a></p>
+<p>A utility class to handle 1-D multi-channel signals (time series data).</p>
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool1D.st_define_signal_params">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">st_define_signal_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a><a class="headerlink" href="#tnmf.utils.demo.SignalTool1D.st_define_signal_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines all signal parameters via streamlit widgets and returns them in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool1D.generate_signal">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">generate_signal</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#tnmf.utils.demo.SignalTool1D.generate_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a single signal using the specified signal parameters. Returns the signal and the used NMF atoms.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="tnmf.utils.demo.SignalTool2D">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">tnmf.utils.demo.</span></code><code class="sig-name descname"><span class="pre">SignalTool2D</span></code><a class="headerlink" href="#tnmf.utils.demo.SignalTool2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tnmf.utils.demo.SignalTool" title="tnmf.utils.demo.SignalTool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SignalTool</span></code></a></p>
+<p>A utility class to handle 2-D multi-channel signals (image data).</p>
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool2D.st_define_signal_params">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">st_define_signal_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a><a class="headerlink" href="#tnmf.utils.demo.SignalTool2D.st_define_signal_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines all signal parameters via streamlit widgets and returns them in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, show detailed information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="tnmf.utils.demo.SignalTool2D.generate_signal">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">generate_signal</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#tnmf.utils.demo.SignalTool2D.generate_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a single signal using the specified signal parameters. Returns the signal and the used NMF atoms.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../signals/index.html" class="btn btn-neutral float-right" title="tnmf.utils.signals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../data_loading/index.html" class="btn btn-neutral float-left" title="tnmf.utils.data_loading" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Adrian Šošić, Mathias Winkel.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+:mod:`tnmf.old.st_demo`
+=======================
+
+.. py:module:: tnmf.old.st_demo
+
+.. autoapi-nested-parse::
+
+   Author: Adrian Sosic
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.old.st_demo.compute_nmf
+   tnmf.old.st_demo.st_define_signal_params
+   tnmf.old.st_demo.generate_signal
+   tnmf.old.st_demo.st_define_nmf_params
+   tnmf.old.st_demo.st_compare_signals
+   tnmf.old.st_demo.st_compare_single_signals
+   tnmf.old.st_demo.compare_dictionaries
+   tnmf.old.st_demo.st_plot_activations
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.old.st_demo.seed
+
+
+.. function:: compute_nmf(V, nmf_params)
+
+   Streamlit caching of NMF fitting.
+
+
+.. function:: st_define_signal_params(signal_type)
+
+
+.. function:: generate_signal(signal_type, signal_params)
+
+
+.. function:: st_define_nmf_params(signal_type, signal_params)
+
+
+.. function:: st_compare_signals(nmf)
+
+
+.. function:: st_compare_single_signals(nmf, signal_type, signal_number)
+
+
+.. function:: compare_dictionaries(W_true, W_learned, signal_type)
+
+
+.. function:: st_plot_activations(H, nmf_params, signal_type, signal_number)
+
+
+.. data:: seed
+   
+
+   
+

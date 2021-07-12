@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>General Introduction &mdash; TransformInvariantNMF  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/emdgroup.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="autoapi/index.html" />
+    <link rel="prev" title="Welcome to TransformInvariantNMF’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> TransformInvariantNMF
+          
+
+          
+            
+            <img src="_static/tnmf_logo.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">General Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#notation">Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#non-negative-matrix-factorization">Non-Negative Matrix Factorization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-coding">Sparse Coding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transform-invariance">Transform Invariance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multi-channel-data">Multi-channel Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#purpose-of-this-package">Purpose of this Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="link_changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="link_license.html">License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/emdgroup/tnmf/tree/main#contributing">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TransformInvariantNMF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>General Introduction</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/link_generalintroduction.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="general-introduction">
+<h1>General Introduction<a class="headerlink" href="#general-introduction" title="Permalink to this headline">¶</a></h1>
+<p>The purpose of NMF is to learn <em>parts-based representations</em> of data, which is achieved by separating the data into a set of <strong>dictionary elements</strong> and corresponding <strong>activations</strong> (see <a class="footnote-reference brackets" href="#id3" id="id1">1</a>).
+Both the dictionary elements and their activations are required to be <em>non-negative</em>, such that the induced superposition of dictionary elements (weighted with their corresponding activation terms) reconstructs the data in a purely <em>additive</em> way.
+This has the effect that characteristic features emerging in the dictionary during the learning process must correspond to meaningful parts of the data, since each individual feature can only be added to the reconstruction the data but not be subtracted from it.</p>
+<div class="section" id="notation">
+<h2>Notation<a class="headerlink" href="#notation" title="Permalink to this headline">¶</a></h2>
+<p>TODO: add section</p>
+</div>
+<div class="section" id="non-negative-matrix-factorization">
+<h2>Non-Negative Matrix Factorization<a class="headerlink" href="#non-negative-matrix-factorization" title="Permalink to this headline">¶</a></h2>
+<p>In its simplest variant, the NMF task can be formulated as a pure matrix factorization problem, where the data is represented by a non-negative matrix <span class="math notranslate nohighlight">\(V \in \mathbb{R}_{\geq 0}^{S \times D}\)</span> that is to be approximated through a product of a non-negative dictionary matrix <span class="math notranslate nohighlight">\(W \in \mathbb{R}_{\geq 0}^{K \times D}\)</span> and a non-negative activation matrix <span class="math notranslate nohighlight">\(H \in \mathbb{R}_{\geq 0}^{S \times K}\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-nmf">
+<span class="eqno">(1)<a class="headerlink" href="#equation-nmf" title="Permalink to this equation">¶</a></span>\[V \approx H W.\]</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In contrast to most of the NMF literature, we represent individual data points by row vectors instead of column vectors in order to be consistent with the row-major data representation used in the code.</p>
+</div>
+<p>By defining an appropriate divergence measure <span class="math notranslate nohighlight">\(D\)</span>, the factorization task can be translated into a proper optimization problem of the following form (see <a class="footnote-reference brackets" href="#id4" id="id2">2</a>),</p>
+<div class="math notranslate nohighlight">
+\[\min_{W, H} D(V \mid H W) \quad \text{subject to} \quad W \geq 0, H \geq 0.\]</div>
+<p>A common choice is the <em>Frobenius norm</em>, which measures the quadratic difference between the data and its reconstruction,</p>
+<div class="math notranslate nohighlight">
+\[D(V \mid R) = \lVert V - R \rVert_F = \sqrt{ \sum_{s=1}^S \sum_{d=1}^D \lvert V_{sd} - R_{sd} \rvert^2 }.\]</div>
+</div>
+<div class="section" id="sparse-coding">
+<h2>Sparse Coding<a class="headerlink" href="#sparse-coding" title="Permalink to this headline">¶</a></h2>
+<p>TODO: add section</p>
+</div>
+<div class="section" id="transform-invariance">
+<h2>Transform Invariance<a class="headerlink" href="#transform-invariance" title="Permalink to this headline">¶</a></h2>
+<p>Abstractly speaking, the dictionary matrix <span class="math notranslate nohighlight">\(W\)</span> in Equation <a class="reference internal" href="#equation-nmf">(1)</a> contains <span class="math notranslate nohighlight">\(K\)</span> <em>characteristic features</em> represented through its row vectors <span class="math notranslate nohighlight">\(\lbrace W_k \rbrace\)</span>, which are superimposed via the corresponding activation vector <span class="math notranslate nohighlight">\(H_s\)</span> to form the input sample <span class="math notranslate nohighlight">\(V_s\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-nmf-synthesis">
+<span class="eqno">(2)<a class="headerlink" href="#equation-nmf-synthesis" title="Permalink to this equation">¶</a></span>\[V_{s} \approx \sum_k H_{sk} W_{k}.\]</div>
+<p>As can be seen from the above equation, the individual dictionary elements <span class="math notranslate nohighlight">\(\lbrace W_k \rbrace\)</span> have the same size as the samples <span class="math notranslate nohighlight">\(\lbrace V_s \rbrace\)</span>.
+In many applications, however, typical features contained in the data are smaller than the individual samples and exhibit certain kinds of <em>transform invariance</em>.</p>
+<p>For example, image data is typically composed of smaller constituents, which represent different parts of objects and can contribute to the image at all possible locations on the pixel grid.
+This particular degree of freedom stems from the simple fact that objects can usually move freely within a scene and can hence appear at different locations in the recorded image, rendering the characteristic image features <em>invariant under change of location</em> (shift invariance).
+Other types of invariances related to image data arise from additional spatial transforms of the involved objects depicted in the scene (such as scaling, rotation, mirroring) or changes in the lightning conditions and the measurement process (e.g. change of color or contrast).
+In general, invariances can be also observed in other types of data, such as audio recordings, where each individual characteristic feature (e.g. a tone) belongs to a larger part (a chord), which in turn may occur in different timbres, in different keys, for different durations, and so on.</p>
+<p>Instead of attempting to capture all possible instantiations of the involved dictionary elements that could be generated through their applicable transforms (which would require an exponentially large dictionary), a more data-efficient approach is to decouple the transforms from their dictionary elements and learn a <em>transform-invariant dictionary</em>.
+This can be achieved by encoding the transforms explicitly into the model,</p>
+<div class="math notranslate nohighlight" id="equation-tnmf-synthesis">
+<span class="eqno">(3)<a class="headerlink" href="#equation-tnmf-synthesis" title="Permalink to this equation">¶</a></span>\[V_{s} = \sum_k \sum_m H_{smk} T_m[\tilde{W}_{k}].\]</div>
+<p>Herein, the set of possible transforms of a given dictionary element <span class="math notranslate nohighlight">\(\tilde{W}_k\)</span> (which in the following is referred to as an <strong>elementary atom</strong>) is described through a <strong>transform operator</strong> <span class="math notranslate nohighlight">\(T : \mathbb{R}_{\geq 0}^L \times \lbrace 1, \ldots, M \rbrace \rightarrow \mathbb{R}_{\geq 0}^S\)</span>, which can be indexed to refer to a particular instantiation of the transform.
+In the image case, for instance, <span class="math notranslate nohighlight">\(T\)</span> could describe all possible shifts of a smaller image patch within an image region, with <span class="math notranslate nohighlight">\(T_m\)</span> corresponding to a particular shift of the patch to a specific location on the pixel grid.
+The corresponding activations are stored in an <strong>activation tensor</strong> <span class="math notranslate nohighlight">\(H \in \mathbb{R}_{\geq 0}^{S \times M \times K}\)</span>, whose element <span class="math notranslate nohighlight">\(H_{smk}\)</span> quantifies the contribution of the <span class="math notranslate nohighlight">\(m\)</span>-th transform of the <span class="math notranslate nohighlight">\(k\)</span>-th dictionary element to the <span class="math notranslate nohighlight">\(s\)</span>-th data sample.
+Note, in particular, that the sizes of <span class="math notranslate nohighlight">\(V_s\)</span> and <span class="math notranslate nohighlight">\(W_k\)</span> are no longer coupled in this model since the transform operator <span class="math notranslate nohighlight">\(T\)</span> maps each dictionary element from a separate <strong>latent space</strong> <span class="math notranslate nohighlight">\(\mathbb{R}_{\geq 0}^L\)</span>, whose dimensionality <span class="math notranslate nohighlight">\(L\)</span> can be defined independently, to the sample space <span class="math notranslate nohighlight">\(\mathbb{R}_{\geq 0}^D\)</span>.</p>
+<p>For the data reconstruction part, the synthesis procedure in Equation <a class="reference internal" href="#equation-tnmf-synthesis">(3)</a> is, in fact, equivalent to that of Equation <a class="reference internal" href="#equation-nmf-synthesis">(2)</a> when using an extended dictionary <span class="math notranslate nohighlight">\(W\)</span> that contains all possible transforms of the original elements.
+However, the important difference to note is that each dictionary element of that extended dictionary would be considered an independent parameter in the latter approach whereas all transformed versions of the elements are coupled through their elementary atoms <span class="math notranslate nohighlight">\(\lbrace \tilde{W}_k \rbrace\)</span> and hence need to be identified through the same shared parameters.</p>
+<p>TODO: add documentation on inhibition regularization term</p>
+</div>
+<div class="section" id="multi-channel-data">
+<h2>Multi-channel Data<a class="headerlink" href="#multi-channel-data" title="Permalink to this headline">¶</a></h2>
+<p>TODO: add section</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<dl class="footnote brackets">
+<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Lee, D.D., Seung, H.S., 2000. Algorithms for Non-negative Matrix Factorization,
+in: Proceedings of the 13th International Conference on Neural Information
+Processing Systems. pp. 535–541. <a class="reference external" href="https://doi.org/10.5555/3008751.3008829">https://doi.org/10.5555/3008751.3008829</a></p>
+</dd>
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>Févotte, C., &amp; Idier, J, 2011. Algorithms for Nonnegative Matrix Factorization with the β-divergence.
+Neural computation, 23(9), pp. 2421-2456. <a class="reference external" href="https://doi.org/10.1162/NECO_a_00168">https://doi.org/10.1162/NECO_a_00168</a></p>
+</dd>
+</dl>
+</div>
+<div class="section" id="purpose-of-this-package">
+<h2>Purpose of this Package<a class="headerlink" href="#purpose-of-this-package" title="Permalink to this headline">¶</a></h2>
+<p>This package provides a toolset to learn invariant data representations of the form described in Equation <a class="reference internal" href="#equation-tnmf-synthesis">(3)</a> for arbitrary transform types, i.e., it can be used to find the latent dictionary “behind” the underlying transform.</p>
+<p>In the specific case of image data and shift invariance (to mention only one of many possible combinations of data and transforms), the package allows to extract a dictionary of image patches that reconstruct a given image through a specific arrangement of their shifted versions.
+In this sense, it allows to “undo” the data-generating transform operation so that the learned dictionary encodes the input <em>modulo</em> shift.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="autoapi/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to TransformInvariantNMF’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Adrian Šošić, Mathias Winkel.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

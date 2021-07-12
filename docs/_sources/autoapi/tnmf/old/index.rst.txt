@@ -1,0 +1,17 @@
+:mod:`tnmf.old`
+===============
+
+.. py:module:: tnmf.old
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   TransformInvariantNMF/index.rst
+   st_demo/index.rst
+   utils/index.rst
+
+

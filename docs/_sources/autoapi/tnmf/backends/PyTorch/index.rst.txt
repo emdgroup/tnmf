@@ -1,0 +1,36 @@
+:mod:`tnmf.backends.PyTorch`
+============================
+
+.. py:module:: tnmf.backends.PyTorch
+
+.. autoapi-nested-parse::
+
+   A module that provides a PyTorch based backend for computing the gradients of the factorization model.
+   Shift-invariance is implemented via explicit convolution operations in the coordinate space.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends.PyTorch.PyTorch_Backend
+
+
+
+
+.. class:: PyTorch_Backend(**kwargs)
+
+
+   Bases: :py:obj:`tnmf.backends._PyTorchBackend.PyTorchBackend`
+
+   Reconstruction is performed via an explicit convolution in coordinate space.
+
+   .. method:: reconstruct(self, W: torch.Tensor, H: torch.Tensor) -> torch.Tensor
+
+
+

@@ -1,0 +1,277 @@
+:mod:`tnmf.old.TransformInvariantNMF`
+=====================================
+
+.. py:module:: tnmf.old.TransformInvariantNMF
+
+.. autoapi-nested-parse::
+
+   Author: Adrian Sosic
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.old.TransformInvariantNMF.TransformInvariantNMF
+   tnmf.old.TransformInvariantNMF.SparseNMF
+   tnmf.old.TransformInvariantNMF.BaseShiftInvariantNMF
+   tnmf.old.TransformInvariantNMF.ShiftInvariantNMF
+   tnmf.old.TransformInvariantNMF.ExplicitShiftInvariantNMF
+   tnmf.old.TransformInvariantNMF.ImplicitShiftInvariantNMF
+
+
+
+
+.. class:: TransformInvariantNMF(atom_size: Optional[int], n_components: int = 10, sparsity_H: float = 0.1, refit_H: bool = True, n_iterations: int = 100, eps: float = 1e-09, logger: logging.Logger = None, verbose: int = 0)
+
+
+   Bases: :py:obj:`abc.ABC`
+
+   Abstract base class for transform-invariant non-negative matrix factorization.
+
+   .. method:: R(self) -> numpy.array
+      :property:
+
+      The reconstructed signal matrix.
+
+
+   .. method:: W(self) -> numpy.array
+      :property:
+
+      The dictionary matrix.
+
+
+   .. method:: H(self) -> numpy.array
+      :property:
+
+      The activation tensor.
+
+
+   .. method:: n_dim(self) -> int
+      :property:
+
+      Number of input dimensions.
+
+
+   .. method:: n_signals(self) -> int
+      :property:
+
+      Number of input signals.
+
+
+   .. method:: n_channels(self) -> int
+      :property:
+
+      Number of input channels.
+
+
+   .. method:: n_transforms(self) -> int
+      :property:
+
+      Number of dictionary transforms.
+
+
+   .. method:: generate_transforms(self) -> numpy.array
+      :abstractmethod:
+
+      Generates all dictionary transforms for the given signal matrix.
+
+
+   .. method:: initialize(self, V)
+
+      Stores the signal matrix and initialize the factorization (and transformation) matrices.
+
+      Notation:
+      ---------
+      d: number of input dimensions
+      c: number of input channels
+      n: number of input samples
+      m: number of basis vectors (dictionary size)
+      t: number of basis vector transforms (= 1 for standard NMF without transform invariance)
+      h: number of basis vector dimensions (= d for standard NMF without transform invariance)
+
+      Dimensions:
+      -----------
+      Signal matrix V:                d x c x n
+      Dictionary Matrix W:    h x c x m
+      Activation Tensor H:    t x m x n
+      Transformation Tensor:  t x d x h
+
+
+   .. method:: fit(self, V)
+
+      Learns an NMF representation of a given signal matrix.
+
+
+   .. method:: reconstruction_error(self) -> float
+
+      Squared error between the input and its reconstruction.
+
+
+   .. method:: update_H(self, sparsity: bool = True)
+
+      Multiplicative update of the activation tensor.
+
+      :param sparsity: If True, sparsity regularization is applied.
+      :type sparsity: bool
+
+
+   .. method:: update_W(self)
+
+      Multiplicative update of the dictionary matrix.
+
+
+
+.. class:: SparseNMF(**kwargs)
+
+
+   Bases: :py:obj:`TransformInvariantNMF`
+
+   Class for sparse non-negative matrix factorization (special case of a transform invariant NMF with a single
+   identity transformation and an atom size that equals the signal dimension).
+
+   .. method:: initialize(self, X)
+
+      Creates a TransformInvariantNMF where the atom size equals the signal size.
+
+
+   .. method:: generate_transforms(self) -> numpy.array
+
+      No transformations are applied (achieved via a single identity transform).
+
+
+
+.. class:: BaseShiftInvariantNMF(inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs)
+
+
+   Bases: :py:obj:`TransformInvariantNMF`
+
+   Base class for shift-invariant non-negative matrix factorization.
+
+   .. method:: n_dim(self) -> Tuple[int]
+      :property:
+
+      Number of input dimensions.
+
+
+   .. method:: n_transforms(self) -> Tuple[int]
+      :property:
+
+      Number of dictionary transforms.
+
+
+   .. method:: n_shift_dimensions(self)
+      :property:
+
+      The number of shift invariant input dimensions.
+
+
+   .. method:: shift_dimensions(self)
+      :property:
+
+      The dimension index of the shift invariant input dimensions.
+
+
+   .. method:: initialize(self, V)
+
+      Stores the signal matrix and initialize the factorization (and transformation) matrices.
+
+      Notation:
+      ---------
+      d: number of input dimensions
+      c: number of input channels
+      n: number of input samples
+      m: number of basis vectors (dictionary size)
+      t: number of basis vector transforms (= 1 for standard NMF without transform invariance)
+      h: number of basis vector dimensions (= d for standard NMF without transform invariance)
+
+      Dimensions:
+      -----------
+      Signal matrix V:                d x c x n
+      Dictionary Matrix W:    h x c x m
+      Activation Tensor H:    t x m x n
+      Transformation Tensor:  t x d x h
+
+
+
+.. class:: ShiftInvariantNMF(inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs)
+
+
+   Bases: :py:obj:`BaseShiftInvariantNMF`, :py:obj:`abc.ABC`
+
+   Wrapper class for shift-invariant non-negative matrix factorization.
+
+
+.. class:: ExplicitShiftInvariantNMF(inhibition_range: Optional[int] = None, inhibition_strength: float = 0.1, **kwargs)
+
+
+   Bases: :py:obj:`BaseShiftInvariantNMF`
+
+   Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
+   explicitly via transformation matrices.
+
+   .. method:: initialize(self, V)
+
+      Stores the signal matrix and initialize the factorization (and transformation) matrices.
+
+      Notation:
+      ---------
+      d: number of input dimensions
+      c: number of input channels
+      n: number of input samples
+      m: number of basis vectors (dictionary size)
+      t: number of basis vector transforms (= 1 for standard NMF without transform invariance)
+      h: number of basis vector dimensions (= d for standard NMF without transform invariance)
+
+      Dimensions:
+      -----------
+      Signal matrix V:                d x c x n
+      Dictionary Matrix W:    h x c x m
+      Activation Tensor H:    t x m x n
+      Transformation Tensor:  t x d x h
+
+
+   .. method:: generate_transforms(self) -> numpy.array
+
+      Generates all possible shift matrices for the signal dimension and given atom size.
+
+
+
+.. class:: ImplicitShiftInvariantNMF(use_fft=True, **kwargs)
+
+
+   Bases: :py:obj:`BaseShiftInvariantNMF`
+
+   Class for shift-invariant non-negative matrix factorization that computes the involved transform operations
+   implicitly via correlation/convolution.
+
+   .. method:: V_fft(self)
+      :property:
+
+
+   .. method:: R_fft(self)
+      :property:
+
+
+   .. method:: W_fft(self)
+      :property:
+
+
+   .. method:: W_reversed_fft(self)
+      :property:
+
+
+   .. method:: H_fft(self)
+      :property:
+
+
+   .. method:: H_reversed_fft(self)
+      :property:
+
+
+

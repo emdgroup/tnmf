@@ -1,0 +1,125 @@
+:mod:`tnmf.backends.NumPy_CachingFFT`
+=====================================
+
+.. py:module:: tnmf.backends.NumPy_CachingFFT
+
+.. autoapi-nested-parse::
+
+   A module that provides a NumPy based backend for computing the gradients of the factorization model.
+   Shift-invariance is implemented via fast convolution in the Fourier domain using :func:`scipy.fft.rfftn`
+   and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed arrays compared to
+   :mod:`tnmf.backends.NumPy_FFT`.
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends.NumPy_CachingFFT.CachingFFT
+   tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend
+
+
+
+
+.. class:: CachingFFT(field_name: str, fft_axes: Optional[Tuple[int, Ellipsis]] = None, fft_shape: Optional[Tuple[int, Ellipsis]] = None, logger: Optional[logging.Logger] = None)
+
+
+   Wrapper class for conveniently caching and switching back and forth between arrays in coordinate space and their
+   representations in Fourier space.
+
+   .. method:: __imul__(self, other)
+
+
+   .. method:: __isub__(self, other)
+
+
+   .. method:: __iadd__(self, other)
+
+
+   .. method:: __itruediv__(self, other)
+
+
+   .. method:: set_fft_params(self, fft_axes: Tuple[int, Ellipsis], fft_shape: Tuple[int, Ellipsis])
+
+
+   .. method:: has_c(self) -> bool
+
+      Check if the field in coordinate space has already been computed
+
+
+   .. method:: has_f(self) -> bool
+
+      Check if the field in fourier space has already been computed
+
+
+   .. method:: shape(self) -> Tuple[int]
+      :property:
+
+
+   .. method:: ndim(self) -> int
+      :property:
+
+
+   .. method:: c(self) -> numpy.ndarray
+      :property:
+
+      Getter for field in coordinate space
+
+
+   .. method:: f(self) -> numpy.ndarray
+      :property:
+
+      Getter for field in fourier space
+
+
+   .. method:: f_padded(self, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], Ellipsis] = None) -> numpy.ndarray
+
+      Getter for padded field in fourier space
+
+
+   .. method:: f_reversed(self) -> numpy.ndarray
+      :property:
+
+      Getter for time-reversed field in fourier space, intentionally no setter for now
+
+
+
+.. class:: NumPy_CachingFFT_Backend(logger: logging.Logger = None, verbose: int = 0, **kwargs)
+
+
+   Bases: :py:obj:`tnmf.backends._NumPyFFTBackend.NumPyFFTBackend`
+
+   A NumPy based backend that performs convolutions and contractions for computing the gradients of the factorization model
+   via FFT, similar to :class:`.NumPy_FFT_Backend`. However, the Fourier representations of the associated arrays are cached
+   in order to reduce the number of Fourier transformations involved to a minimum.
+
+   .. method:: to_ndarray(arr: CachingFFT) -> numpy.ndarray
+      :staticmethod:
+
+
+   .. method:: normalize(arr: CachingFFT, axis: Optional[Union[int, Tuple[int, Ellipsis]]] = None)
+      :staticmethod:
+
+
+   .. method:: convolve_multi_1d(arr: CachingFFT, kernels: Tuple[numpy.ndarray, Ellipsis], axes: Tuple[int, Ellipsis]) -> CachingFFT
+      :staticmethod:
+
+
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]
+
+
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]
+
+
+   .. method:: reconstruct(self, W: CachingFFT, H: CachingFFT) -> CachingFFT
+
+
+   .. method:: partial_reconstruct(self, W: numpy.ndarray, H: numpy.ndarray, i_atom: int) -> numpy.ndarray
+
+
+
