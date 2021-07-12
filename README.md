@@ -13,10 +13,11 @@ A comprehensive Python package for **Non-Negative Matrix Factorization (NMF)** w
 The packages supports multiple optimization backends and can be easily extended to handle application-specific types of transforms.
 
 # General Introduction
-A general introduction to Non-Negative Matrix Factorization and the purpose of this package can be found [here](doc/GeneralIntroduction.md) and on the package's [PyPI page](https://pypi.org/project/tnmf/).
+A general introduction to Non-Negative Matrix Factorization and the purpose of this package can be found on the corresponding [GitHub Pages](https://emdgroup.github.io/tnmf/).
 
 # Installation
 For using this package, you will at least need Python version 3.6 (or higher).
+The package is avbailable via [PyPI](https://pypi.org/project/tnmf/).
 
 Installation is easiest using pip:
 
@@ -24,8 +25,9 @@ Installation is easiest using pip:
 
 # Demos and Examples
 
-The package comes with a [streamlit](https://streamlit.io) demo and a number examples that demonstrate the capabilities of the TNMF model and 
-provide a good starting point for your own experiments. Once the package is installed, they can be conveniently executed
+The package comes with a [streamlit](https://share.streamlit.io/adriansosic/tnmf/main/demos/demo_selector.py) demo and a number of examples that demonstrate the capabilities of the TNMF model.
+They provide a good starting point for your own experiments.
+Once the package is installed, they can be conveniently executed
 using the `tnmf` command:
 * To execute the demo, run `tnmf demo`.
 * A specific example can be executed by calling `tnmf example <example_name>`.
