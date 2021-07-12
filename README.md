@@ -3,6 +3,7 @@
 [![Pytest](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml)
 [![Build Documentation](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml)
 [![Publish to PyPI](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/adriansosic/tnmf/main/demos/demo_selector.py)
 
 [![Logo](doc/logos/tnmf_header.svg)](https://github.com/emdgroup/tnmf)
 
@@ -69,7 +70,6 @@ python3 -m virtualenv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-pip install -e .
 ```
 
 Now, you should be able to execute the unit tests by calling `pytest` to verify that the code is running as expected.
