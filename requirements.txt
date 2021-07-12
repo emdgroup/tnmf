@@ -8,8 +8,8 @@ streamlit==0.84.0
 torch==1.8.1
 
 # Development and Tests
+coverage==5.5
 pytest==6.2.3
-pytest-cov==2.11.1
 flake8==3.9.1
 flake8-bandit==2.1.2
 flake8-bugbear==21.4.3
