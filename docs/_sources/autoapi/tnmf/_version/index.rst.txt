@@ -1,0 +1,21 @@
+:orphan:
+
+:mod:`tnmf._version`
+====================
+
+.. py:module:: tnmf._version
+
+
+Module Contents
+---------------
+
+.. data:: version
+   :annotation: = 0.1.dev1
+
+   
+
+.. data:: version_tuple
+   :annotation: = [0, 1, 'dev1']
+
+   
+
