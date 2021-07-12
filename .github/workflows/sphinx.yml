@@ -33,9 +33,14 @@ jobs:
         pushd doc/_build
         tar -czf html.tar.gz html
         popd
-    - name: Upload HTML Documentation
+    - name: Upload HTML Documentation to Github Pages
       if: github.ref == 'refs/heads/main'
-      uses: actions/upload-artifact@v2
-      with:
-        name: HTML Documentation
-        path: doc/_build/html.tar.gz
+      run: |
+          git fetch origin gh-pages:gh-pages
+          git checkout gh-pages
+          rm -rf docs
+          cp -r doc/_build/html ./docs
+          touch docs/.nojekyll
+          git_hash=$(git rev-parse --short "$GITHUB_SHA")
+          git commit docs -m "sphinx documentation for ${git_hash}"
+          git push origin gh-pages
