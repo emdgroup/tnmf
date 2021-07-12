@@ -2,8 +2,11 @@ name: Publish to PyPI and TestPyPI
 
 on:
   push:
-    branches: [ main ]
-    
+    branches:
+      - main
+    tags:
+      - '*'
+
 jobs:
   build-n-publish:
     name: Build and publish to PyPI and TestPyPI
