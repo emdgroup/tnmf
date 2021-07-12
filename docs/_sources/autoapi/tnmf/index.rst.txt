@@ -11,7 +11,6 @@ Subpackages
    :maxdepth: 3
 
    backends/index.rst
-   old/index.rst
    tests/index.rst
    utils/index.rst
 
