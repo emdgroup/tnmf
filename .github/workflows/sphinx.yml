@@ -28,19 +28,18 @@ jobs:
         pushd doc
         make html
         popd
-    - name: Tar HTML Documentation
-      run: |
-        pushd doc/_build
-        tar -czf html.tar.gz html
-        popd
-    - name: Upload HTML Documentation to Github Pages
-      if: github.ref == 'refs/heads/main'
+    - name: Prepare gh-pages branch with HTML output from Sphinx
       run: |
           git fetch origin gh-pages:gh-pages
           git checkout gh-pages
           rm -rf docs
           cp -r doc/_build/html ./docs
           touch docs/.nojekyll
+    - name: Update gh-pages branch
+      if: github.ref == 'refs/heads/main'
+      run: |
+          git config --local user.email "sphinx-upload[bot]@users.noreply.github.com"
+          git config --local user.name "sphinx-upload[bot]"
           git_hash=$(git rev-parse --short "$GITHUB_SHA")
           git commit docs -m "sphinx documentation for ${git_hash}"
           git push origin gh-pages
