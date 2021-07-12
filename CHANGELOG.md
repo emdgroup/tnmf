@@ -18,3 +18,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo: 1-D synthetic signals
 - Demo: 2-D synthetic signals
 - Only uploading Sphinx artifacts from github actions that run on the main branch
+- Bugfix: fix pytorch based backends for non-2D signals
