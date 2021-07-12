@@ -25,10 +25,14 @@ Installation is easiest using pip:
 
 # Demos and Examples
 
-The package comes with a [streamlit](https://share.streamlit.io/adriansosic/tnmf/main/demos/demo_selector.py) demo and a number of examples that demonstrate the capabilities of the TNMF model.
+The package comes with a [streamlit](https://streamlit.io) demo and a number of examples that demonstrate the capabilities of the TNMF model.
 They provide a good starting point for your own experiments.
-Once the package is installed, they can be conveniently executed
-using the `tnmf` command:
+
+## Online Demo
+Without requiring any installation, the demo is accessible via [streamlit sharing](https://share.streamlit.io/adriansosic/tnmf/main/demos/demo_selector.py).
+
+## Local Execution
+Once the package is installed, the demo and the examples can be conveniently executed locally using the `tnmf` command:
 * To execute the demo, run `tnmf demo`.
 * A specific example can be executed by calling `tnmf example <example_name>`.
 
