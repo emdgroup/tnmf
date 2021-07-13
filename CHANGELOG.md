@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include demos in pytest bench
   
 ### Changed
-- Fixed internal TODOs to improve code quality
+- Fix internal TODOs to improve code quality
+- Fix partial reconstruction in plain numpy backend
 
 ## [0.1.1] - 2021-07-22
 ### Added
