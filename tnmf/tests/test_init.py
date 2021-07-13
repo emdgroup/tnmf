@@ -8,7 +8,7 @@ _import_error = None
 
 try:
     from tnmf import *
-except Exception as e:
+except Exception as e:  # pragma: no cover
     _import_error = e
 
 
