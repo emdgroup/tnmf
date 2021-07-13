@@ -17,7 +17,7 @@ The packages supports multiple optimization backends and can be easily extended 
 A general introduction to Non-Negative Matrix Factorization and the purpose of this package can be found on the corresponding [GitHub Pages](https://emdgroup.github.io/tnmf/).
 
 # Installation
-For using this package, you will need Python version 3.6 (or higher).
+For using this package, you will need Python version 3.7 (or higher).
 The package is available via [PyPI](https://pypi.org/project/tnmf/).
 
 Installation is easiest using pip:
