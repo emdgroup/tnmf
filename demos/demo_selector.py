@@ -1,12 +1,12 @@
-import numpy as np
+import importlib.resources
 from importlib import import_module
 
+import numpy as np
 import streamlit as st
-from pathlib import Path
 
 # show TNMF header
-img_file = Path(__file__).parent.parent / 'doc' / 'logos' / 'tnmf_header.png'
-st.image(str(img_file), use_column_width='always')
+with importlib.resources.path('logos', 'tnmf_header.png') as img_file:
+    st.image(str(img_file), use_column_width='always')
 
 # mapping of streamlit demo names to the corresponding demo file and optional parameters
 DEMO_NAME_DICT = {

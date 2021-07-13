@@ -5,7 +5,7 @@
 [![Publish to PyPI](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml)
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/adriansosic/tnmf/main/demos/demo_selector.py)
 
-[![Logo](https://raw.githubusercontent.com/emdgroup/tnmf/main/doc/logos/tnmf_header.svg)](https://github.com/emdgroup/tnmf)
+[![Logo](https://raw.githubusercontent.com/emdgroup/tnmf/main/logos/tnmf_header.svg)](https://github.com/emdgroup/tnmf)
 
 # Transform-Invariant Non-Negative Matrix Factorization
 
