@@ -1,3 +1,6 @@
+![Language](https://img.shields.io/github/languages/top/emdgroup/tnmf)
+![PyPI Python Version](https://img.shields.io/pypi/pyversions/tnmf)
+[![License](https://img.shields.io/github/license/emdgroup/tnmf)](https://github.com/emdgroup/tnmf/blob/main/LICENSE)
 [![Flake8 Linter](https://github.com/emdgroup/tnmf/actions/workflows/flake8.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/flake8.yml)
 [![Pylint Linter](https://github.com/emdgroup/tnmf/actions/workflows/pylint.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pylint.yml)
 [![Pytest and Coverage](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml)
