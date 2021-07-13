@@ -1,6 +1,6 @@
 [![Flake8 Linter](https://github.com/emdgroup/tnmf/actions/workflows/flake8.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/flake8.yml)
 [![Pylint Linter](https://github.com/emdgroup/tnmf/actions/workflows/pylint.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pylint.yml)
-[![Pytest](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml)
+[![Pytest and Coverage](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/pytest.yml)
 [![Build Documentation](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/sphinx.yml)
 [![Publish to PyPI](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml)
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/adriansosic/tnmf/main/demos/demo_selector.py)
@@ -76,15 +76,50 @@ Now, you should be able to execute the unit tests by calling `pytest` to verify 
 
 ## Pull Requests
 Before creating a pull request, you should always try to ensure that the automated code quality and unit tests do not fail.
-To execute them, change into the repository root directory and run the following commands:
+This section explains how to run them locally to understand and fix potential issues.
+
+### Code Style and Quality
+Code style and quality are checked using [flake8](https://flake8.pycqa.org/) and [pylint](http://pylint.pycqa.org/).
+To execute them, change into the repository root directory, run the following commands and inspect their output:
 
 ```
 flake8
 pylint tnmf
+```
+
+In order for a pull request to be accaptable, no errors may be reported here.
+
+### Unit Tests
+Automated unit tests reside inside the folder `tnmf/tests` and are executed using [pytest](https://docs.pytest.org/).
+They can be run by changing into the repository root directory and running
+
+```
 pytest
 ```
 
-The output of the individual commands should be pretty instructive, so fixing potential issues is usually rather straightforward.
+Debugging potential failures from the command line might be cumbersome.
+Most Python IDEs, however, also support `pytest` natively in their debugger.
+Again, for a pull request to be acceptable, no failures may be reported by pytest.
+
+### Code Coverage
+Code Coverage in the unit tests is measured using [coverage](https://coverage.readthedocs.io).
+This can also be done locally from the repository root directory via
+
+```
+coverage run
+coverage report
+```
+
+This will create a concise table with an overview of python files that are not fully covered with unit tests along with the line numbers of code that has not been executed.
+A more detailed, interactive report can be created using
+
+```
+coverage html
+```
+
+Then, you can open the file `htmlcov/index.html` in a web browser of your choice to navigate through code annotated with coverage data.
+Required overall coverage to is configured in `setup.cfg`, under the key `fail_under` in section `[coverage:report]`.
+
 
 ## Building the Documentation
 To build the documentation locally, change into the `doc` subdirectory and run `make html`.
