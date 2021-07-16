@@ -72,6 +72,7 @@ def main(progress_bar, verbose: bool = True):
     nmf_params = st_define_nmf_params(default_nmf_params, have_ground_truth=False, verbose=verbose)
     nmf = fit_nmf_model(V, nmf_params, progress_bar)
 
+    n_atoms = nmf.n_atoms
     V, Vc = channel_mode['restore'](V)
     R, Rc = channel_mode['restore'](nmf.R)
 
@@ -89,8 +90,19 @@ def main(progress_bar, verbose: bool = True):
                 plt.title(f'{title}')
                 st.pyplot(fig)
 
+    st.markdown('# Learned Dictionary')
+    if verbose:
+        st.caption('''The visualization below shows an overview of all **learned dictionary atoms***.''')
+    ncols = 5
+    nrows = int(np.ceil(n_atoms / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(3*ncols, 3*nrows))
+    for w, ax in zip(nmf.W, axes.flatten()):
+        ax.imshow(np.moveaxis(w, 0, -1) / w.max(), cmap='Greys' if w.shape[0] == 1 else None)
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
+
     st.markdown('## Atoms, Activation and Partial Signal Reconstruction')
-    # show explanatory text
     if verbose:
         st.caption('''The visualization below shows the **learned dictionary atoms (left), their activations (center),
                    and their partial contributions (right)** to the reconstruction of an individual signal.''')
@@ -102,7 +114,7 @@ def main(progress_bar, verbose: bool = True):
         st.pyplot(fig)
         plt.close(fig)
 
-    n_atoms = nmf.n_atoms
+
     for i_atom in range(n_atoms):
         col1, col2, col3 = st.beta_columns((1, 3, 3))
         with col1:
