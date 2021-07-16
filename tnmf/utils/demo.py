@@ -17,7 +17,7 @@ HELP_CHANNEL = \
     factorization in the sense that each atom always covers all channels.'''
 
 
-def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
+def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, verbose: bool = True) -> dict:
     """
     Defines all necessary NMF parameters via streamlit widgets.
 
@@ -25,6 +25,9 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
     ----------
     default_params : dict
         Contains the default parameters that are used if the created streamlit checkbox is True.
+    have_ground_truth : bool
+        If True, the parameters in default_params are considered being ground truth values and
+        the respective explanatory texts are modified accordingly.
     verbose : bool
         If True, show detailed information.
 
@@ -35,29 +38,39 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
     """
     st.sidebar.markdown('# TNMF settings')
 
-    # decide if ground truth atom number shall be used
-    help_use_n_atoms = \
-        '''If selected, the **number of atoms** used by the model is set to the actual number of atoms used
-        for signal generation.'''
-    use_n_atoms = st.sidebar.checkbox('Use ground truth number of atoms', True, help=help_use_n_atoms)
-    if verbose:
-        st.sidebar.caption(help_use_n_atoms)
+    if have_ground_truth:
+        # decide if ground truth atom number shall be used
+        help_use_n_atoms = \
+            '''If selected, the **number of atoms** used by the model is set to the actual number of atoms used
+            for signal generation.'''
+        use_n_atoms = st.sidebar.checkbox('Use ground truth number of atoms', True, help=help_use_n_atoms)
+        if verbose:
+            st.sidebar.caption(help_use_n_atoms)
+    else:
+        use_n_atoms = False
 
-    help_n_atoms = 'The **number of atoms**. To use the ground truth dictionary size, tick the checkbox above.'
+    help_n_atoms = 'The **number of atoms**.'
+    if have_ground_truth:
+        help_n_atoms += ' To use the ground truth dictionary size, tick the checkbox above.'
     n_atoms = st.sidebar.number_input('# Atoms', value=default_params['n_atoms'], min_value=1,
                                       help=help_n_atoms) if not use_n_atoms else None
     if verbose and not use_n_atoms:
         st.sidebar.caption(help_n_atoms)
 
-    # decide if ground truth atom shape shall be used
-    help_use_atom_shape = \
-        '''If selected, the **size of the atoms** used by the model is set the actual size of the atoms used
-        for signal generation.'''
-    use_atom_shape = st.sidebar.checkbox('Use ground truth atom size', True, help=help_use_atom_shape)
-    if verbose:
-        st.sidebar.caption(help_use_atom_shape)
+    if have_ground_truth:
+        # decide if ground truth atom shape shall be used
+        help_use_atom_shape = \
+            '''If selected, the **size of the atoms** used by the model is set the actual size of the atoms used
+            for signal generation.'''
+        use_atom_shape = st.sidebar.checkbox('Use ground truth atom size', True, help=help_use_atom_shape)
+        if verbose:
+            st.sidebar.caption(help_use_atom_shape)
+    else:
+        use_atom_shape = False
 
-    help_atom_shape = 'The **size of each atom** dimension. To use the ground truth atom size, tick the checkbox above.'
+    help_atom_shape = 'The **size of each atom** dimension.'
+    if have_ground_truth:
+        help_atom_shape += ' To use the ground truth atom size, tick the checkbox above.'
     atom_shape = tuple([st.sidebar.number_input('Atom size',
                         value=default_params['atom_shape'][0], min_value=1,
                         help=help_atom_shape)] * len(default_params['atom_shape'])) if not use_atom_shape else None

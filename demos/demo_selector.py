@@ -12,6 +12,7 @@ with importlib.resources.path('logos', 'tnmf_header.png') as img_file:
 DEMO_NAME_DICT = {
     '1-D Synthetic Signals': ('synthetic_signals', {'n_dims': 1}),
     '2-D Synthetic Signals': ('synthetic_signals', {'n_dims': 2}),
+    'Racoon Image': ('demo_image', {}),
 }
 
 # create progress bar on the top that is shown for all demos
@@ -35,6 +36,20 @@ seed = st.sidebar.number_input('Random seed', value=42, help=help_seed)
 np.random.seed(seed)
 if verbose:
     st.sidebar.caption(help_seed)
+
+# show demo info text
+if verbose:
+    st.markdown('''
+    ## Demo guide
+    This dashboard demonstrates the use of the *Transform-Invariant Non-Negative Matrix Factorization (TNMF) package*
+    in the specific context of learning **shift-invariant representations**.
+    Via the **drop-down menu** on the left, you can choose between different demo examples.
+
+    ## Usage
+    Detailed explanations of the available options and the shown output (including this text) can be displayed or hidden
+    using the **'Verbose' checkbox**. When the checkbox is unticked, the description of the control widgets can still
+    be accessed via the **tooltips** next to them.
+    ''')
 
 # extract the demo name and parameters, import the corresponding module, and execute the demo
 demo_name, demo_args = DEMO_NAME_DICT[selected_demo]
