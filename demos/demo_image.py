@@ -89,7 +89,7 @@ def st_visualize_results(V: np.ndarray,
     st.pyplot(fig)
     plt.close(fig)
 
-    st.markdown('## Atoms, Activation and Partial Signal Reconstruction')
+    st.markdown('# Atoms, Activation and Partial Signal Reconstruction')
     if verbose:
         st.caption('''The visualization below shows the **learned dictionary atoms (left), their activations (center),
                    and their partial contributions (right)** to the reconstruction of an individual signal.''')
