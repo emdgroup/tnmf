@@ -136,4 +136,4 @@ def main(progress_bar, verbose: bool = True):
     nmf = fit_nmf_model(V, nmf_params, progress_bar)
 
     # visualize the results
-    st_visualize_results(V, nmf, channel_mode['restore'])
+    st_visualize_results(V, nmf, channel_mode['restore'], verbose)
