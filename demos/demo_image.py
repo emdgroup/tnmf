@@ -1,10 +1,12 @@
 from itertools import cycle
-import matplotlib.pyplot as plt
+from typing import Callable, Tuple
+
 import numpy as np
+import matplotlib.pyplot as plt
 import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
-from tnmf.utils.demo import st_define_nmf_params
 
+from tnmf.utils.demo import st_define_nmf_params
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.utils.data_loading import racoon_image
 
@@ -18,18 +20,7 @@ def fit_nmf_model(V, nmf_params, progress_bar):
     return nmf
 
 
-def main(progress_bar, verbose: bool = True):
-    """
-    Runs the streamlit demo on the famous scipy reacoon demo image.
-
-    Parameters
-    ----------
-    progress_bar
-        Streamlit progress bar that needs to be updated during model fitting.
-    verbose : bool
-        If True, show detailed information.
-    """
-
+def st_define_sample_params(verbose: bool = True) -> Tuple[dict, float]:
     # define image scale
     help_scale = \
         '''Downscaling the image allows for quicker interactive experimentation. Note that this does
@@ -62,21 +53,17 @@ def main(progress_bar, verbose: bool = True):
     if verbose:
         st.sidebar.caption(help_channels)
 
-    # load the image
-    img = racoon_image(gray=False, scale=scale)
-    # samples are indexed V[sample_index, channel_index, sample_dimension_1, sample_dimension_2, ...]
-    V = channel_mode['get_v'](img)
+    return channel_mode, scale
 
-    # define the NMF parameters and fit the model
-    default_nmf_params = nmf_params = {'n_atoms': 25, 'atom_shape': (10, 10)}
-    nmf_params = st_define_nmf_params(default_nmf_params, have_ground_truth=False, verbose=verbose)
-    nmf = fit_nmf_model(V, nmf_params, progress_bar)
 
+def st_visualize_results(V: np.ndarray,
+                         nmf: TransformInvariantNMF,
+                         restore: Callable[[np.ndarray], np.ndarray],
+                         verbose: bool = True):
     n_atoms = nmf.n_atoms
-    V, Vc = channel_mode['restore'](V)
-    R, Rc = channel_mode['restore'](nmf.R)
+    V, Vc = restore(V)
+    R, Rc = restore(nmf.R)
 
-    # visualize the results
     st.markdown('# Input and Reconstruction')
     if verbose:
         st.caption('''The visualization below shows a **comparison between the input signal and its
@@ -92,7 +79,7 @@ def main(progress_bar, verbose: bool = True):
 
     st.markdown('# Learned Dictionary')
     if verbose:
-        st.caption('''The visualization below shows an overview of all **learned dictionary atoms***.''')
+        st.caption('''The visualization below shows an overview of all **learned dictionary atoms**.''')
     ncols = 5
     nrows = int(np.ceil(n_atoms / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(3*ncols, 3*nrows))
@@ -114,7 +101,6 @@ def main(progress_bar, verbose: bool = True):
         st.pyplot(fig)
         plt.close(fig)
 
-
     for i_atom in range(n_atoms):
         col1, col2, col3 = st.beta_columns((1, 3, 3))
         with col1:
@@ -123,3 +109,31 @@ def main(progress_bar, verbose: bool = True):
             plot(np.moveaxis(nmf.H[:, i_atom], 0, -1), f'Atom {i_atom} - Activation')
         with col3:
             plot(np.squeeze(np.moveaxis(nmf.R_partial(i_atom), (0, 1), (-2, -1))), f'Atom {i_atom} - Partial Reconstruction')
+
+
+def main(progress_bar, verbose: bool = True):
+    """
+    Runs the streamlit demo on the famous scipy reacoon demo image.
+
+    Parameters
+    ----------
+    progress_bar
+        Streamlit progress bar that needs to be updated during model fitting.
+    verbose : bool
+        If True, show detailed information.
+    """
+
+    channel_mode, scale = st_define_sample_params(verbose)
+
+    # load the image
+    img = racoon_image(gray=False, scale=scale)
+    # samples are indexed V[sample_index, channel_index, sample_dimension_1, sample_dimension_2, ...]
+    V = channel_mode['get_v'](img)
+
+    # define the NMF parameters and fit the model
+    default_nmf_params = nmf_params = {'n_atoms': 25, 'atom_shape': (10, 10)}
+    nmf_params = st_define_nmf_params(default_nmf_params, have_ground_truth=False, verbose=verbose)
+    nmf = fit_nmf_model(V, nmf_params, progress_bar)
+
+    # visualize the results
+    st_visualize_results(V, nmf, channel_mode['restore'])
