@@ -9,7 +9,7 @@ and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed 
 
 import logging
 from typing import Dict, Tuple, Optional, Union
-from copy import copy
+from copy import copy, deepcopy
 
 import numpy as np
 from opt_einsum import contract_expression
@@ -49,6 +49,11 @@ class CachingFFT:
     def __isub__(self, other):
         self.c -= other.c if isinstance(other, CachingFFT) else other
         return self
+
+    def __sub__(self, other):
+        result = deepcopy(self)
+        result -= other
+        return result
 
     def __iadd__(self, other):
         self.c += other.c if isinstance(other, CachingFFT) else other
