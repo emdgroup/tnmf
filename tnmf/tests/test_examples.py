@@ -9,10 +9,7 @@ import pkgutil
 import pytest
 
 
-EXAMPLES = [
-    'convergence_control',
-    'shift_invariant_decomposition',
-    ]
+EXAMPLES = [name for _, name, _ in pkgutil.iter_modules(['examples'])]
 
 
 EXAMPLE_FRAME = """
