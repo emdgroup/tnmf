@@ -41,6 +41,15 @@ test_params_inhibition = [
     {'fit': dict(inhibition_strength=5.0), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=518.936361, norm_H_1=6872.57858, norm_H_0=100488)},  # noqa: E501
     {'fit': dict(inhibition_strength=10.), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=489.935256, norm_H_1=7224.76002, norm_H_0=62017)},  # noqa: E501
 ]
+test_params_cross_atom_inhibition = [
+    # no sparsity, increasing inhibition
+    # pylint: disable=line-too-long
+    {'fit': dict(cross_atom_inhibition_strength=0.1), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=235.448889, norm_H_1=6688.70143, norm_H_0=176322)},  # noqa: E501
+    {'fit': dict(cross_atom_inhibition_strength=0.5), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=724.238350, norm_H_1=4953.89250, norm_H_0=175219)},  # noqa: E501
+    {'fit': dict(cross_atom_inhibition_strength=1.0), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=1339.76923, norm_H_1=4026.91719, norm_H_0=171772)},  # noqa: E501
+    {'fit': dict(cross_atom_inhibition_strength=5.0), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=3256.80756, norm_H_1=52460.5343, norm_H_0=122572)},  # noqa: E501
+    {'fit': dict(cross_atom_inhibition_strength=10.), 'nmf': dict(inhibition_range=((3, 3))), 'res': dict(energy=3665.37614, norm_H_1=1142686.96, norm_H_0=17850)},  # noqa: E501
+]
 
 # create the input by concatenating the test image twice
 img = racoon_image(gray=False, scale=0.1)
@@ -85,4 +94,10 @@ def test_sparsity(backend: str, params: Dict):
 @pytest.mark.parametrize('params', test_params_inhibition)
 @pytest.mark.parametrize('backend', backends)
 def test_inhibition(backend: str, params: Dict):
+    _do_test(backend, params)
+
+
+@pytest.mark.parametrize('params', test_params_cross_atom_inhibition)
+@pytest.mark.parametrize('backend', backends)
+def test_cross_atom_inhibition(backend: str, params: Dict):
     _do_test(backend, params)
