@@ -193,12 +193,11 @@ class TransformInvariantNMF:
         self._backend.normalize(self._W, axis=self._axes_W_normalization)
 
     def _update_H(self, V: np.ndarray, sparsity: float = 0., inhibition: float = 0., cross_inhibition: float = 0):
-        # TODO: sparsity and inhibition should be handled by the backends
+        # TODO: sparsity and inhibition computation should be handled by the backends
         neg, pos = self._backend.reconstruction_gradient_H(V, self._W, self._H)
 
         # add the inhibition gradient component
         if inhibition > 0 or cross_inhibition > 0:
-            # TODO: maybe also add cross-channel/cross-atom inhibition?
             convolve_axes = range(-len(self.atom_shape), 0)
             inhibition_gradient = self._backend.convolve_multi_1d(self._H, self._inhibition_kernels_1D, convolve_axes)
 
@@ -207,7 +206,14 @@ class TransformInvariantNMF:
                 tmp *= inhibition
                 pos += tmp
             if cross_inhibition > 0:
-                pass
+                # sum inhibition gradient over all atoms
+                tmp = inhibition_gradient.sum(axis=1, keepdims=True)
+                # broadcast the summed inhibition gradient to all atoms and subtract the contribution of the current atom
+                # thus, tmp contains for every atom the sum over all the inhibition gradient of all other atoms now
+                tmp = -inhibition_gradient + tmp
+                # we scale with (number_atoms - 1)
+                tmp *= cross_inhibition / (self.n_atoms - 1)
+                pos += tmp
 
         self._multiplicative_update(self._H, neg, pos, sparsity)
 

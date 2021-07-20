@@ -9,7 +9,7 @@ and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed 
 
 import logging
 from typing import Dict, Tuple, Optional, Union
-from copy import copy, deepcopy
+from copy import copy
 
 import numpy as np
 from opt_einsum import contract_expression
@@ -32,10 +32,10 @@ class CachingFFT:
         fft_shape: Optional[Tuple[int, ...]] = None,
         logger: Optional[logging.Logger] = None,
     ):
-        self._c = None  # field in coordinate space
-        self._f = None  # field in fourier space
-        self._f_padded = None  # fourier transform of padded field
-        self._f_reversed = None  # time-reversed field in fourier space
+        self._c: np.ndarray = None  # field in coordinate space
+        self._f: np.ndarray = None  # field in fourier space
+        self._f_padded: np.ndarray = None  # fourier transform of padded field
+        self._f_reversed: np.ndarray = None  # time-reversed field in fourier space
         self._fft_axes = fft_axes
         self._fft_shape = fft_shape
         self._fft_workers = -1
@@ -50,10 +50,12 @@ class CachingFFT:
         self.c -= other.c if isinstance(other, CachingFFT) else other
         return self
 
-    def __sub__(self, other):
-        result = deepcopy(self)
-        result -= other
-        return result
+    def __neg__(self) -> np.ndarray:
+        # pylint: disable=invalid-unary-operand-type
+        return -self.c
+
+    def __sub__(self, other) -> np.ndarray:
+        return self.c - other
 
     def __iadd__(self, other):
         self.c += other.c if isinstance(other, CachingFFT) else other
@@ -62,6 +64,9 @@ class CachingFFT:
     def __itruediv__(self, other):
         self.c /= other.c if isinstance(other, CachingFFT) else other
         return self
+
+    def sum(self, axis: int, keepdims: bool = False) -> np.ndarray:
+        return self.c.sum(axis=axis, keepdims=keepdims)
 
     def _invalidate(self):
         self._c = None
