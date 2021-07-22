@@ -80,7 +80,7 @@ This section explains how to run them locally to understand and fix potential is
 
 ### Code Style and Quality
 Code style and quality are checked using [flake8](https://flake8.pycqa.org/) and [pylint](http://pylint.pycqa.org/).
-To execute them, change into the repository root directory, run the following commands and inspect their output:
+To execute them, change into the [repository root directory](.), run the following commands and inspect their output:
 
 ```
 flake8
@@ -90,8 +90,8 @@ pylint tnmf
 In order for a pull request to be accaptable, no errors may be reported here.
 
 ### Unit Tests
-Automated unit tests reside inside the folder `tnmf/tests` and are executed using [pytest](https://docs.pytest.org/).
-They can be run by changing into the repository root directory and running
+Automated unit tests reside inside the folder [tnmf/tests](tnmf/tests). They can be executed via
+[pytest](https://docs.pytest.org/) by changing into the [repository root directory](.) and running
 
 ```
 pytest
@@ -99,18 +99,18 @@ pytest
 
 Debugging potential failures from the command line might be cumbersome.
 Most Python IDEs, however, also support `pytest` natively in their debugger.
-Again, for a pull request to be acceptable, no failures may be reported by pytest.
+Again, for a pull request to be acceptable, no failures may be reported here.
 
 ### Code Coverage
-Code Coverage in the unit tests is measured using [coverage](https://coverage.readthedocs.io).
-This can also be done locally from the repository root directory via
+Code coverage in the unit tests is measured using [coverage](https://coverage.readthedocs.io).
+A coverage report can be created locally from the [repository root directory](.) via
 
 ```
 coverage run
 coverage report
 ```
 
-This will create a concise table with an overview of python files that are not fully covered with unit tests along with the line numbers of code that has not been executed.
+This will output a concise table with an overview of python files that are not fully covered with unit tests along with the line numbers of code that has not been executed.
 A more detailed, interactive report can be created using
 
 ```
@@ -118,9 +118,9 @@ coverage html
 ```
 
 Then, you can open the file `htmlcov/index.html` in a web browser of your choice to navigate through code annotated with coverage data.
-Required overall coverage to is configured in `setup.cfg`, under the key `fail_under` in section `[coverage:report]`.
+Required overall coverage to is configured in [setup.cfg](setup.cfg), under the key `fail_under` in section `[coverage:report]`.
 
 
 ## Building the Documentation
-To build the documentation locally, change into the `doc` subdirectory and run `make html`.
+To build the documentation locally, change into the [doc subdirectory](doc) and run `make html`.
 Then, the documentation resides at `doc\_build\html\index.html`.
