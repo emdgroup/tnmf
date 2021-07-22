@@ -44,25 +44,16 @@ Classes
    .. method:: __itruediv__(self, other)
 
 
-   .. method:: set_fft_params(self, fft_axes: Tuple[int, Ellipsis], fft_shape: Tuple[int, Ellipsis])
-
-
    .. method:: has_c(self) -> bool
+      :property:
 
       Check if the field in coordinate space has already been computed
 
 
    .. method:: has_f(self) -> bool
+      :property:
 
       Check if the field in fourier space has already been computed
-
-
-   .. method:: shape(self) -> Tuple[int]
-      :property:
-
-
-   .. method:: ndim(self) -> int
-      :property:
 
 
    .. method:: c(self) -> numpy.ndarray

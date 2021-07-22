@@ -32,7 +32,7 @@ Functions
 
 
 
-.. function:: fftconvolve_sum(in1: Union[numpy.ndarray, Tuple[numpy.ndarray, Ellipsis]], in2: numpy.ndarray, fft_axes: Tuple[int, Ellipsis], slices: Tuple[slice, Ellipsis], correlate: bool, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], Ellipsis] = None, sum_axis: Tuple[int, Ellipsis] = None, keepdims: bool = False) -> numpy.ndarray
+.. function:: fftconvolve_sum(in1: Tuple[numpy.ndarray, Ellipsis], in2: numpy.ndarray, fft_axes: Tuple[int, Ellipsis], slices: Tuple[slice, Ellipsis], correlate: bool, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], Ellipsis] = None, sum_axis: Tuple[int, Ellipsis] = None, keepdims: bool = False) -> numpy.ndarray
 
 
 .. class:: NumPy_FFT_Backend(**kwargs)
