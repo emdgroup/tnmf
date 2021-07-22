@@ -20,6 +20,7 @@ _build
 *.egg-info
 build
 dist
+htmlcov
 
 # Package Version
 tnmf/_version.py

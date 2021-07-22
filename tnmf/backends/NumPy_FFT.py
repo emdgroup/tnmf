@@ -3,7 +3,7 @@ A module that provides a NumPy based backend for computing the gradients of the 
 Shift-invariance is implemented via fast convolution in the Fourier domain using :func:`scipy.fft.rfftn`
 and :func:`scipy.fft.irfftn`.
 """
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict
 
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
@@ -12,7 +12,7 @@ from ._NumPyFFTBackend import NumPyFFTBackend
 
 
 def fftconvolve_sum(
-        in1: Union[np.ndarray, Tuple[np.ndarray, ...]],
+        in1: Tuple[np.ndarray, ...],
         in2: np.ndarray,
         fft_axes: Tuple[int, ...],
         slices: Tuple[slice, ...],
@@ -42,10 +42,6 @@ def fftconvolve_sum(
         array_padded = np.pad(array, fftpadding, mode='constant', constant_values=0.)
         # Fourier transform (for real data)
         return rfftn(array_padded, axes=axes)
-
-    if not isinstance(in1, tuple):
-        assert isinstance(in1, np.ndarray)
-        in1 = (in1, )
 
     assert isinstance(in2, np.ndarray)
 

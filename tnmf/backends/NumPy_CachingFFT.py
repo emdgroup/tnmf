@@ -58,36 +58,26 @@ class CachingFFT:
         self.c /= other.c if isinstance(other, CachingFFT) else other
         return self
 
-    def set_fft_params(self, fft_axes: Tuple[int, ...], fft_shape: Tuple[int, ...]):
-        self._fft_axes = fft_axes
-        self._fft_shape = fft_shape
-
     def _invalidate(self):
         self._c = None
         self._f = None
         self._f_padded = None
         self._f_reversed = None
 
+    @property
     def has_c(self) -> bool:
         """Check if the field in coordinate space has already been computed"""
         return self._c is not None
 
+    @property
     def has_f(self) -> bool:
         """Check if the field in fourier space has already been computed"""
         return self._f is not None
 
     @property
-    def shape(self) -> Tuple[int]:
-        return self._c.shape
-
-    @property
-    def ndim(self) -> int:
-        return self._c.ndim
-
-    @property
     def c(self) -> np.ndarray:
         """Getter for field in coordinate space"""
-        if self._c is None:
+        if not self.has_c:
             self._logger.debug(f'Computing {self._field_name}(x) = FFT^-1[ {self._field_name}(f) ]', )
             assert self.has_f
             self._c = irfftn(self._f, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
@@ -103,9 +93,9 @@ class CachingFFT:
     @property
     def f(self) -> np.ndarray:
         """Getter for field in fourier space"""
-        if self._f is None:
+        if not self.has_f:
             self._logger.debug(f'Computing {self._field_name}(f) = FFT[ {self._field_name}(x) ]')
-            assert self.has_c()
+            assert self.has_c
             self._f = rfftn(self._c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
         return self._f
 
@@ -113,7 +103,7 @@ class CachingFFT:
         """Getter for padded field in fourier space"""
         if self._f_padded is None:
             self._logger.debug(f'Computing {self._field_name}_padded(f) = FFT[ {self._field_name}_padded(x) ]')
-            assert self.has_c()
+            assert self.has_c
 
             c = np.pad(self._c, pad_width, **pad_mode)
             # TODO: we should actually make sure that the padding does not change between calls
@@ -132,7 +122,7 @@ class CachingFFT:
         """Getter for time-reversed field in fourier space, intentionally no setter for now"""
         if self._f_reversed is None:
             self._logger.debug(f'Computing {self._field_name}_rev(f) = FFT[ {self._field_name}(-x) ]')
-            assert self.has_c()
+            assert self.has_c
             c_reversed = np.flip(self._c, axis=self._fft_axes)
             self._f_reversed = rfftn(c_reversed, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
         return self._f_reversed
