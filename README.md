@@ -5,7 +5,7 @@
 [![Publish to PyPI](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/emdgroup/tnmf/actions/workflows/publish-to-pypi.yml)
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/adriansosic/tnmf/main/demos/demo_selector.py)
 
-[![Logo](https://raw.githubusercontent.com/emdgroup/tnmf/main/doc/logos/tnmf_header.svg)](https://github.com/emdgroup/tnmf)
+[![Logo](https://raw.githubusercontent.com/emdgroup/tnmf/main/logos/tnmf_header.svg)](https://github.com/emdgroup/tnmf)
 
 # Transform-Invariant Non-Negative Matrix Factorization
 
@@ -17,7 +17,7 @@ The packages supports multiple optimization backends and can be easily extended 
 A general introduction to Non-Negative Matrix Factorization and the purpose of this package can be found on the corresponding [GitHub Pages](https://emdgroup.github.io/tnmf/).
 
 # Installation
-For using this package, you will need Python version 3.6 (or higher).
+For using this package, you will need Python version 3.7 (or higher).
 The package is available via [PyPI](https://pypi.org/project/tnmf/).
 
 Installation is easiest using pip:
