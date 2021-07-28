@@ -107,6 +107,7 @@ A coverage report can be created locally from the [repository root directory](.)
 
 ```
 coverage run
+coverage combine
 coverage report
 ```
 

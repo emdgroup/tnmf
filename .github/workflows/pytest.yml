@@ -32,4 +32,5 @@ jobs:
         coverage run
     - name: Generate code coverage report
       run: |
+        coverage combine
         coverage report
