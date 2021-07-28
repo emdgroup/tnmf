@@ -49,10 +49,10 @@ def main():
     if args.command == 'example':
         args_example = parser.parse_args()
         example = [e for e in examples if e.stem == args_example.example_name][0]
-        os.system(f'python {example}')  # noqa: S605
+        os.system(f'python {example}')  # noqa: S605, DUO106
 
     # run the demo
     elif args.command == 'demo':
         args_demo = parser.parse_args()
         demo_name = args_demo.demo_name if args_demo.demo_name is not None else ''
-        os.system(f'streamlit run {DEMO_FILE} "{demo_name}"')  # noqa: S605
+        os.system(f'streamlit run {DEMO_FILE} "{demo_name}"')  # noqa: S605, DUO106
