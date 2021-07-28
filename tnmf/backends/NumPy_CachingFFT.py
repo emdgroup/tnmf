@@ -7,7 +7,7 @@ and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed 
 # TODO: this backend has a logger member but the other backends don't
 
 import logging
-from typing import Dict, Tuple, Optional, Union
+from typing import Dict, Tuple, Optional
 from copy import copy
 
 import numpy as np
@@ -64,8 +64,8 @@ class CachingFFT:
         self.c /= other.c if isinstance(other, CachingFFT) else other
         return self
 
-    def sum(self, axis: int, keepdims: bool = False) -> np.ndarray:
-        return self.c.sum(axis=axis, keepdims=keepdims)
+    def sum(self, *args, **kwargs):
+        return self.c.sum(*args, **kwargs)
 
     def _invalidate(self):
         self._c = None
@@ -206,12 +206,6 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
     @staticmethod
     def to_ndarray(arr: CachingFFT) -> np.ndarray:
         return arr.c
-
-    @staticmethod
-    def normalize(arr: CachingFFT, axis: Optional[Union[int, Tuple[int, ...]]] = None):
-        # TODO: overwriting the parent method can be avoided by redefining the division operator of CachingFFT and defining
-        #   a common "array type" that can handle both np.ndarray and CachingFFT objects
-        arr.c /= arr.c.sum(axis=axis, keepdims=True)
 
     @staticmethod
     def convolve_multi_1d(arr: CachingFFT, kernels: Tuple[np.ndarray, ...], axes: Tuple[int, ...]) -> CachingFFT:
