@@ -2,11 +2,6 @@
 A module that defines a common interface for all backends.
 """
 
-# TODO: generalize n_transforms from numpy_fft to all backends
-# TODO: all backends need to support self._mode_R et al
-# TODO: do we need self._input_padding ? If yes, all backends have to support it.
-# TODO: refactor common backend logic of NumpyBackend/PyTorchBackend into function
-
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional, Union
 

@@ -3,8 +3,6 @@ A module that provides a PyTorch based backend for computing the gradients of th
 Shift-invariance is implemented via explicit convolution operations in the coordinate space.
 """
 
-# TODO: use torch.fft.rfftn() to generalize for more dimensions and improve performance
-
 import torch
 from torch import Tensor
 from torch.nn.functional import pad

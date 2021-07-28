@@ -4,7 +4,6 @@ Shift-invariance is implemented via fast convolution in the Fourier domain using
 and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed arrays compared to
 :mod:`tnmf.backends.NumPy_FFT`.
 """
-# TODO: consider adding shape getters to CachingFFT
 # TODO: this backend has a logger member but the other backends don't
 
 import logging
