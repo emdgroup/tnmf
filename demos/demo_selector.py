@@ -14,7 +14,7 @@ DEMO_NAME_DICT = {
 }
 
 
-def main(default_demo: int = 1):
+def main(demo_name: str):
     # show TNMF header
     with importlib.resources.path('logos', 'tnmf_header.png') as img_file:
         st.image(str(img_file), use_column_width='always')
@@ -30,6 +30,7 @@ def main(default_demo: int = 1):
 
     # select the demo
     help_select_demo = 'The specific **demo example** that gets executed.'
+    default_demo = list(DEMO_NAME_DICT.keys()).index(demo_name)
     selected_demo = st.sidebar.selectbox('Demo example', list(DEMO_NAME_DICT.keys()), default_demo, help=help_select_demo)
     if verbose:
         st.sidebar.caption(help_select_demo)
@@ -63,9 +64,6 @@ def main(default_demo: int = 1):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        demo_name = str(sys.argv[1])
-        default_demo = list(DEMO_NAME_DICT.keys()).index(demo_name)
+        main(sys.argv[1])
     else:
-        default_demo = 1
-
-    main(default_demo)
+        main('2-D Synthetic Signals')
