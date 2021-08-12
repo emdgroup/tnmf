@@ -33,9 +33,8 @@ def st_define_sample_params(verbose: bool = True) -> Tuple[dict, float]:
     help_channels = \
         '''The way, how color information in the image is processed. A grayscale image only has a single channel.
         A color images can be treated as a single, three-channel sample (leading to having three-channel, i.e.
-        colorized, dictionary elements) or as three inidivudal samples (leading to color-universal monochrome
+        colorized, dictionary elements) or as three individual samples (leading to color-universal monochrome
         dictionary elements).'''
-
     channel_choices = {
         'grayscale':
             dict(get_v=lambda img: (np.dot(img, [0.2989, 0.5870, 0.1140]))[np.newaxis, np.newaxis, :, :],
@@ -113,7 +112,7 @@ def st_visualize_results(V: np.ndarray,
 
 def main(progress_bar, verbose: bool = True):
     """
-    Runs the streamlit demo on the famous scipy reacoon demo image.
+    Runs the streamlit demo on the famous scipy racoon demo image.
 
     Parameters
     ----------
@@ -127,11 +126,12 @@ def main(progress_bar, verbose: bool = True):
 
     # load the image
     img = racoon_image(gray=False, scale=scale)
+
     # samples are indexed V[sample_index, channel_index, sample_dimension_1, sample_dimension_2, ...]
     V = channel_mode['get_v'](img)
 
     # define the NMF parameters and fit the model
-    default_nmf_params = nmf_params = {'n_atoms': 25, 'atom_shape': (10, 10)}
+    default_nmf_params = {'n_atoms': 25, 'atom_shape': (10, 10)}
     nmf_params = st_define_nmf_params(default_nmf_params, have_ground_truth=False, verbose=verbose)
     nmf = fit_nmf_model(V, nmf_params, progress_bar)
 
