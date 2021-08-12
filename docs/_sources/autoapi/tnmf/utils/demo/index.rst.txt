@@ -28,6 +28,7 @@ Functions
 
 .. autoapisummary::
 
+   tnmf.utils.demo.explanation
    tnmf.utils.demo.st_define_nmf_params
 
 
@@ -60,12 +61,18 @@ Attributes
 
    
 
-.. function:: st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict
+.. function:: explanation(text: str, verbose: bool)
+
+
+.. function:: st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, verbose: bool = True) -> dict
 
    Defines all necessary NMF parameters via streamlit widgets.
 
    :param default_params: Contains the default parameters that are used if the created streamlit checkbox is True.
    :type default_params: dict
+   :param have_ground_truth: If True, the parameters in default_params are considered being ground truth values and
+                             the respective explanatory texts are modified accordingly.
+   :type have_ground_truth: bool
    :param verbose: If True, show detailed information.
    :type verbose: bool
 
