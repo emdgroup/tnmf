@@ -26,19 +26,6 @@ def main(progress_bar, n_dims: int, verbose: bool = True):
     verbose : bool
         If True, show detailed information.
     """
-    # show demo info text
-    if verbose:
-        st.markdown('''
-        ## Demo guide
-        This dashboard demonstrates the use of the *Transform-Invariant Non-Negative Matrix Factorization (TNMF) package*
-        in the specific context of learning **shift-invariant representations**.
-        Via the **drop-down menu** on the left, you can choose between different demo examples.
-
-        ## Usage
-        Detailed explanations of the available options and the shown output (including this text) can be displayed or hidden
-        using the **'Verbose' checkbox**. When the checkbox is unticked, the description of the control widgets can still
-        be accessed via the **tooltips** next to them.
-        ''')
 
     # create the signal handling tool
     tool = SignalTool(n_dims=n_dims)

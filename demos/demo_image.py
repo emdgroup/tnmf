@@ -1,74 +1,139 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import streamlit as st
+from itertools import cycle
+from typing import Callable, Tuple
 
+import numpy as np
+import matplotlib.pyplot as plt
+import streamlit as st
+from streamlit.delta_generator import DeltaGenerator
+
+from tnmf.utils.demo import st_define_nmf_params
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.utils.data_loading import racoon_image
 
-progress_bar = st.sidebar.progress(0)
 
-st.sidebar.markdown('# Input options')
-scale = st.sidebar.slider('Image rescaling factor', min_value=0., max_value=1., value=0.2)
-color = st.sidebar.checkbox('Color channels', False)
+@st.cache(hash_funcs={DeltaGenerator: lambda _: None})
+def fit_nmf_model(V, nmf_params, progress_bar):
+    fit_params = {k: nmf_params.pop(k) for k in ('sparsity_H', 'inhibition_strength')}
+    nmf = TransformInvariantNMF(**nmf_params)
+    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / nmf_params['n_iterations']), **fit_params)
+    assert nmf.R.ndim > 0  # dummy code to ensure R is up to date to avoid streamlit caching issues
+    return nmf
 
-st.sidebar.markdown('# NMF options')
-backend = st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft'], 1)
-n_atoms = st.sidebar.number_input('Number of atoms', min_value=1, value=10)
-atom_size = st.sidebar.number_input('Atom size', min_value=1, value=10)
-sparsity_H = st.sidebar.number_input('Activation sparsity', min_value=0., value=0., step=0.1)
-inhibition = st.sidebar.number_input('Activation lateral inhibition', min_value=0., value=0., step=0.1)
-if inhibition > 0:
-    inhibition_range = st.sidebar.selectbox('Inhibition Range', [f'default ({atom_size-1})', ] + list(range(1, atom_size)), 0)
-    inhibition_range = None if isinstance(inhibition_range, str) else (inhibition_range, ) * 2
-else:
-    inhibition_range = None
 
-n_iterations = st.sidebar.number_input('Number of iterations', min_value=1, value=100)
+def st_define_sample_params(verbose: bool = True) -> Tuple[dict, float]:
+    # define image scale
+    help_scale = \
+        '''Downscaling the image allows for quicker interactive experimentation. Note that this does
+        not change atom size.'''
+    scale = st.sidebar.number_input('Image Scale', min_value=0.05, value=0.25, step=0.05, help=help_scale)
+    if verbose:
+        st.sidebar.caption(help_scale)
 
-img = racoon_image(gray=not color, scale=scale)
-V = img.transpose((2, 0, 1))[np.newaxis, ...] if color else img[np.newaxis, np.newaxis, ...]
+    # define the number of channels
+    help_channels = \
+        '''The way, how color information in the image is processed. A grayscale image only has a single channel.
+        A color images can be treated as a single, three-channel sample (leading to having three-channel, i.e.
+        colorized, dictionary elements) or as three individual samples (leading to color-universal monochrome
+        dictionary elements).'''
+    channel_choices = {
+        'grayscale':
+            dict(get_v=lambda img: (np.dot(img, [0.2989, 0.5870, 0.1140]))[np.newaxis, np.newaxis, :, :],
+                 #                      ^----simple grayscale conversion
+                 restore=lambda X: (X[:, 0], ['Greys'])),
+        'color, multi-channel':
+            dict(get_v=lambda img: np.moveaxis(img, -1, 0)[np.newaxis, :, :, :],
+                 restore=lambda X: (np.moveaxis(X, 1, -1), [None])),
+        'color, one sample per channel':
+            dict(get_v=lambda img: np.moveaxis(img, -1, 0)[:, np.newaxis, :, :],
+                 restore=lambda X: (np.moveaxis(X, 1, -1), ['Reds', 'Greens', 'Blues'])),
+    }
+    channel_mode = st.sidebar.radio('# Channel mode', list(channel_choices.keys()), index=0, help=help_channels)
+    channel_mode = channel_choices[channel_mode]
+    if verbose:
+        st.sidebar.caption(help_channels)
 
-nmf = TransformInvariantNMF(
-    n_atoms=n_atoms,
-    atom_shape=(atom_size, atom_size),
-    n_iterations=n_iterations,
-    backend=backend,
-    inhibition_range=inhibition_range,
-)
+    return channel_mode, scale
 
-nmf.fit(
-    V,
-    sparsity_H=sparsity_H,
-    inhibition_strength=inhibition,
-    progress_callback=lambda _, x: progress_bar.progress((x + 1) / n_iterations)
-)
 
-img_cmap = None if color else 'gray'
+def st_visualize_results(V: np.ndarray,
+                         nmf: TransformInvariantNMF,
+                         restore: Callable[[np.ndarray], np.ndarray],
+                         verbose: bool = True):
+    n_atoms = nmf.n_atoms
+    V, Vc = restore(V)
+    R, Rc = restore(nmf.R)
 
-st.markdown('# Input and reconstruction')
-col1, col2 = st.beta_columns(2)
-with col1:
-    fig = plt.figure()
-    plt.imshow(img, cmap=img_cmap)
+    st.markdown('# Input and Reconstruction')
+    if verbose:
+        st.caption('''The visualization below shows a **comparison between the input signal and its
+        reconstruction** obtained through the learned factorization model.''')
+    cols = st.beta_columns(2)
+    for col, X, Xc, title in zip(cols, [V, R], [Vc, Rc], ['Input', 'Reconstruction']):
+        with col:
+            for x, xc in zip(X, cycle(Xc)):
+                fig = plt.figure()
+                plt.imshow(x, cmap=xc)
+                plt.title(f'{title}')
+                st.pyplot(fig)
+
+    st.markdown('# Learned Dictionary')
+    if verbose:
+        st.caption('''The visualization below shows an overview of all **learned dictionary atoms**.''')
+    ncols = 5
+    nrows = int(np.ceil(n_atoms / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(3*ncols, 3*nrows))
+    for w, ax in zip(nmf.W, axes.flatten()):
+        ax.imshow(np.moveaxis(w, 0, -1) / w.max(), cmap='Greys' if w.shape[0] == 1 else None)
+    plt.tight_layout()
     st.pyplot(fig)
-with col2:
-    fig = plt.figure()
-    plt.imshow(nmf.R[0].transpose((1, 2, 0)), cmap=img_cmap)
-    st.pyplot(fig)
+    plt.close(fig)
 
-st.markdown('## Atom, activation and partial reconstruction')
-for i_atom in range(n_atoms):
-    col1, col2, col3 = st.beta_columns(3)
-    with col1:
+    st.markdown('# Atoms, Activation and Partial Signal Reconstruction')
+    if verbose:
+        st.caption('''The visualization below shows the **learned dictionary atoms (left), their activations (center),
+                   and their partial contributions (right)** to the reconstruction of an individual signal.''')
+
+    def plot(X, title):
         fig = plt.figure()
-        plt.imshow(nmf.W[i_atom, 0], cmap=img_cmap)
+        plt.imshow(X / X.max(), cmap='Greys' if X.ndim == 2 or (X.ndim == 3 and X.shape[2] == 1) else None)
+        fig.suptitle(title)
         st.pyplot(fig)
-    with col2:
-        fig = plt.figure()
-        plt.imshow(nmf.H[0, i_atom])
-        st.pyplot(fig)
-    with col3:
-        fig = plt.figure()
-        partial_R = nmf.R_partial(i_atom)
-        plt.imshow(partial_R[0].transpose((1, 2, 0)) / partial_R[0].max(), cmap=img_cmap)
-        st.pyplot(fig)
+        plt.close(fig)
+
+    for i_atom in range(n_atoms):
+        col1, col2, col3 = st.beta_columns((1, 3, 3))
+        with col1:
+            plot(np.moveaxis(nmf.W[i_atom], 0, -1), f'Atom {i_atom}')
+        with col2:
+            plot(np.moveaxis(nmf.H[:, i_atom], 0, -1), f'Atom {i_atom} - Activation')
+        with col3:
+            plot(np.squeeze(np.moveaxis(nmf.R_partial(i_atom), (0, 1), (-2, -1))), f'Atom {i_atom} - Partial Reconstruction')
+
+
+def main(progress_bar, verbose: bool = True):
+    """
+    Runs the streamlit demo on the famous scipy racoon demo image.
+
+    Parameters
+    ----------
+    progress_bar
+        Streamlit progress bar that needs to be updated during model fitting.
+    verbose : bool
+        If True, show detailed information.
+    """
+
+    channel_mode, scale = st_define_sample_params(verbose)
+
+    # load the image
+    img = racoon_image(gray=False, scale=scale)
+
+    # samples are indexed V[sample_index, channel_index, sample_dimension_1, sample_dimension_2, ...]
+    V = channel_mode['get_v'](img)
+
+    # define the NMF parameters and fit the model
+    default_nmf_params = {'n_atoms': 25, 'atom_shape': (10, 10)}
+    nmf_params = st_define_nmf_params(default_nmf_params, have_ground_truth=False, verbose=verbose)
+    nmf = fit_nmf_model(V, nmf_params, progress_bar)
+
+    # visualize the results
+    st_visualize_results(V, nmf, channel_mode['restore'], verbose)

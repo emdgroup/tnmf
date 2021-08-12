@@ -17,7 +17,12 @@ HELP_CHANNEL = \
     factorization in the sense that each atom always covers all channels.'''
 
 
-def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
+def explanation(text: str, verbose: bool):
+    if verbose:
+        st.sidebar.caption(text)
+
+
+def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, verbose: bool = True) -> dict:
     """
     Defines all necessary NMF parameters via streamlit widgets.
 
@@ -25,6 +30,9 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
     ----------
     default_params : dict
         Contains the default parameters that are used if the created streamlit checkbox is True.
+    have_ground_truth : bool
+        If True, the parameters in default_params are considered being ground truth values and
+        the respective explanatory texts are modified accordingly.
     verbose : bool
         If True, show detailed information.
 
@@ -35,34 +43,43 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
     """
     st.sidebar.markdown('# TNMF settings')
 
-    # decide if ground truth atom number shall be used
-    help_use_n_atoms = \
-        '''If selected, the **number of atoms** used by the model is set to the actual number of atoms used
-        for signal generation.'''
-    use_n_atoms = st.sidebar.checkbox('Use ground truth number of atoms', True, help=help_use_n_atoms)
-    if verbose:
-        st.sidebar.caption(help_use_n_atoms)
+    help_n_atoms = 'The **number of atoms**.'
+    if have_ground_truth:
+        # decide if ground truth atom number shall be used
+        help_n_atoms += ' To use the ground truth dictionary size, tick the checkbox above.'
+        help_use_n_atoms = \
+            '''If selected, the **number of atoms** used by the model is set to the actual number of atoms used
+            for signal generation.'''
+        use_n_atoms = st.sidebar.checkbox('Use ground truth number of atoms', True, help=help_use_n_atoms)
+        explanation(help_use_n_atoms, verbose)
+    else:
+        use_n_atoms = False
 
-    help_n_atoms = 'The **number of atoms**. To use the ground truth dictionary size, tick the checkbox above.'
-    n_atoms = st.sidebar.number_input('# Atoms', value=default_params['n_atoms'], min_value=1,
-                                      help=help_n_atoms) if not use_n_atoms else None
+    n_atoms_default = default_params['n_atoms']
+    n_atoms = st.sidebar.number_input('# Atoms', value=n_atoms_default, min_value=1,
+                                      help=help_n_atoms) if not use_n_atoms else n_atoms_default
     if verbose and not use_n_atoms:
         st.sidebar.caption(help_n_atoms)
 
-    # decide if ground truth atom shape shall be used
-    help_use_atom_shape = \
-        '''If selected, the **size of the atoms** used by the model is set the actual size of the atoms used
-        for signal generation.'''
-    use_atom_shape = st.sidebar.checkbox('Use ground truth atom size', True, help=help_use_atom_shape)
-    if verbose:
-        st.sidebar.caption(help_use_atom_shape)
+    help_atom_shape = 'The **size of each atom** dimension.'
+    if have_ground_truth:
+        # decide if ground truth atom shape shall be used
+        help_atom_shape += ' To use the ground truth atom size, tick the checkbox above.'
+        help_use_atom_shape = \
+            '''If selected, the **size of the atoms** used by the model is set the actual size of the atoms used
+            for signal generation.'''
+        use_atom_shape = st.sidebar.checkbox('Use ground truth atom size', True, help=help_use_atom_shape)
+        explanation(help_use_atom_shape, verbose)
+    else:
+        use_atom_shape = False
 
-    help_atom_shape = 'The **size of each atom** dimension. To use the ground truth atom size, tick the checkbox above.'
+    default_atom_shape = default_params['atom_shape']
     atom_shape = tuple([st.sidebar.number_input('Atom size',
-                        value=default_params['atom_shape'][0], min_value=1,
-                        help=help_atom_shape)] * len(default_params['atom_shape'])) if not use_atom_shape else None
-    if verbose and not use_atom_shape:
-        st.sidebar.caption(help_atom_shape)
+                        value=default_atom_shape[0], min_value=1,
+                        help=help_atom_shape)] * len(default_params['atom_shape'])
+                       ) if not use_atom_shape else default_atom_shape
+    if not use_atom_shape:
+        explanation(help_atom_shape, verbose)
 
     help_sparsity_H = 'The strength of the **L1 activation sparsity regularization** imposed on the optimization problem.'
     sparsity_H = st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.0, step=0.01,
@@ -76,8 +93,7 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
         the same atom at neighboring locations.'''
     inhibition_strength = st.sidebar.number_input('Lateral activation inhibition', min_value=0.0, value=0.1, step=0.01,
                                                   help=help_inhibition_strength)
-    if verbose:
-        st.sidebar.caption(help_inhibition_strength)
+    explanation(help_inhibition_strength, verbose)
 
     help_n_iterations = '''The **number of multiplicative updates** to the atom dictionary and activation tensors.'''
     n_iterations = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_n_iterations)
@@ -90,8 +106,7 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
             for speed comparisons only.'''
     backend = st.sidebar.selectbox('Backend', ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft'], 4,
                                    help=help_backend)
-    if verbose:
-        st.sidebar.caption(help_backend)
+    explanation(help_backend, verbose)
 
     help_reconstruction_mode = \
         '''Defines the **convolution mode** for the signal reconstruction.\
@@ -109,8 +124,7 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
         input array are inserted circularly on the respective other side of the array.'''
     reconstruction_mode = st.sidebar.selectbox('Reconstruction', ['valid', 'full', 'circular'], 2,
                                                help=help_reconstruction_mode)
-    if verbose:
-        st.sidebar.caption(help_reconstruction_mode)
+    explanation(help_reconstruction_mode, verbose)
 
     selected_params = dict(
         n_iterations=n_iterations,
@@ -121,15 +135,6 @@ def st_define_nmf_params(default_params: dict, verbose: bool = True) -> dict:
         backend=backend,
         reconstruction_mode=reconstruction_mode,
     )
-
-    # default parameter selection dictionary
-    use_default = dict(
-        n_atoms=use_n_atoms,
-        atom_shape=use_atom_shape,
-    )
-
-    # overwrite selected parameters with defaults
-    selected_params.update({k: v for k, v in default_params.items() if use_default[k]})
 
     return selected_params
 
@@ -178,8 +183,7 @@ class SignalTool(ABC):
             '''The **number of generated signals** passed as input to the algorithm.
             All signals have the same shape and number of channels.'''
         n_signals = st.sidebar.number_input('# Signals', min_value=1, value=10, help=help_n_signals)
-        if verbose:
-            st.sidebar.caption(help_n_signals)
+        explanation(help_n_signals, verbose)
         signal_params = cls.st_define_signal_params(verbose=verbose)
 
         # create the input
@@ -368,16 +372,14 @@ class SignalTool1D(SignalTool):
 
         # define the number of channels
         n_channels = st.sidebar.number_input('# Channels', min_value=1, value=3, max_value=5, help=HELP_CHANNEL)
-        if verbose:
-            st.sidebar.caption(HELP_CHANNEL)
+        explanation(HELP_CHANNEL, verbose)
 
         # define the pulse shapes
         help_shapes = \
             '''The **pulse shapes** that can be combined along different channels to form a multi-channel time-series
             symbol.'''
         shapes = st.sidebar.multiselect('Pulse shapes', ['n', '-', '^', 'v', '_'], ['n', '-', '^', 'v', '_'], help=help_shapes)
-        if verbose:
-            st.sidebar.caption(help_shapes)
+        explanation(help_shapes, verbose)
 
         # to avoid having too many different symbols, consider only those where all channels are identical
         help_symbols = \
@@ -385,20 +387,17 @@ class SignalTool1D(SignalTool):
              signal generation. The subset of channel-symmetric symbols is pre-selected.'''
         symbols = st.sidebar.multiselect('Symbols', [''.join(chars) for chars in product(*repeat(shapes, n_channels))],
                                          [s * n_channels for s in shapes], help=help_symbols)
-        if verbose:
-            st.sidebar.caption(help_symbols)
+        explanation(help_symbols, verbose)
 
         # define the number of pulses
         help_n_pulses = 'The **number of symbols** concatenated randomly to form a signal.'
         n_pulses = st.sidebar.number_input('# Symbols', min_value=1, value=3, help=help_n_pulses)
-        if verbose:
-            st.sidebar.caption(help_n_pulses)
+        explanation(help_n_pulses, verbose)
 
         # define the pulse length
         help_pulse_length = 'The **length** of each individual multi-channel symbol.'
         pulse_length = st.sidebar.number_input('Symbol length', min_value=1, value=20, help=help_pulse_length)
-        if verbose:
-            st.sidebar.caption(help_pulse_length)
+        explanation(help_pulse_length, verbose)
 
         # create the parameter dictionary
         signal_params = dict(
@@ -444,8 +443,7 @@ class SignalTool2D(SignalTool):
         # choose between grayscale or color images
         n_channels = st.sidebar.radio('# Channels', ['1 (Grayscale images)', '3 (Color images)'], 0, help=HELP_CHANNEL)
         n_channels = 1 if n_channels == '1 (Grayscale images)' else 3
-        if verbose:
-            st.sidebar.caption(HELP_CHANNEL)
+        explanation(HELP_CHANNEL, verbose)
 
         # create all possible combinations of shapes and color
         shapes = ['+', 'x', 's']
@@ -459,22 +457,19 @@ class SignalTool2D(SignalTool):
             images) defines the color of the symbol. For color images, a representative subset of symbols is pre-selected.'''
         symbols = st.sidebar.multiselect('Symbols', all_symbols, ['+r', 'xg', 'sb'] if n_channels == 3 else all_symbols,
                                          help=help_symbols)
-        if verbose:
-            st.sidebar.caption(help_symbols)
+        explanation(help_symbols, verbose)
 
         # select the number of symbols per dimension
         help_n_symbols = \
             '''The **number of symbols** placed randomly next to each other both horizontally and vertically to generate an
             input image.'''
         n_symbols = st.sidebar.number_input('# Symbols per dimension', min_value=1, value=5, help=help_n_symbols)
-        if verbose:
-            st.sidebar.caption(help_n_symbols)
+        explanation(help_n_symbols, verbose)
 
         # define the size of each symbol
         help_symbol_size = 'The **size of each symbol** in pixels per dimension. All symbols are of square size.'
         symbol_size = st.sidebar.number_input('Symbol size', min_value=1, value=10, help=help_symbol_size)
-        if verbose:
-            st.sidebar.caption(help_symbol_size)
+        explanation(help_symbol_size, verbose)
 
         # create the parameter dictionary
         signal_params = dict(

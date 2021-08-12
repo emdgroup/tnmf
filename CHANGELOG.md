@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Unit test Code Coverage Reporting
+- Demo: Racoon image
 
 ## [0.1.1] - 2021-07-22
 ### Added
