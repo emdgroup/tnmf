@@ -12,6 +12,7 @@ Submodules
 
    test_1d/index.rst
    test_backends/index.rst
+   test_examples/index.rst
    test_init/index.rst
    test_sparsity_inhibition/index.rst
 

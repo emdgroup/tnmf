@@ -1,0 +1,63 @@
+:mod:`tnmf.tests.test_examples`
+===============================
+
+.. py:module:: tnmf.tests.test_examples
+
+.. autoapi-nested-parse::
+
+   Test if all examples can be run without error, i.e. `python <example>.py` yields a zero return code.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_examples.test_example
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_examples.EXAMPLES
+   tnmf.tests.test_examples.EXAMPLE_FRAME
+
+
+.. data:: EXAMPLES
+   
+
+   
+
+.. data:: EXAMPLE_FRAME
+   :annotation: = Multiline-String
+
+    .. raw:: html
+
+        <details><summary>Show Value</summary>
+
+    .. code-block:: text
+        :linenos:
+
+        
+        import matplotlib.pyplot as plt
+        plt.ion()
+        from examples import {}
+
+
+    .. raw:: html
+
+        </details>
+
+   
+
+.. function:: test_example(example: str)
+
+
