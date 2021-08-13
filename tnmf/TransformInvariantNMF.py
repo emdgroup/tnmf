@@ -192,18 +192,28 @@ class TransformInvariantNMF:
         self._multiplicative_update(self._W, neg, pos)
         self._backend.normalize(self._W, axis=self._axes_W_normalization)
 
-    def _update_H(self, V: np.ndarray, sparsity: float = 0., inhibition: float = 0.):
-        # TODO: sparsity and inhibition should be handled by the backends
+    def _update_H(self, V: np.ndarray, sparsity: float = 0., inhibition: float = 0., cross_inhibition: float = 0):
+        # TODO: sparsity and inhibition computation should be handled by the backends
         neg, pos = self._backend.reconstruction_gradient_H(V, self._W, self._H)
 
         # add the inhibition gradient component
-        if inhibition > 0:
-            # TODO: maybe also add cross-channel/cross-atom inhibition?
+        if inhibition > 0 or cross_inhibition > 0:
             convolve_axes = range(-len(self.atom_shape), 0)
             inhibition_gradient = self._backend.convolve_multi_1d(self._H, self._inhibition_kernels_1D, convolve_axes)
-            inhibition_gradient -= self._H
-            inhibition_gradient *= inhibition
-            pos += inhibition_gradient
+
+            if inhibition > 0:
+                tmp = inhibition_gradient - self.H  # prevent the atom from suppressing itself at its own position
+                tmp *= inhibition
+                pos += tmp
+            if cross_inhibition > 0:
+                # sum inhibition gradient over all atoms
+                tmp = inhibition_gradient.sum(axis=1, keepdims=True)
+                # broadcast the summed inhibition gradient to all atoms and subtract the contribution of the current atom
+                # thus, tmp contains for every atom the sum over all the inhibition gradient of all other atoms now
+                tmp = -inhibition_gradient + tmp
+                # we scale with (number_atoms - 1)
+                tmp *= cross_inhibition / (self.n_atoms - 1)
+                pos += tmp
 
         self._multiplicative_update(self._H, neg, pos, sparsity)
 
@@ -214,12 +224,14 @@ class TransformInvariantNMF:
             update_W: bool,
             sparsity_H: float,
             inhibition_strength: float,
+            cross_atom_inhibition_strength: float,
             keep_W: bool,
             progress_callback: Callable[['TransformInvariantNMF', int], bool],
     ):
         assert update_H or update_W
         assert sparsity_H >= 0
         assert inhibition_strength >= 0
+        assert cross_atom_inhibition_strength >= 0
 
         self._W, self._H = self._backend.initialize(
             V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
@@ -229,7 +241,7 @@ class TransformInvariantNMF:
 
         for self.n_iterations_done in range(self.n_iterations):
             if update_H:
-                self._update_H(V, sparsity_H, inhibition_strength)
+                self._update_H(V, sparsity_H, inhibition_strength, cross_atom_inhibition_strength)
 
             if update_W:
                 self._update_W(V)
@@ -249,6 +261,7 @@ class TransformInvariantNMF:
             update_W: bool = True,
             sparsity_H: float = 0.,
             inhibition_strength: float = 0.,
+            cross_atom_inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
         r"""
@@ -268,7 +281,9 @@ class TransformInvariantNMF:
         sparsity_H : float, default = 0.
             Sparsity enforcing regularization for the :attr:`H` update.
         inhibition_strength : float, default = 0.
-            Lateral inhibition regularization factor for the :attr:`H` update.
+            Lateral inhibition regularization factor for the :attr:`H` update within the same atom.
+        inhibition_strength : float, default = 0.
+            Lateral inhibition regularization factor for the :attr:`H` update across different atoms.
         progress_callback : Callable[['TransformInvariantNMF', int], bool], default = None
             If provided, this function will be called after every iteration, i.e. after every update to :attr:`H` and
             :attr:`W`. The first parameter to the function is the calling :class:`TransformInvariantNMF` instance, which can be
@@ -277,7 +292,9 @@ class TransformInvariantNMF:
             If the `progress_callback` function returns False, iteration will be aborted, which allows to implement
             specialized convergence criteria.
         """
-        self._do_fit(V, update_H, update_W, sparsity_H, inhibition_strength, False, progress_callback)
+        self._do_fit(V, update_H, update_W,
+                     sparsity_H, inhibition_strength, cross_atom_inhibition_strength,
+                     False, progress_callback)
 
     def partial_fit(
             self,
@@ -286,6 +303,9 @@ class TransformInvariantNMF:
             update_W: bool = True,
             sparsity_H: float = 0.,
             inhibition_strength: float = 0.,
+            cross_atom_inhibition_strength: float = 0.,
             progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
     ):
-        self._do_fit(V, update_H, update_W, sparsity_H, inhibition_strength, self.n_iterations_done > 0, progress_callback)
+        self._do_fit(V, update_H, update_W,
+                     sparsity_H, inhibition_strength, cross_atom_inhibition_strength,
+                     self.n_iterations_done > 0, progress_callback)

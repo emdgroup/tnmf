@@ -88,12 +88,22 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
         st.sidebar.caption(help_sparsity_H)
 
     help_inhibition_strength = \
-        '''The strength of the **lateral activation sparsity regularization** imposed on the optimization problem. The
-        parameter controls how strong the activation of an atom at a particular shift location suppresses the activation of
-        the same atom at neighboring locations.'''
-    inhibition_strength = st.sidebar.number_input('Lateral activation inhibition', min_value=0.0, value=0.1, step=0.01,
+        '''The strength of the **same-atom lateral activation sparsity regularization** imposed on the optimization problem.
+        The parameter controls how strong the activation of an atom at a particular shift location suppresses the activation
+        of *the same atom* at neighboring locations.'''
+    inhibition_strength = st.sidebar.number_input('Lateral activation inhibition (same atom)',
+                                                  min_value=0.0, value=0.1, step=0.01,
                                                   help=help_inhibition_strength)
     explanation(help_inhibition_strength, verbose)
+
+    help_cross_atom_inhibition_strength = \
+        '''The strength of the **cross-atom lateral activation sparsity regularization** imposed on the optimization problem.
+        The parameter controls how strong the activation of an atom at a particular shift location suppresses the activation
+        of *all other atoms* at the same and neighboring locations.'''
+    cross_atom_inhibition_strength = st.sidebar.number_input('Lateral activation inhibition (cross-atom)',
+                                                             min_value=0.0, value=0.1, step=0.01,
+                                                             help=help_cross_atom_inhibition_strength)
+    explanation(help_cross_atom_inhibition_strength, verbose)
 
     help_n_iterations = '''The **number of multiplicative updates** to the atom dictionary and activation tensors.'''
     n_iterations = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_n_iterations)
@@ -126,17 +136,21 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
                                                help=help_reconstruction_mode)
     explanation(help_reconstruction_mode, verbose)
 
-    selected_params = dict(
+    nmf_params = dict(
         n_iterations=n_iterations,
         n_atoms=n_atoms,
         atom_shape=atom_shape,
-        sparsity_H=sparsity_H,
-        inhibition_strength=inhibition_strength,
         backend=backend,
         reconstruction_mode=reconstruction_mode,
     )
 
-    return selected_params
+    fit_params = dict(
+        sparsity_H=sparsity_H,
+        inhibition_strength=inhibition_strength,
+        cross_atom_inhibition_strength=cross_atom_inhibition_strength,
+    )
+
+    return nmf_params, fit_params
 
 
 class SignalTool(ABC):
