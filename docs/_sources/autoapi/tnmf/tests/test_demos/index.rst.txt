@@ -1,0 +1,66 @@
+:mod:`tnmf.tests.test_demos`
+============================
+
+.. py:module:: tnmf.tests.test_demos
+
+.. autoapi-nested-parse::
+
+   Test if all demos can be run without error, i.e. `python demo_selector.py <demo_name>` yields a zero return code.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_demos.test_demo
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_demos.DEMOS
+   tnmf.tests.test_demos.DEMO_FRAME
+
+
+.. data:: DEMOS
+   
+
+   
+
+.. data:: DEMO_FRAME
+   :annotation: = Multiline-String
+
+    .. raw:: html
+
+        <details><summary>Show Value</summary>
+
+    .. code-block:: text
+        :linenos:
+
+        
+        # Work around a ModuleNotFoundError when running the demo inside coverage.py
+        import sys
+        sys.path[0] = '{}'
+        # Finally run the selected demo
+        from demos.demo_selector import main
+        main('{}')
+
+
+    .. raw:: html
+
+        </details>
+
+   
+
+.. function:: test_demo(demo_name: str)
+
+
