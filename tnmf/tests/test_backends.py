@@ -54,7 +54,7 @@ def fit_nmf(backend, reconstruction_mode):
 @pytest.fixture(name='expected_factorization')
 def fixture_expected_factorization(reconstruction_mode):
     nmf = fit_nmf('pytorch', reconstruction_mode)
-    return nmf.W, nmf.H
+    return nmf.W, nmf.H, nmf.R, nmf.R_partial(0)
 
 
 @pytest.mark.parametrize('reconstruction_mode', reconstruction_modes)
@@ -62,7 +62,7 @@ def fixture_expected_factorization(reconstruction_mode):
 def test_expected_energy(backend: str, reconstruction_mode: str, expected_factorization: Tuple[np.ndarray, np.ndarray]):
 
     # extract the target tensors and the reconstruction mode dependent expected energy level
-    W, H = expected_factorization
+    W, H, R, R0 = expected_factorization
     expected_energy = expected_energies[reconstruction_mode]
 
     # fit the NMF model
@@ -79,6 +79,8 @@ def test_expected_energy(backend: str, reconstruction_mode: str, expected_factor
     # check if the expected factorization is obtained
     assert np.allclose(nmf.W, W)
     assert np.allclose(nmf.H, H)
+    assert np.allclose(nmf.R, R)
+    assert np.allclose(nmf.R_partial(0), R0)
 
     # check if the atoms have unit norm
     norm_W = np.sum(nmf.W, axis=(-1, -2))

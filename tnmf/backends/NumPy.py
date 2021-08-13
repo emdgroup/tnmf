@@ -60,7 +60,7 @@ class NumPy_Backend(NumPyBackend):
             'H_strided_V_shape': H.shape[:2] + atom_shape + V.shape[2:],
             'H_strided_V_labels': ['n', 'm'] + [s + str(i) for s, i in product(['a', 'd'], shift_dim_idx)],
             # dimension info for striding in reconstruction computation
-            'H_strided_W_shape': H.shape[:2] + V.shape[2:] + atom_shape,
+            'H_strided_W_shape_suffix': V.shape[2:] + atom_shape,  # will have to be prefixed with H.shape[:2]
             'H_strided_W_labels': ['n', 'm'] + [s + str(i) for s, i in product(['d', 'a'], shift_dim_idx)],
         })
 
@@ -101,8 +101,11 @@ class NumPy_Backend(NumPyBackend):
         return neg, pos
 
     def reconstruct(self, W: np.ndarray, H: np.ndarray) -> np.ndarray:
-        H_strided_W_strides = H.strides + H.strides[2:]  # do NOT put these strides into self._cache as H layout can change
-        H_strided = as_strided(H, self._cache['H_strided_W_shape'], H_strided_W_strides, writeable=False)
+        # do NOT put these strides into self._cache as H layout can change
+        H_strided_W_strides = H.strides + H.strides[2:]
+        # do NOT put into self._cache, this will break partial_reconstruct
+        H_strided_W_shape = H.shape[:2] + self._cache['H_strided_W_shape_suffix']
+        H_strided = as_strided(H, H_strided_W_shape, H_strided_W_strides, writeable=False)
         R = contract(
             H_strided, self._cache['H_strided_W_labels'],
             np.flip(W, self._shift_axes), self._cache['W_labels'],
