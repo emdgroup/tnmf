@@ -1,7 +1,5 @@
 """
-Test if all demos can be run without error, i.e.
-   `python demo_selector.py demo_name` does not
-yield a nonzero return code
+Test if all demos can be run without error, i.e. `python demo_selector.py <demo_name>` yields a zero return code.
 """
 
 import sys
