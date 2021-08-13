@@ -50,7 +50,7 @@ Classes
    .. method:: __itruediv__(self, other)
 
 
-   .. method:: sum(self, axis: int, keepdims: bool = False) -> numpy.ndarray
+   .. method:: sum(self, *args, **kwargs)
 
 
    .. method:: has_c(self) -> bool
@@ -99,10 +99,6 @@ Classes
    in order to reduce the number of Fourier transformations involved to a minimum.
 
    .. method:: to_ndarray(arr: CachingFFT) -> numpy.ndarray
-      :staticmethod:
-
-
-   .. method:: normalize(arr: CachingFFT, axis: Optional[Union[int, Tuple[int, Ellipsis]]] = None)
       :staticmethod:
 
 

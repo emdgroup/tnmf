@@ -47,6 +47,8 @@ Attributes
         :linenos:
 
         
+        import matplotlib
+        matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         plt.ion()
         from examples import {}
