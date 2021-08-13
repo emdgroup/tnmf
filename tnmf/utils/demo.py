@@ -58,8 +58,7 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
     n_atoms_default = default_params['n_atoms']
     n_atoms = st.sidebar.number_input('# Atoms', value=n_atoms_default, min_value=1,
                                       help=help_n_atoms) if not use_n_atoms else n_atoms_default
-    if verbose and not use_n_atoms:
-        st.sidebar.caption(help_n_atoms)
+    explanation(help_n_atoms, verbose and not use_n_atoms)
 
     help_atom_shape = 'The **size of each atom** dimension.'
     if have_ground_truth:
@@ -78,14 +77,12 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
                         value=default_atom_shape[0], min_value=1,
                         help=help_atom_shape)] * len(default_params['atom_shape'])
                        ) if not use_atom_shape else default_atom_shape
-    if not use_atom_shape:
-        explanation(help_atom_shape, verbose)
+    explanation(help_atom_shape, verbose and not use_atom_shape)
 
     help_sparsity_H = 'The strength of the **L1 activation sparsity regularization** imposed on the optimization problem.'
     sparsity_H = st.sidebar.number_input('Activation sparsity', min_value=0.0, value=0.0, step=0.01,
                                          help=help_sparsity_H)
-    if verbose:
-        st.sidebar.caption(help_sparsity_H)
+    explanation(help_sparsity_H, verbose)
 
     help_inhibition_strength = \
         '''The strength of the **same-atom lateral activation sparsity regularization** imposed on the optimization problem.
@@ -107,8 +104,7 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
 
     help_n_iterations = '''The **number of multiplicative updates** to the atom dictionary and activation tensors.'''
     n_iterations = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_n_iterations)
-    if verbose:
-        st.sidebar.caption(help_n_iterations)
+    explanation(help_n_iterations, verbose)
 
     help_backend = \
         '''The **optimization backend** for computing the multiplicative gradients.

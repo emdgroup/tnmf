@@ -24,7 +24,7 @@ def st_define_sample_params(verbose: bool = True) -> Tuple[dict, float]:
     help_scale = \
         '''Downscaling the image allows for quicker interactive experimentation. Note that this does
         not change atom size.'''
-    scale = st.sidebar.number_input('Image Scale', min_value=0.05, value=0.25, step=0.05, help=help_scale)
+    scale = st.sidebar.number_input('Image scale', min_value=0.05, value=0.25, step=0.05, help=help_scale)
     if verbose:
         st.sidebar.caption(help_scale)
 
