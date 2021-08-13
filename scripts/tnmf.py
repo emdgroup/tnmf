@@ -51,8 +51,10 @@ def main():
         example = [e for e in examples if e.stem == args_example.example_name][0]
         os.system(f'python {example}')  # noqa: S605, DUO106
 
-    # run the demo
+    # parse the (optional) demo name and run the demo
     elif args.command == 'demo':
         args_demo = parser.parse_args()
-        demo_name = args_demo.demo_name if args_demo.demo_name is not None else ''
-        os.system(f'streamlit run {DEMO_FILE} "{demo_name}"')  # noqa: S605, DUO106
+        if args_demo.demo_name is not None:
+            os.system(f'streamlit run {DEMO_FILE} "{args_demo.demo_name}"')  # noqa: S605, DUO106
+        else:
+            os.system(f'streamlit run {DEMO_FILE}')  # noqa: S605
