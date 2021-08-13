@@ -7,12 +7,9 @@ Authors: Adrian Šošić, Mathias Winkel
 # TODO: backend-specific return types
 # TODO: no atom_shape for non-ShiftInvariantNMF
 # TODO: handling of transform input/output shapes
-# TODO: naming convention: energy (instead of cost/error)
 # TODO: add options for tensor renormalization
 # TODO: cache reconstruction result
 # TODO: flexible input types for V
-# TODO: we extract .shape[...] too often
-# TODO: add support for inhibition
 
 import logging
 from typing import Tuple, Callable, Union
