@@ -1,6 +1,5 @@
 """
-Test if all examples can be run without error, i.e.
-   `python example.py` does not yield a nonzero return code
+Test if all examples can be run without error, i.e. `python <example>.py` yields a zero return code.
 """
 
 import sys
