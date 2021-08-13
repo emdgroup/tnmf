@@ -124,7 +124,7 @@ Classes
    .. method:: R_partial(self, i_atom: int) -> numpy.ndarray
 
 
-   .. method:: fit(self, V: numpy.ndarray, update_H: bool = True, update_W: bool = True, sparsity_H: float = 0.0, inhibition_strength: float = 0.0, progress_callback: Callable[[TransformInvariantNMF, int], bool] = None)
+   .. method:: fit(self, V: numpy.ndarray, update_H: bool = True, update_W: bool = True, sparsity_H: float = 0.0, inhibition_strength: float = 0.0, cross_atom_inhibition_strength: float = 0.0, progress_callback: Callable[[TransformInvariantNMF, int], bool] = None)
 
       Perform non-negative matrix factorization of samples :attr:`V`, i.e. optimization of dictionary :attr:`W` and
       activations :attr:`H`.
@@ -139,7 +139,9 @@ Classes
       :type update_W: bool, default = True
       :param sparsity_H: Sparsity enforcing regularization for the :attr:`H` update.
       :type sparsity_H: float, default = 0.
-      :param inhibition_strength: Lateral inhibition regularization factor for the :attr:`H` update.
+      :param inhibition_strength: Lateral inhibition regularization factor for the :attr:`H` update within the same atom.
+      :type inhibition_strength: float, default = 0.
+      :param inhibition_strength: Lateral inhibition regularization factor for the :attr:`H` update across different atoms.
       :type inhibition_strength: float, default = 0.
       :param progress_callback: If provided, this function will be called after every iteration, i.e. after every update to :attr:`H` and
                                 :attr:`W`. The first parameter to the function is the calling :class:`TransformInvariantNMF` instance, which can be
@@ -150,7 +152,7 @@ Classes
       :type progress_callback: Callable[['TransformInvariantNMF', int], bool], default = None
 
 
-   .. method:: partial_fit(self, V: numpy.ndarray, update_H: bool = True, update_W: bool = True, sparsity_H: float = 0.0, inhibition_strength: float = 0.0, progress_callback: Callable[[TransformInvariantNMF, int], bool] = None)
+   .. method:: partial_fit(self, V: numpy.ndarray, update_H: bool = True, update_W: bool = True, sparsity_H: float = 0.0, inhibition_strength: float = 0.0, cross_atom_inhibition_strength: float = 0.0, progress_callback: Callable[[TransformInvariantNMF, int], bool] = None)
 
 
 

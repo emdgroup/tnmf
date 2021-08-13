@@ -21,6 +21,7 @@ Functions
 
    tnmf.tests.test_sparsity_inhibition.test_sparsity
    tnmf.tests.test_sparsity_inhibition.test_inhibition
+   tnmf.tests.test_sparsity_inhibition.test_cross_atom_inhibition
 
 
 
@@ -32,6 +33,7 @@ Attributes
    tnmf.tests.test_sparsity_inhibition.backends
    tnmf.tests.test_sparsity_inhibition.test_params_sparsity
    tnmf.tests.test_sparsity_inhibition.test_params_inhibition
+   tnmf.tests.test_sparsity_inhibition.test_params_cross_atom_inhibition
    tnmf.tests.test_sparsity_inhibition.img
    tnmf.tests.test_sparsity_inhibition.V
 
@@ -51,6 +53,11 @@ Attributes
 
    
 
+.. data:: test_params_cross_atom_inhibition
+   
+
+   
+
 .. data:: img
    
 
@@ -65,5 +72,8 @@ Attributes
 
 
 .. function:: test_inhibition(backend: str, params: Dict)
+
+
+.. function:: test_cross_atom_inhibition(backend: str, params: Dict)
 
 

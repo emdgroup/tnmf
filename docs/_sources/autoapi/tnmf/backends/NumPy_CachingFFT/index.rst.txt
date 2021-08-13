@@ -38,10 +38,19 @@ Classes
    .. method:: __isub__(self, other)
 
 
+   .. method:: __neg__(self) -> numpy.ndarray
+
+
+   .. method:: __sub__(self, other) -> numpy.ndarray
+
+
    .. method:: __iadd__(self, other)
 
 
    .. method:: __itruediv__(self, other)
+
+
+   .. method:: sum(self, axis: int, keepdims: bool = False) -> numpy.ndarray
 
 
    .. method:: has_c(self) -> bool
