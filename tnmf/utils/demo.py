@@ -238,7 +238,7 @@ class SignalTool(ABC):
             ''')
 
         # show the input, its reconstruction, and the reconstruction error as images next to each other
-        cols = st.beta_columns(3)
+        cols = st.columns(3)
         for col, X, title in zip(cols, [V, R, V-R], ['Input', 'Reconstruction', 'Error']):
             with col:
                 fig = plt.figure()
@@ -298,7 +298,7 @@ class SignalTool(ABC):
         i_signal = st.slider('Signal number', 1, V.shape[0], key='i_signal_partial') - 1 if V.shape[0] > 1 else 0
         for i_atom in range(nmf.n_atoms):
             R_atom = nmf.R_partial(i_atom)
-            cols = st.beta_columns(2)
+            cols = st.columns(2)
             for col, signals, signal_opts, opts in zip(
                     cols,
                     [[nmf.W[i_atom]], [R_atom[i_signal], V[i_signal]]],
@@ -497,7 +497,7 @@ class SignalTool2D(SignalTool):
 
     @classmethod
     def _st_compare_individual_signals(cls, V_i: np.ndarray, R_i: np.ndarray):
-        cols = st.beta_columns(2)
+        cols = st.columns(2)
         for col, X, title in zip(cols, [V_i, R_i], ['Input', 'Reconstruction']):
             with col:
                 cls.plot_signals([X], opts={'title': title})
