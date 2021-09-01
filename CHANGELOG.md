@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Fix internal TODOs to improve code quality
 - Fix partial reconstruction in plain numpy backend
+- Fix deprecation warning about st.beta_columns
 
 ## [0.1.1] - 2021-07-22
 ### Added

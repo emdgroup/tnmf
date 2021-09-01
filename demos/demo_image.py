@@ -66,7 +66,7 @@ def st_visualize_results(V: np.ndarray,
     if verbose:
         st.caption('''The visualization below shows a **comparison between the input signal and its
         reconstruction** obtained through the learned factorization model.''')
-    cols = st.beta_columns(2)
+    cols = st.columns(2)
     for col, X, Xc, title in zip(cols, [V, R], [Vc, Rc], ['Input', 'Reconstruction']):
         with col:
             for x, xc in zip(X, cycle(Xc)):
@@ -100,7 +100,7 @@ def st_visualize_results(V: np.ndarray,
         plt.close(fig)
 
     for i_atom in range(n_atoms):
-        col1, col2, col3 = st.beta_columns((1, 3, 3))
+        col1, col2, col3 = st.columns((1, 3, 3))
         with col1:
             plot(np.moveaxis(nmf.W[i_atom], 0, -1), f'Atom {i_atom}')
         with col2:
