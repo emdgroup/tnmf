@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo: Racoon image
 - Include examples in pytest bench
 - Include demos in pytest bench
+- Citation information via CITATION.cff
   
 ### Changed
 - Fix internal TODOs to improve code quality

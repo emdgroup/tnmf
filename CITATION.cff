@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+authors: 
+  -
+    affiliation: "Merck KGaA, Darmstadt, Germany"
+    family-names: Šošić
+    given-names: Adrian
+    orcid: https://orcid.org/0000-0003-2845-6635
+  -
+    affiliation: "Merck KGaA, Darmstadt, Germany"
+    family-names: Winkel
+    given-names: Mathias
+    orcid: https://orcid.org/0000-0002-0345-9701
+license: "Apache-2.0"
+message: "If you use this software, please cite it using these metadata."
+url: "https://emdgroup.github.io/tnmf/"
+repository-code: "https://github.com/emdgroup/tnmf"
+title: "Transform-Invariant Non-Negative Matrix Factorization"
+date-released: 2021-07-12
+
