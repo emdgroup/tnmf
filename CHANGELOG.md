@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include examples in pytest bench
 - Include demos in pytest bench
 - Citation information via CITATION.cff
+- Support for minibatch updates following (Serizel et al., 2016)
   
 ### Changed
 - Fix internal TODOs to improve code quality
