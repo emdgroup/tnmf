@@ -133,7 +133,6 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
     explanation(help_reconstruction_mode, verbose)
 
     nmf_params = dict(
-        n_iterations=n_iterations,
         n_atoms=n_atoms,
         atom_shape=atom_shape,
         backend=backend,
@@ -141,6 +140,7 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
     )
 
     fit_params = dict(
+        n_iterations=n_iterations,
         sparsity_H=sparsity_H,
         inhibition_strength=inhibition_strength,
         cross_atom_inhibition_strength=cross_atom_inhibition_strength,

@@ -22,7 +22,6 @@ n_atoms = 16
 nmf = TransformInvariantNMF(
     n_atoms=n_atoms,
     atom_shape=(6, 10),
-    n_iterations=500,
     reconstruction_mode='circular',
     backend='pytorch',
     verbose=3,
@@ -46,7 +45,7 @@ def progress_callback(nmf_instance: TransformInvariantNMF, iteration: int) -> bo
 
 # Run the fitting, i.e. compute dictionary W and activations H so that img = H*W.
 # Note that setting a progress callback suppresses regular convergence output.
-nmf.fit(img, inhibition_strength=0.0, progress_callback=progress_callback)
+nmf.fit(img, n_iterations=500, inhibition_strength=0.0, progress_callback=progress_callback)
 
 # Collect results from the TransformInvariantNMF instance.
 img_r = nmf.R

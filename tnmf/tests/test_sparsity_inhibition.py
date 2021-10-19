@@ -64,12 +64,11 @@ def _do_test(backend, params):
     nmf = TransformInvariantNMF(
         n_atoms=10,
         atom_shape=(7, 7),
-        n_iterations=25,
         backend=backend,
         verbose=3,
         **params['nmf']
     )
-    nmf.fit(V, **params['fit'])
+    nmf.fit(V, n_iterations=25, **params['fit'])
 
     H = nmf.H
 

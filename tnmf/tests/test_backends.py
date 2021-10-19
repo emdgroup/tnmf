@@ -41,12 +41,11 @@ def fit_nmf(backend, reconstruction_mode):
     nmf = TransformInvariantNMF(
         n_atoms=10,
         atom_shape=(7, 7),
-        n_iterations=10,
         backend=backend,
         verbose=3,
         reconstruction_mode=reconstruction_mode,
     )
-    nmf.fit(V, sparsity_H=0.1)
+    nmf.fit(V, sparsity_H=0.1, n_iterations=10)
 
     return nmf
 

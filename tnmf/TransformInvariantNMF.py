@@ -49,8 +49,6 @@ class TransformInvariantNMF:
         Lateral inhibition range. If set to None, the value is set to ``*atom_shape``, which ensures
         that activations are pairwise sufficiently far apart, that the corresponding atoms do not overlap
         in the reconstruction.
-    n_iterations : int, default = 1000
-        Maximum number of iterations (:attr:`W` and :attr:`H` updates) to be performed.
     backend : {'numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch'}, default = 'numpy_fft'
         Defines the optimization backend.
 
@@ -109,7 +107,6 @@ class TransformInvariantNMF:
             n_atoms: int,
             atom_shape: Tuple[int, ...],
             inhibition_range: Union[int, Tuple[int, ...]] = None,
-            n_iterations: int = 1000,
             backend: str = 'numpy_fft',
             logger: logging.Logger = None,
             verbose: int = 0,
@@ -128,7 +125,6 @@ class TransformInvariantNMF:
         assert len(self._inhibition_range) == len(atom_shape)
         self._inhibition_kernels_1D = tuple((1 - ((np.arange(-i, i + 1) / (i+1)) ** 2) for i in self._inhibition_range))
         self.n_atoms = n_atoms
-        self.n_iterations = n_iterations
         self._axes_W_normalization = tuple(range(-len(atom_shape), 0))
         self.eps = 1.e-9
 
@@ -146,7 +142,6 @@ class TransformInvariantNMF:
         self._logger.setLevel([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbose])
         self._logger.debug(f'Using {backend} backend.')
 
-        self.n_iterations_done = 0
         self._W = None
         self._H = None
 
@@ -214,48 +209,13 @@ class TransformInvariantNMF:
 
         self._multiplicative_update(self._H, neg, pos, sparsity)
 
-    def _do_fit(
-            self,
-            V: np.ndarray,
-            update_H: bool,
-            update_W: bool,
-            sparsity_H: float,
-            inhibition_strength: float,
-            cross_atom_inhibition_strength: float,
-            keep_W: bool,
-            progress_callback: Callable[['TransformInvariantNMF', int], bool],
-    ):
-        assert update_H or update_W
-        assert sparsity_H >= 0
-        assert inhibition_strength >= 0
-        assert cross_atom_inhibition_strength >= 0
-
-        self._W, self._H = self._backend.initialize(
-            V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
-
-        if not keep_W:
-            self._backend.normalize(self._W, self._axes_W_normalization)
-
-        for self.n_iterations_done in range(self.n_iterations):
-            if update_H:
-                self._update_H(V, sparsity_H, inhibition_strength, cross_atom_inhibition_strength)
-
-            if update_W:
-                self._update_W(V)
-
-            if progress_callback is not None:
-                if not progress_callback(self, self.n_iterations_done):
-                    break
-            else:
-                self._logger.info(f"Iteration: {self.n_iterations_done}\tEnergy function: {self._energy_function(V)}")
-
-        self._logger.info("NMF finished.")
-
     def fit(
             self,
             V: np.ndarray,
+            n_iterations: int = 1000,
             update_H: bool = True,
             update_W: bool = True,
+            keep_W: bool = False,
             sparsity_H: float = 0.,
             inhibition_strength: float = 0.,
             cross_atom_inhibition_strength: float = 0.,
@@ -271,10 +231,14 @@ class TransformInvariantNMF:
             Samples to be reconstructed. The shape of the sample tensor is ``(n_samples, n_channels, *sample_shape)``,
             where `sample_shape` is the shape of the individual samples and each sample consists of `n_channels`
             individual channels.
+        n_iterations : int, default = 1000
+            Maximum number of iterations (:attr:`W` and :attr:`H` updates) to be performed.
         update_H : bool, default = True
             If False, the activation tensor :attr:`H` will not be updated.
         update_W : bool, default = True
             If False, the dictionary tensor :attr:`W' will not be updated.
+        keep_W : bool, default = False
+            If False, the dictionary tensor :attr:`W' will not be (re)initialized before starting iteration.
         sparsity_H : float, default = 0.
             Sparsity enforcing regularization for the :attr:`H` update.
         inhibition_strength : float, default = 0.
@@ -289,20 +253,29 @@ class TransformInvariantNMF:
             If the `progress_callback` function returns False, iteration will be aborted, which allows to implement
             specialized convergence criteria.
         """
-        self._do_fit(V, update_H, update_W,
-                     sparsity_H, inhibition_strength, cross_atom_inhibition_strength,
-                     False, progress_callback)
+        assert update_H or update_W
+        assert sparsity_H >= 0
+        assert inhibition_strength >= 0
+        assert cross_atom_inhibition_strength >= 0
+        keep_W = False
 
-    def partial_fit(
-            self,
-            V: np.ndarray,
-            update_H: bool = True,
-            update_W: bool = True,
-            sparsity_H: float = 0.,
-            inhibition_strength: float = 0.,
-            cross_atom_inhibition_strength: float = 0.,
-            progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
-    ):
-        self._do_fit(V, update_H, update_W,
-                     sparsity_H, inhibition_strength, cross_atom_inhibition_strength,
-                     self.n_iterations_done > 0, progress_callback)
+        self._W, self._H = self._backend.initialize(
+            V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
+
+        if not keep_W:
+            self._backend.normalize(self._W, self._axes_W_normalization)
+
+        for iteration in range(n_iterations):
+            if update_H:
+                self._update_H(V, sparsity_H, inhibition_strength, cross_atom_inhibition_strength)
+
+            if update_W:
+                self._update_W(V)
+
+            if progress_callback is not None:
+                if not progress_callback(self, iteration):
+                    break
+            else:
+                self._logger.info(f"Iteration: {iteration}\tEnergy function: {self._energy_function(V)}")
+
+        self._logger.info("NMF finished.")

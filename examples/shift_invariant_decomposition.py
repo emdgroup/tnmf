@@ -30,7 +30,6 @@ n_atoms = 16
 nmf = TransformInvariantNMF(
     n_atoms=n_atoms,
     atom_shape=(6, 10),
-    n_iterations=500,
     reconstruction_mode='circular',
     backend='pytorch',
     verbose=3,
@@ -41,7 +40,7 @@ nmf = TransformInvariantNMF(
 img = img[np.newaxis, np.newaxis, ...]
 
 # Run the fitting, i.e. compute dictionary W and activations H so that img = H*W.
-nmf.fit(img, inhibition_strength=0.05)
+nmf.fit(img, n_iterations=500, inhibition_strength=0.05)
 
 # Collect results from the TransformInvariantNMF instance.
 img_r = nmf.R
