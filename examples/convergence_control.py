@@ -36,7 +36,7 @@ reconstruction_energy = list()
 
 
 def progress_callback(nmf_instance: TransformInvariantNMF, iteration: int) -> bool:
-    energy = nmf_instance._energy_function(img)  # TODO: having this function protected is impractical
+    energy = nmf_instance._energy_function()  # TODO: having this function protected is impractical
     reconstruction_energy.append([iteration, energy])
 
     # Continue iteration as long as energy is above a certain threshold.

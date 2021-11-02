@@ -72,7 +72,7 @@ def _do_test(backend, params):
 
     H = nmf.H
 
-    energy = nmf._energy_function(V)  # pylint: disable=protected-access
+    energy = nmf._energy_function()  # pylint: disable=protected-access
     norm_H_1 = np.sum(np.abs(H))
     norm_H_0 = np.sum(H/H.max() > 1e-7)
 

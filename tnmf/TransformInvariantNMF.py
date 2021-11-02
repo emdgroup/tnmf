@@ -202,8 +202,8 @@ class TransformInvariantNMF:
     def _reconstruct(self) -> np.ndarray:
         return self._backend.reconstruct(self._W, self._H)
 
-    def _energy_function(self, V: np.ndarray) -> float:
-        return self._backend.reconstruction_energy(V, self._W, self._H)
+    def _energy_function(self) -> float:
+        return self._backend.reconstruction_energy(self._V, self._W, self._H)
 
     def _multiplicative_update(self, arr: np.ndarray, neg, pos, sparsity: float = 0.):
         assert sparsity >= 0
