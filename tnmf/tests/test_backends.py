@@ -18,12 +18,12 @@ expected_energies = {
     'valid': 268.14423,
     'full': 345.82498,
     'circular': 265.35091,
-    'reflect': 272.13762,  # TODO: needs to be verified against another backend
+    # 'reflect': 272.13762,  # TODO: needs to be verified against another backend
 }
 
 # define all test settings
 backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft']
-reconstruction_modes = ['valid', 'full', 'circular', ]  # 'reflect']
+reconstruction_modes = list(expected_energies.keys())
 
 # temporarily ignore failed tests due to unimplemented features
 raise_not_implemented_errors = False
