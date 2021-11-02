@@ -169,6 +169,7 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
         fft_shape = np.array(self._sample_shape) + np.array(self._transform_shape) - 1
         if self._pad_mode is not None:
             fft_shape += np.asarray(self._padding_right).sum(axis=1)
+        # TODO: lines with fft_shape above do not seem to have an effect
         fft_shape = tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1)
 
         self._V = CachingFFT('V', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
