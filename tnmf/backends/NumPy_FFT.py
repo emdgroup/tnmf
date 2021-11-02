@@ -8,6 +8,7 @@ from typing import Tuple, Dict
 import numpy as np
 from scipy.fft import next_fast_len, rfftn, irfftn
 
+from ._Backend import sliceNone
 from ._NumPyFFTBackend import NumPyFFTBackend
 
 
@@ -67,7 +68,7 @@ def fftconvolve_sum(
         padded_shape = s1
 
     # now need to zero-pad to identical size / optimal fft size
-    fft_shape = tuple(next_fast_len(padded_shape[a] + s2[a] - 1, True) for a in axes)
+    fft_shape = tuple(next_fast_len(padded_shape[a] + s2[a] - 1) for a in axes)
 
     # compute how to undo the padding
     fslice = (slice(None), ) * (ndim - len(axes)) + slices
@@ -117,14 +118,21 @@ class NumPy_FFT_Backend(NumPyFFTBackend):
     sum over all atoms in the reconstruction), and transformed back to coordinate space.
     """
 
-    def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        R = self.reconstruct(W, H)
-        assert R.shape == V.shape
+    def reconstruction_gradient_W(
+        self,
+        V: np.ndarray,
+        W: np.ndarray,
+        H: np.ndarray,
+        s: slice = sliceNone
+    ) -> Tuple[np.ndarray, np.ndarray]:
+
+        R = self.reconstruct(W, H[s])
+        assert R.shape == V[s].shape
 
         #          sum_n    H[n , m, _, ...] * V|R[n, _, c, ... ]   --> dR / dW[m, c, ...]
         neg, pos = fftconvolve_sum(
-            (V[:, np.newaxis, :, ...], R[:, np.newaxis, :, ...]),
-            H[:, :, np.newaxis, ...],
+            (V[s, np.newaxis, :, ...], R[:, np.newaxis, :, ...]),
+            H[s, :, np.newaxis, ...],
             sum_axis=0,
             **self.fft_params['grad_W'])
 
@@ -133,19 +141,26 @@ class NumPy_FFT_Backend(NumPyFFTBackend):
 
         return neg, pos
 
-    def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        R = self.reconstruct(W, H)
-        assert R.shape == V.shape
+    def reconstruction_gradient_H(
+        self,
+        V: np.ndarray,
+        W: np.ndarray,
+        H: np.ndarray,
+        s: slice = sliceNone
+    ) -> Tuple[np.ndarray, np.ndarray]:
+
+        R = self.reconstruct(W, H[s])
+        assert R.shape == V[s].shape
 
         #        sum_c        V|R[n, _, c, ... ] * W[_ , m, c, ...]   --> dR / dH[n, m, ...]
         neg, pos = fftconvolve_sum(
-            (V[:, np.newaxis, :, ...], R[:, np.newaxis, :, ...]),
+            (V[s, np.newaxis, :, ...], R[:, np.newaxis, :, ...]),
             W[np.newaxis, :, :, ...],
             sum_axis=2,
             **self.fft_params['grad_H'])
 
-        assert neg.shape == H.shape
-        assert pos.shape == H.shape
+        assert neg.shape == H[s].shape
+        assert pos.shape == H[s].shape
 
         return neg, pos
 
