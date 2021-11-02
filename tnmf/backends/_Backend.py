@@ -7,6 +7,8 @@ from typing import Tuple, Optional, Union
 
 import numpy as np
 
+sliceNone = slice(None)
+
 
 class Backend(ABC):
     r"""
@@ -93,11 +95,23 @@ class Backend(ABC):
         return W, H
 
     @abstractmethod
-    def reconstruction_gradient_W(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def reconstruction_gradient_W(
+        self,
+        V: np.ndarray,
+        W: np.ndarray,
+        H: np.ndarray,
+        s: slice = sliceNone
+    ) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
     @abstractmethod
-    def reconstruction_gradient_H(self, V: np.ndarray, W: np.ndarray, H: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def reconstruction_gradient_H(
+        self,
+        V: np.ndarray,
+        W: np.ndarray,
+        H: np.ndarray,
+        s: slice = sliceNone
+    ) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
     @abstractmethod
