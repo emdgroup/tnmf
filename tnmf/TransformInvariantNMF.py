@@ -12,7 +12,8 @@ Authors: Adrian Šošić, Mathias Winkel
 # TODO: flexible input types for V
 
 import logging
-from typing import Tuple, Callable, Union
+from typing import Iterable, Tuple, Callable, Union
+from enum import Enum
 
 import numpy as np
 
@@ -21,6 +22,34 @@ from .backends.NumPy_FFT import NumPy_FFT_Backend
 from .backends.PyTorch import PyTorch_Backend
 from .backends.PyTorch_FFT import PyTorch_FFT_Backend
 from .backends.NumPy_CachingFFT import NumPy_CachingFFT_Backend
+
+
+def _compute_sequential_minibatches(length: int, batch_size: int) -> Iterable[slice]:
+    if batch_size is None:
+        yield slice(None)
+    else:
+        start = 0
+        while start < length:
+            end = min(length, start + batch_size)
+            yield slice(start, end)
+            start = end
+
+
+def _random_shuffle(arr):
+    np.random.shuffle(np.asarray(arr))
+    return arr
+
+
+class MiniBatchAlgorithm(Enum):
+    r"""
+    MiniBatch algorithms that can be used with #TransformInvatiantNMF.fit_minibatch().
+    """
+    Basic_MU = 3   # Algorithm 3 Basic alternating scheme for MU rules
+    Cyclic_MU = 4  # Algorithm 4 Cyclic mini-batch for MU rules
+    ASG_MU = 5     # Algorithm 5 Asymmetric SG mini-batch MU rules (ASG-MU)
+    GSG_MU = 6     # Algorithm 6 Greedy SG mini-batch MU rules (GSG-MU)
+    ASAG_MU = 7    # Algorithm 7 Asymmetric SAG mini-batch MU rules (ASAG-MU)
+    GSAG_MU = 8    # Algorithm 8 Greedy SAG mini-batch MU rules (GSAG-MU)
 
 
 class TransformInvariantNMF:
@@ -37,6 +66,7 @@ class TransformInvariantNMF:
         as an optional transform type even when additional transforms become supported in future releases.
 
     Optimization is performed via multiplicative updates to :attr:`W` and :attr:`H`, see [1]_.
+    Minibatch updates are possible via a selection of algorithms from [2]_.
     Different backend implementations (NumPy, PyTorch, with/without FFT, etc.) can be selected by the user.
 
     Parameters
@@ -97,9 +127,13 @@ class TransformInvariantNMF:
     ----------
     # TODO: add bibtex file
 
-    .. [1] Lee, D.D., Seung, H.S., 2000. Algorithms for Non-negative Matrix Factorization,
+    .. [1] D.D. Lee, H.S. Seung, 2000. Algorithms for Non-negative Matrix Factorization,
         in: Proceedings of the 13th International Conference on Neural Information
         Processing Systems. pp. 535–541. https://doi.org/10.5555/3008751.3008829
+    .. [2] R. Serizel, S. Essid, G. Richard, 2016. Mini-batch stochastic approaches for
+        accelerated multiplicative updates in nonnegative matrix factorisation with
+        beta-divergence, in: 26th International Workshop on Machine Learning for Signal
+        Processing (MLSP). pp 1-6. http://ieeexplore.ieee.org/document/7738818/
     """
 
     def __init__(
@@ -144,6 +178,7 @@ class TransformInvariantNMF:
 
         self._W = None
         self._H = None
+        self._V = None  # V is not necessarily identical with the V outside as the stochastic minibatch methods shuffle V
 
     @property
     def W(self) -> np.ndarray:
@@ -152,6 +187,10 @@ class TransformInvariantNMF:
     @property
     def H(self) -> np.ndarray:
         return self._backend.to_ndarray(self._H)
+
+    @property
+    def V(self) -> np.ndarray:
+        return self._V
 
     @property
     def R(self) -> np.ndarray:
@@ -179,22 +218,26 @@ class TransformInvariantNMF:
         arr *= neg
         arr /= pos
 
-    def _update_W(self, V: np.ndarray):
-        neg, pos = self._backend.reconstruction_gradient_W(V, self._W, self._H)
+    def _update_W(self, s: slice):
+        neg, pos = self._backend.reconstruction_gradient_W(self._V, self._W, self._H, s)
+        assert neg.shape == self._W.shape
+        assert pos.shape == self._W.shape
         self._multiplicative_update(self._W, neg, pos)
         self._backend.normalize(self._W, axis=self._axes_W_normalization)
 
-    def _update_H(self, V: np.ndarray, sparsity: float = 0., inhibition: float = 0., cross_inhibition: float = 0):
+    def _update_H(self, s: slice, sparsity: float = 0., inhibition: float = 0., cross_inhibition: float = 0):
         # TODO: sparsity and inhibition computation should be handled by the backends
-        neg, pos = self._backend.reconstruction_gradient_H(V, self._W, self._H)
+        neg, pos = self._backend.reconstruction_gradient_H(self._V, self._W, self._H, s)
+        assert neg.shape == self._H[s].shape
+        assert pos.shape == self._H[s].shape
 
         # add the inhibition gradient component
         if inhibition > 0 or cross_inhibition > 0:
             convolve_axes = range(-len(self.atom_shape), 0)
-            inhibition_gradient = self._backend.convolve_multi_1d(self._H, self._inhibition_kernels_1D, convolve_axes)
+            inhibition_gradient = self._backend.convolve_multi_1d(self._H[s], self._inhibition_kernels_1D, convolve_axes)
 
             if inhibition > 0:
-                tmp = inhibition_gradient - self.H  # prevent the atom from suppressing itself at its own position
+                tmp = inhibition_gradient - self.H[s]  # prevent the atom from suppressing itself at its own position
                 tmp *= inhibition
                 pos += tmp
             if cross_inhibition > 0:
@@ -207,9 +250,17 @@ class TransformInvariantNMF:
                 tmp *= cross_inhibition / (self.n_atoms - 1)
                 pos += tmp
 
-        self._multiplicative_update(self._H, neg, pos, sparsity)
+        self._multiplicative_update(self._H[s], neg, pos, sparsity)
 
-    def fit(
+    def _initialize_matrices(self, V: np.ndarray, keep_W: bool):
+        self._V = V
+        self._W, self._H = self._backend.initialize(
+            self._V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
+
+        if not keep_W:
+            self._backend.normalize(self._W, self._axes_W_normalization)
+
+    def fit_basic(
             self,
             V: np.ndarray,
             n_iterations: int = 1000,
@@ -236,14 +287,14 @@ class TransformInvariantNMF:
         update_H : bool, default = True
             If False, the activation tensor :attr:`H` will not be updated.
         update_W : bool, default = True
-            If False, the dictionary tensor :attr:`W' will not be updated.
+            If False, the dictionary tensor :attr:`W` will not be updated.
         keep_W : bool, default = False
-            If False, the dictionary tensor :attr:`W' will not be (re)initialized before starting iteration.
+            If False, the dictionary tensor :attr:`W` will not be (re)initialized before starting iteration.
         sparsity_H : float, default = 0.
             Sparsity enforcing regularization for the :attr:`H` update.
         inhibition_strength : float, default = 0.
             Lateral inhibition regularization factor for the :attr:`H` update within the same atom.
-        inhibition_strength : float, default = 0.
+        cross_atom_inhibition_strength : float, default = 0.
             Lateral inhibition regularization factor for the :attr:`H` update across different atoms.
         progress_callback : Callable[['TransformInvariantNMF', int], bool], default = None
             If provided, this function will be called after every iteration, i.e. after every update to :attr:`H` and
@@ -259,23 +310,193 @@ class TransformInvariantNMF:
         assert cross_atom_inhibition_strength >= 0
         keep_W = False
 
-        self._W, self._H = self._backend.initialize(
-            V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
-
-        if not keep_W:
-            self._backend.normalize(self._W, self._axes_W_normalization)
+        self._initialize_matrices(V, keep_W)
 
         for iteration in range(n_iterations):
             if update_H:
-                self._update_H(V, sparsity_H, inhibition_strength, cross_atom_inhibition_strength)
+                self._update_H(slice(None), sparsity_H, inhibition_strength, cross_atom_inhibition_strength)
 
             if update_W:
-                self._update_W(V)
+                self._update_W(slice(None))
 
             if progress_callback is not None:
                 if not progress_callback(self, iteration):
                     break
             else:
-                self._logger.info(f"Iteration: {iteration}\tEnergy function: {self._energy_function(V)}")
+                self._logger.info(f"Iteration: {iteration}\tEnergy function: {self._energy_function()}")
 
-        self._logger.info("NMF finished.")
+        self._logger.info("TNMF finished.")
+
+    def fit_minibatch(
+            self,
+            V: np.ndarray,
+            algorithm: MiniBatchAlgorithm = MiniBatchAlgorithm.Basic_MU,
+            batch_size: int = 3,
+            max_epoch: int = 1000,   # corresponds to max_iter if algorithm == MiniBatchAlgorithm.Basic_MU
+            sag_lambda: float = 0.8,
+            keep_W: bool = False,
+            sparsity_H: float = 0.,
+            inhibition_strength: float = 0.,
+            cross_atom_inhibition_strength: float = 0.,
+            progress_callback: Callable[['TransformInvariantNMF', int], bool] = None,
+    ):
+        r"""
+        Perform non-negative matrix factorization of samples :attr:`V`, i.e. optimization of dictionary :attr:`W` and
+        activations :attr:`H` via mini-batch updates using a selection of algorithms from [2]_.
+
+        Parameters
+        ----------
+        V : np.ndarray
+            Samples to be reconstructed. The shape of the sample tensor is ``(n_samples, n_channels, *sample_shape)``,
+            where `sample_shape` is the shape of the individual samples and each sample consists of `n_channels`
+            individual channels.
+        algorithm: MiniBatchAlgorithm
+            MiniBatch update scheme to be used. See #MiniBatchAlgorithm and [3]_ for the different choices.
+        batch_size: int, default = 3
+            Number of samples per mini batch. Ignored if algorithm==MiniBatchAlgorithm.Basic_MU
+        max_epoch: int, default = 1000
+            Maximum number of epochs (iterations if algorithm==MiniBatchAlgorithm.Basic_MU) across the full
+            sample set to be performed.
+        sag_lambda: float, default = 0.8
+            Exponential forgetting factor for for the stochastic _average_ gradient updates, i.e.
+            MiniBatchAlgorithm.ASAG_MU and MiniBatchAlgorithm.GSAG_MU
+        keep_W : bool, default = False
+            If False, the dictionary tensor :attr:`W` will not be (re)initialized before starting iteration.
+        sparsity_H : float, default = 0.
+            Sparsity enforcing regularization for the :attr:`H` update.
+        inhibition_strength : float, default = 0.
+            Lateral inhibition regularization factor for the :attr:`H` update within the same atom.
+        cross_atom_inhibition_strength : float, default = 0.
+            Lateral inhibition regularization factor for the :attr:`H` update across different atoms.
+        progress_callback : Callable[['TransformInvariantNMF', int], bool], default = None
+            If provided, this function will be called after every (epoch-)iteration.
+            The first parameter to the function is the calling :class:`TransformInvariantNMF` instance, which can be
+            used to inspect intermediate results, etc. The second parameter is the current iteration step.
+
+            If the `progress_callback` function returns False, (epoch-)iteration will be aborted, which allows to implement
+            specialized convergence criteria.
+        References
+        ----------
+        .. [3] R. Serizel, S. Essid, G. Richard, 2016. Mini-batch stochastic approaches for
+            accelerated multiplicative updates in nonnegative matrix factorisation with
+            beta-divergence, in: 26th International Workshop on Machine Learning for Signal
+            Processing (MLSP). pp 1-6. http://ieeexplore.ieee.org/document/7738818/
+        """
+        assert sparsity_H >= 0
+        assert inhibition_strength >= 0
+        assert cross_atom_inhibition_strength >= 0
+        assert isinstance(algorithm, MiniBatchAlgorithm)
+
+        stochastic_update = algorithm in (5, 6)
+        self._initialize_matrices(V if not stochastic_update else _random_shuffle(V.copy()), keep_W)
+
+        batches = list(_compute_sequential_minibatches(len(self._V), batch_size))
+
+        epoch_update = {
+            MiniBatchAlgorithm.Basic_MU: self._epoch_update_algorithm_3,
+            MiniBatchAlgorithm.Cyclic_MU: self._epoch_update_algorithm_4,
+            MiniBatchAlgorithm.ASG_MU: self._epoch_update_algorithm_5,
+            MiniBatchAlgorithm.GSG_MU: self._epoch_update_algorithm_6,
+            MiniBatchAlgorithm.ASAG_MU: self._epoch_update_algorithm_7,
+            MiniBatchAlgorithm.GSAG_MU: self._epoch_update_algorithm_8,
+        }
+
+        kwargs_update_H = dict(
+            sparsity=sparsity_H,
+            inhibition=inhibition_strength,
+            cross_inhibition=cross_atom_inhibition_strength,
+        )
+
+        inner_stat = None
+        for epoch in range(max_epoch):
+            inner_stat = epoch_update[algorithm](
+                inner_stat, batches,
+                kwargs_update_H,
+                sag_lambda)
+
+            if progress_callback is not None:
+                if not progress_callback(self, epoch):
+                    break
+            else:
+                self._logger.info(f"{'Iteration' if algorithm == MiniBatchAlgorithm.Basic_MU else 'Epoch'}: {epoch}\t"
+                                  f"Energy function: {self._energy_function()}")
+
+        self._logger.info("MiniBatch TNMF finished.")
+
+    def _accumulate_gradient_W(self, gradW_neg, gradW_pos, sag_lambda: float, s: slice):
+        neg, pos = self._backend.reconstruction_gradient_W(self._V, self._W, self._H, s)
+        if sag_lambda == 1:
+            gradW_neg += neg
+            gradW_pos += pos
+        else:
+            gradW_neg *= (1-sag_lambda)
+            gradW_pos *= (1-sag_lambda)
+            gradW_neg += sag_lambda * neg
+            gradW_pos += sag_lambda * pos
+
+        return gradW_neg, gradW_pos
+
+    def _epoch_update_algorithm_3(self, _, ___, args_update_H, __):
+        # update H for all samples
+        self._update_H(slice(None), **args_update_H)
+        # update W after processing all batches using all samples
+        self._update_W(slice(None))
+
+    def _epoch_update_algorithm_4(self, _, batches, args_update_H, __):
+        gradW_neg, gradW_pos = 0, 0
+        for batch in batches:
+            # update H for all batches
+            self._update_H(batch, **args_update_H)
+            # accumulate the gradient over all batches
+            gradW_neg, gradW_pos = self._accumulate_gradient_W(gradW_neg, gradW_pos, 1., batch)
+        # update W with the gradient that has been accumulated over all batches
+        self._multiplicative_update(self._W, gradW_neg, gradW_pos)
+        self._backend.normalize(self._W, axis=self._axes_W_normalization)
+
+    def _epoch_update_algorithm_5(self, _, batches, args_update_H, __):
+        for batch in _random_shuffle(batches):
+            # update H for every batch
+            self._update_H(batch, **args_update_H)
+            # update W after every batch
+            self._update_W(batch)
+
+    def _epoch_update_algorithm_6(self, _, batches, args_update_H, __):
+        batch = slice(0, 0)  # initialize to an empty slice as we use it after the loop (just in case batches is empty)
+        for batch in _random_shuffle(batches):
+            # update H for every batch
+            self._update_H(batch, **args_update_H)
+        # update W after processing all batches using the last batch (algorithm 6)
+        self._update_W(batch)
+
+    def _epoch_update_algorithm_7(self, inner_stat, batches, args_update_H, sag_lambda):
+        if inner_stat is None:
+            inner_stat = (0, 0)
+        for batch in batches:
+            # update H for every batch
+            self._update_H(batch, **args_update_H)
+            # average the gradient over all batches and epochs
+            inner_stat = self._accumulate_gradient_W(*inner_stat, sag_lambda, batch)
+            # update W with the gradient that has been averaged over all batches until now
+            self._multiplicative_update(self._W, *inner_stat)
+            self._backend.normalize(self._W, axis=self._axes_W_normalization)
+        return inner_stat
+
+    def _epoch_update_algorithm_8(self, inner_stat, batches, args_update_H, sag_lambda):
+        if inner_stat is None:
+            inner_stat = (0, 0)
+        batch = slice(0, 0)  # initialize to an empty slice as we use it after the loop (just in case batches is empty)
+        for batch in batches:
+            # update H for every batch
+            self._update_H(batch, **args_update_H)
+        # average the gradient from the last batch over all epochs
+        inner_stat = self._accumulate_gradient_W(*inner_stat, sag_lambda, batch)
+        # update W with the gradient that has been averaged over all batches until now
+        self._multiplicative_update(self._W, *inner_stat)
+        self._backend.normalize(self._W, axis=self._axes_W_normalization)
+        return inner_stat
+
+    def fit(self, V: np.ndarray, **kwargs):
+        if 'batch_size' in kwargs:
+            self.fit_minibatch(V, **kwargs)
+        else:
+            self.fit_basic(V, **kwargs)
