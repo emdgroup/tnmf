@@ -11,7 +11,6 @@ from typing import Dict, Tuple, Optional
 from copy import copy
 
 import numpy as np
-from opt_einsum import contract_expression
 from opt_einsum.contract import ContractExpression
 from scipy.fft import rfftn, irfftn
 from scipy.ndimage import convolve1d
@@ -211,25 +210,6 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
                 field_name='W', c=w,
                 fft_axes=self._shift_dimensions, fft_shape=self.fft_params['grad_W']['fft_shape'],
                 logger=self._logger)
-
-        # add unpadded and unsliced axes
-        unpadded = ((0, 0), ) * (V.ndim - len(self._shift_dimensions))
-        unsliced = (slice(None), ) * (V.ndim - len(self._shift_dimensions))
-        for key in self.fft_params:
-            self.fft_params[key]['pad_width'] = unpadded + self.fft_params[key]['pad_width']
-            self.fft_params[key]['slices'] = unsliced + self.fft_params[key]['slices']
-
-        # sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
-        self.fft_params['reconstruct']['contraction'] = contract_expression(
-            'nm...,mc...->nc...', H.f.shape, W.f.shape)
-
-        # sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
-        self.fft_params['grad_H']['contraction'] = contract_expression(
-            'nc...,mc...->nm...', self._V.f.shape, W.f_reversed.shape)
-
-        # sum_n V|R[n, c, ... ] * H[n, m, ...]   --> dR / dW[m, c, ...]
-        self.fft_params['grad_W']['contraction'] = contract_expression(  # TODO: why is the pylint annotation necessary?
-            'nc...,nm...->mc...', self._V.f.shape, H.f_reversed.shape)   # pylint: disable=no-member
 
         return W, H
 

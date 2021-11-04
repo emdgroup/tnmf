@@ -6,6 +6,7 @@ and :func:`scipy.fft.irfftn`.
 from typing import Tuple, Dict
 
 import numpy as np
+from opt_einsum.contract import ContractExpression
 from scipy.fft import next_fast_len, rfftn, irfftn
 
 from ._Backend import sliceNone
@@ -18,6 +19,7 @@ def fftconvolve_sum(
         fft_axes: Tuple[int, ...],
         fft_shape: Tuple[int, ...],
         slices: Tuple[slice, ...],
+        contraction: ContractExpression,
         correlate: bool,
         pad_mode: Dict = None,
         pad_width: Tuple[Tuple[int, int], ...] = None,
@@ -34,7 +36,7 @@ def fftconvolve_sum(
     ) -> np.ndarray:
         # padding to fulfill boundary conditions
         if pad_mode is not None:
-            array = np.pad(array, pad_shape, **pad_mode)
+            array = np.pad(array, pad_shape[2:], **pad_mode)
 
         # first axes are not to be padded
         fftpadding = tuple(((0, 0), ) * (array.ndim - len(axes)))
@@ -60,10 +62,10 @@ def fftconvolve_sum(
     # pad according to required boundary conditions
     if pad_mode is not None:
         # we need padding information for all axes to be convolved over
-        assert pad_width is not None and len(pad_width) == len(axes)
+        assert pad_width is not None and len(pad_width[2:]) == len(axes)
 
         pad_shape = tuple(((0, 0), ) * (ndim - len(axes))) + pad_width
-        padded_shape = np.asarray(pad_shape).sum(axis=1) + np.asarray(s1)
+        padded_shape = np.asarray(pad_shape[2:]).sum(axis=1) + np.asarray(s1)
     else:
         pad_shape = None
         padded_shape = s1
@@ -98,7 +100,7 @@ def fftconvolve_sum(
         ret = np.asarray(irfftn(sp1sp2, axes=axes))
 
         # actually remove the padded rows/columns
-        ret = ret[fslice].copy()
+        ret = ret[fslice[2:]].copy()
 
         # remove singleton dimensions if requested
         if not keepdims and sum_axis is not None:
