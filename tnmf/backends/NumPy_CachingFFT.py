@@ -57,16 +57,6 @@ class CachingFFT:
         self.invalidate_f()
         return self
 
-    def __isub__(self, other):
-        self.c -= other.c if hasattr(other, 'c') else other
-        self.invalidate_f()
-        return self
-
-    def __iadd__(self, other):
-        self.c += other.c if hasattr(other, 'c') else other
-        self.invalidate_f()
-        return self
-
     def __itruediv__(self, other):
         self.c /= other.c if hasattr(other, 'c') else other
         self.invalidate_f()
