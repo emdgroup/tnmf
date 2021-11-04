@@ -26,14 +26,12 @@ expected_energies = {
 
 # define all test settings
 backends = [
-    # TODO(minibatch): activate numpy and numpy_fft backends
     'numpy',
     'numpy_fft',
     'numpy_caching_fft',
     'pytorch',
     'pytorch_fft']
 
-# create the input by concatenating the test image twice
 img = racoon_image(gray=True, scale=1.)
 # creative way of extracting image blocks (attention: patch_shape must divide img.shape)
 shape = np.array(img.shape*2)
