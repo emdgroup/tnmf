@@ -12,7 +12,8 @@ Authors: Adrian Šošić, Mathias Winkel
 # TODO: flexible input types for V
 
 import logging
-from typing import Iterable, Tuple, Callable, Union
+from itertools import islice, count
+from typing import Iterable, Tuple, Callable, Union, Iterator
 from enum import Enum
 
 import numpy as np
@@ -493,8 +494,29 @@ class TransformInvariantNMF:
         self._backend.normalize(self._W, axis=self._axes_W_normalization)
         return inner_stat
 
+    def fit_subsamples(
+            self,
+            V: Iterator[np.ndarray],
+            subsample_size: int = 3,
+            max_subsamples: int = None,
+            **kwargs
+    ):
+        for isub in count(0):
+            subsample = list(islice(V, subsample_size))
+            if len(subsample) > 0:
+                self._logger.info(f"Processing subsample {isub}.")
+                self.fit(np.asarray(subsample), keep_W=True, **kwargs)
+                if max_subsamples is not None and isub == max_subsamples - 1:
+                    self._logger.info("Processed {max_subsamples} subsamples. TNMF on iterator will stop.")
+                    return
+            else:
+                self._logger.info("Sample iterator exhausted. TNMF on full iterator finished.")
+                return
+
     def fit(self, V: np.ndarray, **kwargs):
-        if 'batch_size' in kwargs:
+        if 'subsample_size' in kwargs or 'max_subsamples' in kwargs:
+            self.fit_subsamples(iter(V), **kwargs)
+        elif 'batch_size' in kwargs or 'algorithm' in kwargs:
             self.fit_minibatch(V, **kwargs)
         else:
             self.fit_basic(V, **kwargs)
