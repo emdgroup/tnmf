@@ -38,9 +38,10 @@ class Backend(ABC):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[np.ndarray] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
         self._set_dimensions(V, atom_shape)
-        return self._initialize_matrices(V, atom_shape, n_atoms, W)
+        return self._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
     @staticmethod
     @abstractmethod
@@ -85,12 +86,14 @@ class Backend(ABC):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[np.ndarray] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         H = np.asarray(1 - np.random.rand(self.n_samples, n_atoms, *self._transform_shape), dtype=V.dtype)
 
         if W is None:
             W = np.asarray(1 - np.random.rand(n_atoms, self.n_channels, *atom_shape), dtype=V.dtype)
+            Backend.normalize(W, axes_W_normalization)
 
         return W, H
 

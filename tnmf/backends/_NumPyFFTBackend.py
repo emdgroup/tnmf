@@ -2,7 +2,7 @@
 A module that provides some specializations and utilities for all NumPy based backends
 that are using FFT for performing convolutions.
 """
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import numpy as np
 from scipy.fft import next_fast_len
@@ -30,10 +30,11 @@ class NumPyFFTBackend(NumPyBackend):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[np.ndarray] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         # this sets pad_mode and pad_width properly
-        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
         # shorthand for unpadded and unsliced axes
         unpadded = ((0, 0), ) * (V.ndim - len(self._shift_dimensions))

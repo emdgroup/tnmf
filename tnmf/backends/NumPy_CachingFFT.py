@@ -7,7 +7,7 @@ and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed 
 # TODO: this backend has a logger member but the other backends don't
 
 import logging
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, Union
 from copy import copy
 
 import numpy as np
@@ -181,9 +181,10 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[np.ndarray] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
-        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
         self._V = CachingFFT(
             field_name='V', c=V,

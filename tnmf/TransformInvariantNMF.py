@@ -255,10 +255,8 @@ class TransformInvariantNMF:
     def _initialize_matrices(self, V: np.ndarray, keep_W: bool):
         self._V = V
         self._W, self._H = self._backend.initialize(
-            self._V, self.atom_shape, self.n_atoms, self._W if keep_W else None)
-
-        if not keep_W:
-            self._backend.normalize(self._W, self._axes_W_normalization)
+            self._V, self.atom_shape, self.n_atoms, self._W if keep_W else None,
+            self._axes_W_normalization)
 
     def fit_basic(
             self,

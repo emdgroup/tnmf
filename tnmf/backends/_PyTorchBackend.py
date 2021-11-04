@@ -36,6 +36,7 @@ class PyTorchBackend(Backend):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[Tensor] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[Tensor, Tensor]:
 
         if self._reconstruction_mode == 'valid':
@@ -50,7 +51,7 @@ class PyTorchBackend(Backend):
             raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
                              f'Please choose "valid", "full", "circular", or "reflect".')
 
-        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
         H = torch.from_numpy(h)
         if W is None:

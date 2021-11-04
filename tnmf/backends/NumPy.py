@@ -3,7 +3,7 @@ A module that provides a NumPy based backend for computing the gradients of the 
 Shift-invariance is implemented via explicit convolution operations in the coordinate space.
 """
 from itertools import product
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
@@ -35,9 +35,10 @@ class NumPy_Backend(NumPyBackend):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[np.ndarray] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
-        W, H = super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        W, H = super()._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
         n_shift_axes = len(self._sample_shape)
         self._shift_axes = tuple(range(-n_shift_axes, 0))

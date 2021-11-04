@@ -2,7 +2,7 @@
 A module that provides some specializations and utilities for all NumPy based backends.
 """
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import numpy as np
 from scipy.ndimage import convolve1d
@@ -29,6 +29,7 @@ class NumPyBackend(Backend):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[np.ndarray] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         self._padding_left = tuple((s - 1, 0) for s in self.atom_shape)
@@ -46,7 +47,7 @@ class NumPyBackend(Backend):
             raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
                              f'Please choose "valid", "full", "circular", or "reflect".')
 
-        return super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        return super()._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
     @staticmethod
     def to_ndarray(arr: np.ndarray) -> np.ndarray:
