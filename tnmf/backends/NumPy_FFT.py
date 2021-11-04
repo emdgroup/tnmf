@@ -16,6 +16,7 @@ def fftconvolve_sum(
         in1: Tuple[np.ndarray, ...],
         in2: np.ndarray,
         fft_axes: Tuple[int, ...],
+        fft_shape: Tuple[int, ...],
         slices: Tuple[slice, ...],
         correlate: bool,
         pad_mode: Dict = None,
@@ -68,7 +69,7 @@ def fftconvolve_sum(
         padded_shape = s1
 
     # now need to zero-pad to identical size / optimal fft size
-    fft_shape = tuple(next_fast_len(padded_shape[a] + s2[a] - 1) for a in axes)
+    fft_shape = tuple(next_fast_len(padded_shape[a] + s2[a] - 1, True) for a in axes)
 
     # compute how to undo the padding
     fslice = (slice(None), ) * (ndim - len(axes)) + slices

@@ -13,7 +13,7 @@ from copy import copy
 import numpy as np
 from opt_einsum import contract_expression
 from opt_einsum.contract import ContractExpression
-from scipy.fft import next_fast_len, rfftn, irfftn
+from scipy.fft import rfftn, irfftn
 from scipy.ndimage import convolve1d
 
 from ._Backend import sliceNone
@@ -28,11 +28,12 @@ class CachingFFT:
     def __init__(
         self,
         field_name: str,
+        c: Optional[np.ndarray] = None,
         fft_axes: Optional[Tuple[int, ...]] = None,
         fft_shape: Optional[Tuple[int, ...]] = None,
         logger: Optional[logging.Logger] = None,
     ):
-        self._c: np.ndarray = None  # field in coordinate space
+        self._c: np.ndarray = c  # field in coordinate space
         self._f: np.ndarray = None  # field in fourier space
         self._f_padded: np.ndarray = None  # fourier transform of padded field
         self._f_reversed: np.ndarray = None  # time-reversed field in fourier space
@@ -156,8 +157,10 @@ class CachingFFT_Sliced(CachingFFT):
     and keeps the caching logic intact
     """
     def __init__(self, parent: CachingFFT, s: slice):
-        super().__init__(parent._field_name + '_sliced', parent._fft_axes, parent._fft_shape, parent._logger)
-        self._c = parent._c[s]
+        super().__init__(
+            field_name=parent._field_name + '_sliced', c=parent._c[s],
+            fft_axes=parent._fft_axes, fft_shape=parent._fft_shape,
+            logger=parent._logger)
         self._parent = parent
 
     def invalidate_f(self, also_c: bool = False):
@@ -193,31 +196,28 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
 
         w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
 
-        # fft shape and functions
-        fft_axes = self._shift_dimensions
-        fft_shape = np.array(self._sample_shape) + np.array(self._transform_shape) - 1
-        if self._pad_mode is not None:
-            fft_shape += np.asarray(self._padding_right).sum(axis=1)
-        # TODO: lines with fft_shape above do not seem to have an effect
-        fft_shape = tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1)
+        self._V = CachingFFT(
+            field_name='V', c=V,
+            fft_axes=self._shift_dimensions, fft_shape=self.fft_params['reconstruct']['fft_shape'],
+            logger=self._logger)
 
-        self._V = CachingFFT('V', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
-        self._V.c = V
-
-        H = CachingFFT('H', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
-        H.c = h
+        H = CachingFFT(
+            field_name='H', c=h,
+            fft_axes=self._shift_dimensions, fft_shape=self.fft_params['grad_H']['fft_shape'],
+            logger=self._logger)
 
         if W is None:
-            W = CachingFFT('W', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
-            W.c = w
+            W = CachingFFT(
+                field_name='W', c=w,
+                fft_axes=self._shift_dimensions, fft_shape=self.fft_params['grad_W']['fft_shape'],
+                logger=self._logger)
 
-        # add unpadded and unsliced axes and the necessary fft_shape param
+        # add unpadded and unsliced axes
         unpadded = ((0, 0), ) * (V.ndim - len(self._shift_dimensions))
         unsliced = (slice(None), ) * (V.ndim - len(self._shift_dimensions))
         for key in self.fft_params:
             self.fft_params[key]['pad_width'] = unpadded + self.fft_params[key]['pad_width']
             self.fft_params[key]['slices'] = unsliced + self.fft_params[key]['slices']
-            self.fft_params[key]['fft_shape'] = fft_shape
 
         # sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
         self.fft_params['reconstruct']['contraction'] = contract_expression(
@@ -271,7 +271,7 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
 
         ret = tuple()
         for a, n in zip(arr1_fft, name):
-            result = CachingFFT(n, fft_axes=fft_axes, fft_shape=fft_shape)
+            result = CachingFFT(field_name=n, fft_axes=fft_axes, fft_shape=fft_shape)
             result.f = contraction(a[arr1_slice], arr2_fft[arr2_slice])
             result.c = result.c[slices]
             ret += (result, )

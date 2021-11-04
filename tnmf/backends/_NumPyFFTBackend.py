@@ -5,6 +5,7 @@ that are using FFT for performing convolutions.
 from typing import Tuple, Optional
 
 import numpy as np
+from scipy.fft import next_fast_len
 
 from ._NumPyBackend import NumPyBackend
 
@@ -41,6 +42,7 @@ class NumPyFFTBackend(NumPyBackend):
             'pad_width': self._padding_left,
             'correlate': False,
             'slices': tuple(slice(f, f + s) for f, s in zip(lower_idx, self._sample_shape)),
+            'fft_shape': tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1),
         }
 
         # fft details: gradient H computation
@@ -53,6 +55,7 @@ class NumPyFFTBackend(NumPyBackend):
             'pad_width': self._padding_right,
             'correlate': True,
             'slices': tuple(slice(f, f + s) for f, s in zip(lower_idx, self._transform_shape)),
+            'fft_shape': tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1),
         }
 
         # fft details: gradient W computation
@@ -63,6 +66,7 @@ class NumPyFFTBackend(NumPyBackend):
             'pad_width': self._padding_right,
             'correlate': True,
             'slices': tuple(slice(f, f + s) for f, s in zip(lower_idx, atom_shape)),
+            'fft_shape': tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1),
         }
 
         return w, h
