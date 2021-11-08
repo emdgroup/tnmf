@@ -7,7 +7,8 @@
 
 [![Logo](https://raw.githubusercontent.com/emdgroup/tnmf/main/logos/tnmf_header.svg)](https://github.com/emdgroup/tnmf)
 
-# Transform-Invariant Non-Negative Matrix Factorization
+Transform-Invariant Non-Negative Matrix Factorization
+=====================================================
 
 A comprehensive Python package for **Non-Negative Matrix Factorization (NMF)** with a focus on learning *transform-invariant representations*.
 
@@ -25,7 +26,6 @@ Installation is easiest using pip:
     pip install tnmf
 
 # Demos and Examples
-
 The package comes with a [streamlit](https://streamlit.io) demo and a number of examples that demonstrate the capabilities of the TNMF model.
 They provide a good starting point for your own experiments.
 
@@ -55,6 +55,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 The full text of the license can be found in the file [LICENSE](LICENSE) in the repository root directory.
+
+# Usage and Citation
+If you use this software, please cite us using the information in CITATION.cff.
 
 # Contributing
 Contributions to the package are always welcome and can be submitted via a pull request.
