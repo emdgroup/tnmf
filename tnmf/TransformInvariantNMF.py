@@ -43,7 +43,7 @@ def _random_shuffle(arr):
 
 class MiniBatchAlgorithm(Enum):
     r"""
-    MiniBatch algorithms that can be used with #TransformInvatiantNMF.fit_minibatch().
+    MiniBatch algorithms that can be used with :meth:`.TransformInvariantNMF.fit_minibatch`.
     """
     Basic_MU = 3   # Algorithm 3 Basic alternating scheme for MU rules
     Cyclic_MU = 4  # Algorithm 4 Cyclic mini-batch for MU rules
