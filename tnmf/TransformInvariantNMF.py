@@ -333,7 +333,7 @@ class TransformInvariantNMF:
             algorithm: MiniBatchAlgorithm = MiniBatchAlgorithm.Basic_MU,
             batch_size: int = 3,
             max_epoch: int = 1000,   # corresponds to max_iter if algorithm == MiniBatchAlgorithm.Basic_MU
-            sag_lambda: float = 0.8,
+            sag_lambda: float = 0.2,
             keep_W: bool = False,
             sparsity_H: float = 0.,
             inhibition_strength: float = 0.,
@@ -357,7 +357,7 @@ class TransformInvariantNMF:
         max_epoch: int, default = 1000
             Maximum number of epochs (iterations if algorithm==MiniBatchAlgorithm.Basic_MU) across the full
             sample set to be performed.
-        sag_lambda: float, default = 0.8
+        sag_lambda: float, default = 0.2
             Exponential forgetting factor for for the stochastic _average_ gradient updates, i.e.
             MiniBatchAlgorithm.ASAG_MU and MiniBatchAlgorithm.GSAG_MU
         keep_W : bool, default = False
