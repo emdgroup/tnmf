@@ -303,6 +303,7 @@ class TransformInvariantNMF:
             If the `progress_callback` function returns False, iteration will be aborted, which allows to implement
             specialized convergence criteria.
         """
+        assert np.all(V >= 0)
         assert update_H or update_W
         assert sparsity_H >= 0
         assert inhibition_strength >= 0
@@ -381,6 +382,7 @@ class TransformInvariantNMF:
             beta-divergence, in: 26th International Workshop on Machine Learning for Signal
             Processing (MLSP). pp 1-6. http://ieeexplore.ieee.org/document/7738818/
         """
+        assert np.all(V >= 0)
         assert sparsity_H >= 0
         assert inhibition_strength >= 0
         assert cross_atom_inhibition_strength >= 0
