@@ -206,7 +206,14 @@ class TransformInvariantNMF:
     def _energy_function(self) -> float:
         return self._backend.reconstruction_energy(self._V, self._W, self._H)
 
-    def _multiplicative_update(self, arr: np.ndarray, neg, pos, sparsity: float = 0.):
+    def _multiplicative_update(
+        self,
+        arr: np.ndarray,
+        neg,
+        pos,
+        sparsity: float = 0.,
+        normalization_axes: Union[int, Tuple[int, ...]] = None
+    ):
         assert sparsity >= 0
 
         regularization = self.eps
@@ -219,12 +226,14 @@ class TransformInvariantNMF:
         arr *= neg
         arr /= pos
 
+        if normalization_axes is not None:
+            self._backend.normalize(arr, axis=normalization_axes)
+
     def _update_W(self, s: slice):
         neg, pos = self._backend.reconstruction_gradient_W(self._V, self._W, self._H, s)
         assert neg.shape == self._W.shape
         assert pos.shape == self._W.shape
-        self._multiplicative_update(self._W, neg, pos)
-        self._backend.normalize(self._W, axis=self._axes_W_normalization)
+        self._multiplicative_update(self._W, neg, pos, normalization_axes=self._axes_W_normalization)
 
     def _update_H(self, s: slice, sparsity: float = 0., inhibition: float = 0., cross_inhibition: float = 0):
         # TODO: sparsity and inhibition computation should be handled by the backends
@@ -251,7 +260,7 @@ class TransformInvariantNMF:
                 tmp *= cross_inhibition / (self.n_atoms - 1)
                 pos += tmp
 
-        self._multiplicative_update(self._H[s], neg, pos, sparsity)
+        self._multiplicative_update(self._H[s], neg, pos, sparsity=sparsity)
 
     def _initialize_matrices(self, V: np.ndarray, keep_W: bool):
         self._V = V
@@ -451,8 +460,7 @@ class TransformInvariantNMF:
             # accumulate the gradient over all batches
             gradW_neg, gradW_pos = self._accumulate_gradient_W(gradW_neg, gradW_pos, 1., batch)
         # update W with the gradient that has been accumulated over all batches
-        self._multiplicative_update(self._W, gradW_neg, gradW_pos)
-        self._backend.normalize(self._W, axis=self._axes_W_normalization)
+        self._multiplicative_update(self._W, gradW_neg, gradW_pos, normalization_axes=self._axes_W_normalization)
 
     def _epoch_update_algorithm_5(self, _, batches, args_update_H, __):
         for batch in _random_shuffle(batches):
@@ -478,8 +486,7 @@ class TransformInvariantNMF:
             # average the gradient over all batches and epochs
             inner_stat = self._accumulate_gradient_W(*inner_stat, sag_lambda, batch)
             # update W with the gradient that has been averaged over all batches until now
-            self._multiplicative_update(self._W, *inner_stat)
-            self._backend.normalize(self._W, axis=self._axes_W_normalization)
+            self._multiplicative_update(self._W, *inner_stat, normalization_axes=self._axes_W_normalization)
         return inner_stat
 
     def _epoch_update_algorithm_8(self, inner_stat, batches, args_update_H, sag_lambda):
@@ -492,8 +499,7 @@ class TransformInvariantNMF:
         # average the gradient from the last batch over all epochs
         inner_stat = self._accumulate_gradient_W(*inner_stat, sag_lambda, batch)
         # update W with the gradient that has been averaged over all batches until now
-        self._multiplicative_update(self._W, *inner_stat)
-        self._backend.normalize(self._W, axis=self._axes_W_normalization)
+        self._multiplicative_update(self._W, *inner_stat, normalization_axes=self._axes_W_normalization)
         return inner_stat
 
     def fit_subsamples(
