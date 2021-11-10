@@ -341,7 +341,7 @@ class TransformInvariantNMF:
     ):
         r"""
         Perform non-negative matrix factorization of samples :attr:`V`, i.e. optimization of dictionary :attr:`W` and
-        activations :attr:`H` via mini-batch updates using a selection of algorithms from [2]_.
+        activations :attr:`H` via mini-batch updates using a selection of algorithms from [3]_.
 
         Parameters
         ----------
@@ -350,7 +350,7 @@ class TransformInvariantNMF:
             where `sample_shape` is the shape of the individual samples and each sample consists of `n_channels`
             individual channels.
         algorithm: MiniBatchAlgorithm
-            MiniBatch update scheme to be used. See #MiniBatchAlgorithm and [3]_ for the different choices.
+            MiniBatch update scheme to be used. See :class:`MiniBatchAlgorithm` and [3]_ for the different choices.
         batch_size: int, default = 3
             Number of samples per mini batch. Ignored if algorithm==MiniBatchAlgorithm.Basic_MU
         max_epoch: int, default = 1000
