@@ -386,7 +386,7 @@ class TransformInvariantNMF:
         assert cross_atom_inhibition_strength >= 0
         assert isinstance(algorithm, MiniBatchAlgorithm)
 
-        stochastic_update = algorithm in (5, 6)
+        stochastic_update = algorithm in (5, 6, 7, 8)
         self._initialize_matrices(V if not stochastic_update else _random_shuffle(V.copy()), keep_W)
 
         batches = list(_compute_sequential_minibatches(len(self._V), batch_size))
@@ -470,7 +470,7 @@ class TransformInvariantNMF:
     def _epoch_update_algorithm_7(self, inner_stat, batches, args_update_H, sag_lambda):
         if inner_stat is None:
             inner_stat = (0, 0)
-        for batch in batches:
+        for batch in _random_shuffle(batches):
             # update H for every batch
             self._update_H(batch, **args_update_H)
             # average the gradient over all batches and epochs
@@ -484,7 +484,7 @@ class TransformInvariantNMF:
         if inner_stat is None:
             inner_stat = (0, 0)
         batch = slice(0, 0)  # initialize to an empty slice as we use it after the loop (just in case batches is empty)
-        for batch in batches:
+        for batch in _random_shuffle(batches):
             # update H for every batch
             self._update_H(batch, **args_update_H)
         # average the gradient from the last batch over all epochs
