@@ -23,7 +23,7 @@ expected_energies = {
     # MiniBatchAlgorithm.Cyclic_MU: 136.8409655,
     # MiniBatchAlgorithm.ASG_MU: 97.09478123,
     # MiniBatchAlgorithm.GSG_MU: 136.0901304,
-    MiniBatchAlgorithm.ASAG_MU: 96.69410458,
+    MiniBatchAlgorithm.ASAG_MU: 96.70358983,
     # MiniBatchAlgorithm.GSAG_MU: 136.6650301,
 }
 
