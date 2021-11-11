@@ -18,10 +18,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(m
 expected_energies = {
     MiniBatchAlgorithm.Basic_MU: 14434.02658,
     MiniBatchAlgorithm.Cyclic_MU: 14434.02658,
-    MiniBatchAlgorithm.ASG_MU: 4597.179784,
-    MiniBatchAlgorithm.GSG_MU: 13700.10348,
-    MiniBatchAlgorithm.ASAG_MU: 4591.835380,
-    MiniBatchAlgorithm.GSAG_MU: 13780.44859,
+    MiniBatchAlgorithm.ASG_MU: 4558.86695,
+    MiniBatchAlgorithm.GSG_MU: 14223.14454,
+    MiniBatchAlgorithm.ASAG_MU: 4560.03432,
+    MiniBatchAlgorithm.GSAG_MU: 14310.92041,
 }
 
 # define all test settings

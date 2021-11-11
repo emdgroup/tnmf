@@ -36,9 +36,11 @@ def _compute_sequential_minibatches(length: int, batch_size: int) -> Iterable[sl
             start = end
 
 
-def _random_shuffle(arr):
-    np.random.shuffle(np.asarray(arr))
-    return arr
+def _random_shuffle(arr, return_indices: bool = False):
+    idx = np.random.permutation(len(arr))
+    if return_indices:
+        return np.asarray(arr)[idx], idx
+    return np.asarray(arr)[idx]
 
 
 class MiniBatchAlgorithm(Enum):
@@ -181,17 +183,23 @@ class TransformInvariantNMF:
         self._H = None
         self._V = None  # V is not necessarily identical with the V outside as the stochastic minibatch methods shuffle V
 
+        self._shuffle_idx = None
+
     @property
     def W(self) -> np.ndarray:
         return self._backend.to_ndarray(self._W)
 
     @property
     def H(self) -> np.ndarray:
-        return self._backend.to_ndarray(self._H)
+        if self._shuffle_idx is None:
+            return self._backend.to_ndarray(self._H)
+        return self._backend.to_ndarray(self._H)[np.argsort(self._shuffle_idx)]
 
     @property
     def V(self) -> np.ndarray:
-        return self._V
+        if self._shuffle_idx is None:
+            return self._V
+        return self._V[np.argsort(self._shuffle_idx)]
 
     @property
     def R(self) -> np.ndarray:
@@ -262,8 +270,11 @@ class TransformInvariantNMF:
 
         self._multiplicative_update(self._H[s], neg, pos, sparsity=sparsity)
 
-    def _initialize_matrices(self, V: np.ndarray, keep_W: bool):
-        self._V = V
+    def _initialize_matrices(self, V: np.ndarray, keep_W: bool, shuffle_input: bool = False):
+        if shuffle_input:
+            self._V, self._shuffle_idx = _random_shuffle(V, return_indices=True)
+        else:
+            self._V = V
         self._W, self._H = self._backend.initialize(
             self._V, self.atom_shape, self.n_atoms, self._W if keep_W else None,
             self._axes_W_normalization)
@@ -398,7 +409,7 @@ class TransformInvariantNMF:
         assert isinstance(algorithm, MiniBatchAlgorithm)
 
         stochastic_update = algorithm in (5, 6, 7, 8)
-        self._initialize_matrices(V if not stochastic_update else _random_shuffle(V.copy()), keep_W)
+        self._initialize_matrices(V, keep_W, shuffle_input=stochastic_update)
 
         batches = list(_compute_sequential_minibatches(len(self._V), batch_size))
 

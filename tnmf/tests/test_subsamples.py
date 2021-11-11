@@ -21,10 +21,10 @@ expected_energies = {
     # no need to test all algorithms here
     MiniBatchAlgorithm.Basic_MU: 136.84096550,
     # MiniBatchAlgorithm.Cyclic_MU: 136.8409655,
-    # MiniBatchAlgorithm.ASG_MU: 97.09478123,
-    # MiniBatchAlgorithm.GSG_MU: 136.0901304,
-    MiniBatchAlgorithm.ASAG_MU: 96.70358983,
-    # MiniBatchAlgorithm.GSAG_MU: 136.6650301,
+    # MiniBatchAlgorithm.ASG_MU: 97.0072791,
+    # MiniBatchAlgorithm.GSG_MU: 136.43285833,
+    MiniBatchAlgorithm.ASAG_MU: 96.7375921,
+    # MiniBatchAlgorithm.GSAG_MU: 136.7082644,
 }
 
 img = racoon_image(gray=True, scale=1.)
