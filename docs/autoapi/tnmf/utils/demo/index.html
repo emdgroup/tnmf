@@ -222,6 +222,9 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#tnmf.utils.demo.st_define_nmf_params" title="tnmf.utils.demo.st_define_nmf_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_define_nmf_params</span></code></a>(default_params: dict, have_ground_truth: bool = True, verbose: bool = True) → dict</p></td>
 <td><p>Defines all necessary NMF parameters via streamlit widgets.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.utils.demo.fit_nmf_model" title="tnmf.utils.demo.fit_nmf_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_nmf_model</span></code></a>(V, nmf_params, fit_params, progress_bar)</p></td>
+<td><p></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -264,17 +267,17 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>default_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Contains the default parameters that are used if the created streamlit checkbox is True.</p></li>
-<li><p><strong>have_ground_truth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, the parameters in default_params are considered being ground truth values and
+<li><p><strong>default_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Contains the default parameters that are used if the created streamlit checkbox is True.</p></li>
+<li><p><strong>have_ground_truth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, the parameters in default_params are considered being ground truth values and
 the respective explanatory texts are modified accordingly.</p></li>
-<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>nmf_params</strong> – A dictionary containing the selected NMF parameters.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -292,12 +295,12 @@ different signal types.</p>
 with a dictionary containing details of the used NMF atoms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>V</strong> (<em>np.ndarray</em>) – The generated input for the NMF.</p></li>
-<li><p><strong>nmf_params</strong> (<em>dict</em>) – Ground truth NMF atom parameters that were used for the signal generation.</p></li>
+<li><p><strong>V</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – The generated input for the NMF.</p></li>
+<li><p><strong>nmf_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Ground truth NMF atom parameters that were used for the signal generation.</p></li>
 </ul>
 </p>
 </dd>
@@ -311,9 +314,9 @@ with a dictionary containing details of the used NMF atoms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input that was factorized via NMF.</p></li>
-<li><p><strong>R</strong> (<em>np.ndarray</em>) – The NMF reconstruction of the input.</p></li>
-<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+<li><p><strong>V</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – The input that was factorized via NMF.</p></li>
+<li><p><strong>R</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – The NMF reconstruction of the input.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p></li>
 </ul>
 </dd>
 </dl>
@@ -326,9 +329,9 @@ with a dictionary containing details of the used NMF atoms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input that was factorized via NMF.</p></li>
-<li><p><strong>R</strong> (<em>np.ndarray</em>) – The NMF reconstruction of the input.</p></li>
-<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+<li><p><strong>V</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – The input that was factorized via NMF.</p></li>
+<li><p><strong>R</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – The NMF reconstruction of the input.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p></li>
 </ul>
 </dd>
 </dl>
@@ -341,9 +344,9 @@ with a dictionary containing details of the used NMF atoms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input that was factorized via NMF.</p></li>
-<li><p><strong>nmf</strong> (<a class="reference internal" href="../../TransformInvariantNMF/index.html#tnmf.TransformInvariantNMF.TransformInvariantNMF" title="tnmf.TransformInvariantNMF.TransformInvariantNMF"><em>TransformInvariantNMF</em></a>) – The trained NMF object.</p></li>
-<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p></li>
+<li><p><strong>V</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – The input that was factorized via NMF.</p></li>
+<li><p><strong>nmf</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">TransformInvariantNMF</span></code>) – The trained NMF object.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p></li>
 </ul>
 </dd>
 </dl>
@@ -361,7 +364,7 @@ with a dictionary containing details of the used NMF atoms.</p>
 <dd><p>Defines all signal parameters via streamlit widgets and returns them in a dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -385,7 +388,7 @@ with a dictionary containing details of the used NMF atoms.</p>
 <dd><p>Defines all signal parameters via streamlit widgets and returns them in a dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -409,7 +412,7 @@ with a dictionary containing details of the used NMF atoms.</p>
 <dd><p>Defines all signal parameters via streamlit widgets and returns them in a dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, show detailed information.</p>
+<dd class="field-odd"><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – If True, show detailed information.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -421,6 +424,11 @@ with a dictionary containing details of the used NMF atoms.</p>
 </dd></dl>
 
 </dd></dl>
+
+<dl class="py function">
+<dt id="tnmf.utils.demo.fit_nmf_model">
+<code class="sig-prename descclassname"><span class="pre">tnmf.utils.demo.</span></code><code class="sig-name descname"><span class="pre">fit_nmf_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmf_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tnmf.utils.demo.fit_nmf_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>

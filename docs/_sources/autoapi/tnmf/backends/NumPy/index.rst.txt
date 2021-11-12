@@ -32,10 +32,10 @@ Classes
 
    Convolutions are computed efficiently as contractions of properly strided arrays.
 
-   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray, s: slice = sliceNone) -> Tuple[numpy.ndarray, numpy.ndarray]
 
 
-   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray, s: slice = sliceNone) -> Tuple[numpy.ndarray, numpy.ndarray]
 
 
    .. method:: reconstruct(self, W: numpy.ndarray, H: numpy.ndarray) -> numpy.ndarray

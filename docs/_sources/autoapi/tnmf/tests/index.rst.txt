@@ -15,6 +15,8 @@ Submodules
    test_demos/index.rst
    test_examples/index.rst
    test_init/index.rst
+   test_minibatch/index.rst
    test_sparsity_inhibition/index.rst
+   test_stream/index.rst
 
 

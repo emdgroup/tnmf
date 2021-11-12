@@ -46,10 +46,10 @@ Classes
       :staticmethod:
 
 
-   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: torch.Tensor, H: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: torch.Tensor, H: torch.Tensor, s: slice = sliceNone) -> Tuple[torch.Tensor, torch.Tensor]
 
 
-   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: torch.Tensor, H: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: torch.Tensor, H: torch.Tensor, s: slice = sliceNone) -> Tuple[torch.Tensor, torch.Tensor]
 
 
    .. method:: reconstruction_energy(self, V: torch.Tensor, W: torch.Tensor, H: torch.Tensor) -> float

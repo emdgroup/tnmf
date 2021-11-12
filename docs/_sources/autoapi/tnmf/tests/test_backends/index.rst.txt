@@ -48,7 +48,7 @@ Attributes
    
 
 .. data:: reconstruction_modes
-   :annotation: = ['valid', 'full', 'circular']
+   
 
    
 

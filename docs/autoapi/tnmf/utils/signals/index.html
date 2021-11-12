@@ -210,20 +210,6 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="attributes">
-<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tnmf.utils.signals.n_pulses" title="tnmf.utils.signals.n_pulses"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_pulses</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
 <dl class="py function">
 <dt id="tnmf.utils.signals.generate_pulse">
 <code class="sig-prename descclassname"><span class="pre">tnmf.utils.signals.</span></code><code class="sig-name descname"><span class="pre">generate_pulse</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="headerlink" href="#tnmf.utils.signals.generate_pulse" title="Permalink to this definition">¶</a></dt>
@@ -231,15 +217,15 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> (<em>'n' | '-' | '^' | 'v' | '_'</em>) – Shape of the pulse.</p></li>
-<li><p><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Length of the pulse.</p></li>
+<li><p><strong>shape</strong> (<code class="docutils literal notranslate"><span class="pre">'n'</span></code> | <code class="docutils literal notranslate"><span class="pre">'-'</span></code> | <code class="docutils literal notranslate"><span class="pre">'^'</span></code> | <code class="docutils literal notranslate"><span class="pre">'v'</span></code> | <code class="docutils literal notranslate"><span class="pre">'_'</span></code>) – Shape of the pulse.</p></li>
+<li><p><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Length of the pulse.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>pulse</strong> – The signal pulse as a 1-D array.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.ndarray</p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -251,17 +237,17 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>symbols</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – A list of symbols (= multi-channel pulse shapes) specified via strings that are used as a dictionary to generate
+<li><p><strong>symbols</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List[str]</span></code>, <em>optional</em>) – A list of symbols (= multi-channel pulse shapes) specified via strings that are used as a dictionary to generate
 the signal. If ‘None’, the following three-channel symbols are used: [‘nnn’, ‘—’, ‘^^^’, ‘vvv’, ‘___’].
 See <cite>generate_pulse</cite> for an overview of all available pulse shapes.</p></li>
-<li><p><strong>pulse_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The length of each individual pulse.</p></li>
-<li><p><strong>n_pulses</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The total number of pulses to be sequenced.</p></li>
+<li><p><strong>pulse_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – The length of each individual pulse.</p></li>
+<li><p><strong>n_pulses</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – The total number of pulses to be sequenced.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>signal</strong> (<em>np.ndarray</em>) – A 2-D array of shape (n_channels, n_pulses * pulse_length) containing the signal.</p></li>
-<li><p><strong>W</strong> (<em>np.ndarray</em>) – A 3-D array of shape (n_symbols, n_channels, pulse_length) representing the pulse shape dictionary.</p></li>
+<li><p><strong>signal</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – A 2-D array of shape (n_channels, n_pulses * pulse_length) containing the signal.</p></li>
+<li><p><strong>W</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – A 3-D array of shape (n_symbols, n_channels, pulse_length) representing the pulse shape dictionary.</p></li>
 </ul>
 </p>
 </dd>
@@ -275,16 +261,16 @@ See <cite>generate_pulse</cite> for an overview of all available pulse shapes.</
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pattern</strong> (<em>'x' | '+' | 's'</em>) – Pattern shown in the image patch.</p></li>
-<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Size of both dimensions of the image patch.</p></li>
-<li><p><strong>color</strong> (<em>'r' | 'g' | 'b' | 'y' | 'm' | 'c' | 'w'</em><em> , </em><em>optional</em>) – Color of the pattern. If ‘None’, the generated image patch will be grayscale.</p></li>
+<li><p><strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">'x'</span></code> | <code class="docutils literal notranslate"><span class="pre">'+'</span></code> | <code class="docutils literal notranslate"><span class="pre">'s'</span></code>) – Pattern shown in the image patch.</p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Size of both dimensions of the image patch.</p></li>
+<li><p><strong>color</strong> (<code class="docutils literal notranslate"><span class="pre">'r'</span></code> | <code class="docutils literal notranslate"><span class="pre">'g'</span></code> | <code class="docutils literal notranslate"><span class="pre">'b'</span></code> | <code class="docutils literal notranslate"><span class="pre">'y'</span></code> | <code class="docutils literal notranslate"><span class="pre">'m'</span></code> | <code class="docutils literal notranslate"><span class="pre">'c'</span></code> | <code class="docutils literal notranslate"><span class="pre">'w'</span></code> , <em>optional</em>) – Color of the pattern. If ‘None’, the generated image patch will be grayscale.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>patch</strong> – The image patch as a 3-D array, where the first dimension indexes the color channel.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.ndarray</p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -296,29 +282,24 @@ See <cite>generate_pulse</cite> for an overview of all available pulse shapes.</
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>symbols</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – A list of symbols used as a dictionary to generate the image. Each symbol is either a one-character or
+<li><p><strong>symbols</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List[str]</span></code>, <em>optional</em>) – A list of symbols used as a dictionary to generate the image. Each symbol is either a one-character or
 two-character string, where the first character specifies the symbol shape and the optional second character
 specifies the symbol color. For example: ‘x’ creates a grayscale cross-shaped patch while ‘sr’ creates a red square-
 shaped patch. If ‘None’, a certain default set of colored patches will be used as dictionary. See <cite>generate_patch</cite>
 for an overview of all available patch shapes and color options.</p></li>
-<li><p><strong>symbol_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The size of both dimensions of each individual image patch.</p></li>
-<li><p><strong>n_symbols</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The number of image patches to be stacked both horizontally and vertically.</p></li>
+<li><p><strong>symbol_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – The size of both dimensions of each individual image patch.</p></li>
+<li><p><strong>n_symbols</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – The number of image patches to be stacked both horizontally and vertically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>image</strong> (<em>np.ndarray</em>) – A 3-D array of shape (3, n_symbols * symbol_size, n_symbols * symbol_size) containing the image.</p></li>
-<li><p><strong>W</strong> (<em>np.ndarray</em>) – A 3-D array of shape (3, symbols_size, symbol_size) containing the image patch dictionary.</p></li>
+<li><p><strong>image</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – A 3-D array of shape (3, n_symbols * symbol_size, n_symbols * symbol_size) containing the image.</p></li>
+<li><p><strong>W</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – A 3-D array of shape (3, symbols_size, symbol_size) containing the image patch dictionary.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py data">
-<dt id="tnmf.utils.signals.n_pulses">
-<code class="sig-prename descclassname"><span class="pre">tnmf.utils.signals.</span></code><code class="sig-name descname"><span class="pre">n_pulses</span></code><em class="property"> <span class="pre">=</span> <span class="pre">6</span></em><a class="headerlink" href="#tnmf.utils.signals.n_pulses" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 </div>

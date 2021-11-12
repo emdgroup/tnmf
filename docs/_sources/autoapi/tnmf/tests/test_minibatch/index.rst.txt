@@ -1,0 +1,103 @@
+:mod:`tnmf.tests.test_minibatch`
+================================
+
+.. py:module:: tnmf.tests.test_minibatch
+
+.. autoapi-nested-parse::
+
+   Test the decomposition on multiple image patches in minibatch mode
+   and verify that all backends yield the same factorization.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_minibatch.fit_nmf
+   tnmf.tests.test_minibatch.fixture_expected_factorization
+   tnmf.tests.test_minibatch.test_expected_energy
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.tests.test_minibatch.expected_energies
+   tnmf.tests.test_minibatch.backends
+   tnmf.tests.test_minibatch.img
+   tnmf.tests.test_minibatch.shape
+   tnmf.tests.test_minibatch.image_shape
+   tnmf.tests.test_minibatch.patch_shape
+   tnmf.tests.test_minibatch.byte_size
+   tnmf.tests.test_minibatch.image_strides
+   tnmf.tests.test_minibatch.V
+   tnmf.tests.test_minibatch.V
+
+
+.. data:: expected_energies
+   
+
+   
+
+.. data:: backends
+   :annotation: = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft']
+
+   
+
+.. data:: img
+   
+
+   
+
+.. data:: shape
+   
+
+   
+
+.. data:: image_shape
+   
+
+   
+
+.. data:: patch_shape
+   
+
+   
+
+.. data:: byte_size
+   
+
+   
+
+.. data:: image_strides
+   
+
+   
+
+.. data:: V
+   
+
+   
+
+.. data:: V
+   
+
+   
+
+.. function:: fit_nmf(backend, algorithm)
+
+
+.. function:: fixture_expected_factorization(algorithm)
+
+
+.. function:: test_expected_energy(backend: str, algorithm: int, expected_factorization: Tuple[numpy.ndarray, numpy.ndarray])
+
+

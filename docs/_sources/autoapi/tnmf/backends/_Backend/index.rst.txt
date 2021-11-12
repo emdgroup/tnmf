@@ -24,6 +24,19 @@ Classes
 
 
 
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tnmf.backends._Backend.sliceNone
+
+
+.. data:: sliceNone
+   
+
+   
+
 .. class:: Backend(reconstruction_mode: str = 'valid')
 
 
@@ -36,7 +49,7 @@ Classes
 
    Some common functionality between all backends is already defined inside this class but can be overridden if necessary.
 
-   .. method:: initialize(self, V: numpy.ndarray, atom_shape: Tuple[int, Ellipsis], n_atoms: int, W: Optional[numpy.ndarray] = None) -> Tuple[numpy.ndarray, numpy.ndarray]
+   .. method:: initialize(self, V: numpy.ndarray, atom_shape: Tuple[int, Ellipsis], n_atoms: int, W: Optional[numpy.ndarray] = None, axes_W_normalization: Optional[Union[int, Tuple[int, Ellipsis]]] = None) -> Tuple[numpy.ndarray, numpy.ndarray]
 
 
    .. method:: to_ndarray(arr) -> numpy.ndarray
@@ -53,11 +66,11 @@ Classes
       :abstractmethod:
 
 
-   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray, s: slice = sliceNone) -> Tuple[numpy.ndarray, numpy.ndarray]
       :abstractmethod:
 
 
-   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray, s: slice = sliceNone) -> Tuple[numpy.ndarray, numpy.ndarray]
       :abstractmethod:
 
 

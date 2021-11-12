@@ -21,21 +21,28 @@ Classes
 .. autoapisummary::
 
    tnmf.backends.NumPy_CachingFFT.CachingFFT
+   tnmf.backends.NumPy_CachingFFT.CachingFFT_Sliced
    tnmf.backends.NumPy_CachingFFT.NumPy_CachingFFT_Backend
 
 
 
 
-.. class:: CachingFFT(field_name: str, fft_axes: Optional[Tuple[int, Ellipsis]] = None, fft_shape: Optional[Tuple[int, Ellipsis]] = None, logger: Optional[logging.Logger] = None)
+.. class:: CachingFFT(field_name: str, c: Optional[numpy.ndarray] = None, fft_axes: Optional[Tuple[int, Ellipsis]] = None, fft_shape: Optional[Tuple[int, Ellipsis]] = None, logger: Optional[logging.Logger] = None)
 
 
    Wrapper class for conveniently caching and switching back and forth between arrays in coordinate space and their
    representations in Fourier space.
 
+   .. method:: invalidate_f(self, also_c: bool = False)
+
+
+   .. method:: __getitem__(self, s)
+
+
    .. method:: __imul__(self, other)
 
 
-   .. method:: __isub__(self, other)
+   .. method:: __itruediv__(self, other)
 
 
    .. method:: __neg__(self) -> numpy.ndarray
@@ -44,13 +51,11 @@ Classes
    .. method:: __sub__(self, other) -> numpy.ndarray
 
 
-   .. method:: __iadd__(self, other)
-
-
-   .. method:: __itruediv__(self, other)
-
-
    .. method:: sum(self, *args, **kwargs)
+
+
+   .. method:: shape(self) -> Tuple[int, Ellipsis]
+      :property:
 
 
    .. method:: has_c(self) -> bool
@@ -89,6 +94,18 @@ Classes
 
 
 
+.. class:: CachingFFT_Sliced(parent: CachingFFT, s: slice)
+
+
+   Bases: :py:obj:`CachingFFT`
+
+   Proxy class for CachingFFT that provides access to array slices of the original object
+   and keeps the caching logic intact
+
+   .. method:: invalidate_f(self, also_c: bool = False)
+
+
+
 .. class:: NumPy_CachingFFT_Backend(logger: logging.Logger = None, verbose: int = 0, **kwargs)
 
 
@@ -106,10 +123,10 @@ Classes
       :staticmethod:
 
 
-   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: CachingFFT, H: CachingFFT, s: slice = sliceNone) -> Tuple[CachingFFT, CachingFFT]
 
 
-   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: CachingFFT, H: CachingFFT, s: slice = sliceNone) -> Tuple[CachingFFT, CachingFFT]
 
 
    .. method:: reconstruct(self, W: CachingFFT, H: CachingFFT) -> CachingFFT

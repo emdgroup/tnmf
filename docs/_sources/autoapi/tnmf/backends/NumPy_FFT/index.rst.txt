@@ -23,17 +23,6 @@ Classes
 
 
 
-Functions
-~~~~~~~~~
-
-.. autoapisummary::
-
-   tnmf.backends.NumPy_FFT.fftconvolve_sum
-
-
-
-.. function:: fftconvolve_sum(in1: Tuple[numpy.ndarray, Ellipsis], in2: numpy.ndarray, fft_axes: Tuple[int, Ellipsis], slices: Tuple[slice, Ellipsis], correlate: bool, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], Ellipsis] = None, sum_axis: Tuple[int, Ellipsis] = None, keepdims: bool = False) -> numpy.ndarray
-
 
 .. class:: NumPy_FFT_Backend(**kwargs)
 
@@ -46,10 +35,10 @@ Functions
    Arrays to be convolved are transformed to Fourier space, multiplied and accumulated across the free indices (e.g. for the
    sum over all atoms in the reconstruction), and transformed back to coordinate space.
 
-   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+   .. method:: reconstruction_gradient_W(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray, s: slice = sliceNone) -> Tuple[numpy.ndarray, numpy.ndarray]
 
 
-   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]
+   .. method:: reconstruction_gradient_H(self, V: numpy.ndarray, W: numpy.ndarray, H: numpy.ndarray, s: slice = sliceNone) -> Tuple[numpy.ndarray, numpy.ndarray]
 
 
    .. method:: reconstruct(self, W: numpy.ndarray, H: numpy.ndarray) -> numpy.ndarray
