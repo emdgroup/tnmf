@@ -7,6 +7,7 @@ from typing import List, Iterable, Tuple, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
+from streamlit.delta_generator import DeltaGenerator
 
 from tnmf.TransformInvariantNMF import TransformInvariantNMF, MiniBatchAlgorithm
 from tnmf.utils.signals import generate_pulse_train, generate_block_image
@@ -553,3 +554,13 @@ class SignalTool2D(SignalTool):
         plt.imshow(signals[0].transpose((1, 2, 0)) / signals[0].max())
         plt.title(opts.get('title'))
         st.pyplot(fig)
+
+
+# TODO: replace st.cache with st.memo + remove deepcopies when called
+# currently this is not possible because the experimental memo function fails at hashing MiniBatchAlgorithm Enum instances
+@st.cache(hash_funcs={DeltaGenerator: lambda _: None}, allow_output_mutation=True)
+def fit_nmf_model(V, nmf_params, fit_params, progress_bar):
+    nmf = TransformInvariantNMF(**nmf_params)
+    n_steps = fit_params['n_iterations'] if 'n_iterations' in fit_params else fit_params['n_epochs']
+    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / n_steps), **fit_params)
+    return nmf
