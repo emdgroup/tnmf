@@ -99,7 +99,7 @@ class NumPy_Backend(NumPyBackend):
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         V_padded = self._cache['V_padded'][s]
-        # do NOT put these strides into self._cache
+        # do NOT put these strides into self._cache (layout can change e.g. because of varying minibatch size)
         V_strided_W_strides = V_padded.strides + V_padded.strides[2:]
         V_strided_W_shape = V_padded.shape[:2] + H[s].shape[2:] + self.atom_shape
         V_strided = as_strided(V_padded, V_strided_W_shape, V_strided_W_strides, writeable=False)
@@ -109,7 +109,7 @@ class NumPy_Backend(NumPyBackend):
             self._cache['H_labels'], optimize='optimal')
 
         R_padded = np.pad(self.reconstruct(W, H[s]), pad_width=self._cache['pad_width'])
-        # do NOT put these strides into self._cache
+        # do NOT put these strides into self._cache (layout can change e.g. because of varying minibatch size)
         R_strided_W_strides = R_padded.strides + R_padded.strides[2:]
         R_strided_W_shape = R_padded.shape[:2] + H[s].shape[2:] + self.atom_shape
         R_strided = as_strided(R_padded, R_strided_W_shape, R_strided_W_strides, writeable=False)
