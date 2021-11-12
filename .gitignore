@@ -24,3 +24,5 @@ htmlcov
 
 # Package Version
 tnmf/_version.py
+
+.coverage.*

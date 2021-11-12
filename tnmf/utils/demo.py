@@ -7,8 +7,9 @@ from typing import List, Iterable, Tuple, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
+from streamlit.delta_generator import DeltaGenerator
 
-from tnmf.TransformInvariantNMF import TransformInvariantNMF
+from tnmf.TransformInvariantNMF import TransformInvariantNMF, MiniBatchAlgorithm
 from tnmf.utils.signals import generate_pulse_train, generate_block_image
 
 HELP_CHANNEL = \
@@ -102,9 +103,43 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
                                                              help=help_cross_atom_inhibition_strength)
     explanation(help_cross_atom_inhibition_strength, verbose)
 
-    help_n_iterations = '''The **number of multiplicative updates** to the atom dictionary and activation tensors.'''
-    n_iterations = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_n_iterations)
-    explanation(help_n_iterations, verbose)
+    help_minibatch = \
+        '''Process the samples in **minibatches** instead of the full data set at once.'''
+    minibatch_updates = st.sidebar.checkbox('Minibatch updates', value=True, help=help_minibatch)
+    explanation(help_minibatch, verbose)
+    if not minibatch_updates:
+        help_n_iterations = '''The **number of multiplicative updates** to the atom dictionary and activation tensors.'''
+        n_iterations = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_n_iterations)
+        explanation(help_n_iterations, verbose)
+    else:
+        help_algorithm = '''The **minibatch update algorithm** to be used.'''
+        algorithm = st.sidebar.radio('Minibatch algorithm', [
+            '4 - Cyclic MiniBatch for MU rules',
+            '5 - Asymmetric SG MiniBatch MU rules (ASG-MU)',
+            '6 - Greedy SG MiniBatch MU rules (GSG-MU)',
+            '7 - Asymmetric SAG MiniBatch MU rules (ASAG-MU)',
+            '8 - Greedy SAG MiniBatch MU rules (GSAG-MU)'],
+                                     1, help=help_algorithm)
+        algorithm = MiniBatchAlgorithm(int(algorithm[0]))
+        explanation(help_algorithm, verbose)
+
+        help_epoch = '''The number of **passes through the whole data set**.'''
+        n_epochs = st.sidebar.number_input('# Epochs', value=100, min_value=1, help=help_epoch)
+        explanation(help_epoch, verbose)
+
+        help_batch_size = '''The number of **samples per batch**.'''
+        batch_size = st.sidebar.number_input('# Batch size', value=3, min_value=1, help=help_batch_size)
+        explanation(help_batch_size, verbose)
+
+        sag_lambda = None
+        if algorithm in (MiniBatchAlgorithm.ASAG_MU, MiniBatchAlgorithm.GSAG_MU):
+            help_sag_lambda = \
+                '''The **exponential forgetting factor** for for the stochastic **average** gradient updates. A value of 1.0
+                means that only the latest minibatch is used for the update. The smaller the value, the more weight is put on
+                older minibatches.'''
+            sag_lambda = st.sidebar.number_input('Lambda', min_value=0.0, max_value=1., value=0.2, step=0.01,
+                                                 help=help_sag_lambda)
+            explanation(help_sag_lambda, verbose)
 
     help_backend = \
         '''The **optimization backend** for computing the multiplicative gradients.
@@ -133,18 +168,29 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
     explanation(help_reconstruction_mode, verbose)
 
     nmf_params = dict(
-        n_iterations=n_iterations,
         n_atoms=n_atoms,
         atom_shape=atom_shape,
         backend=backend,
         reconstruction_mode=reconstruction_mode,
     )
 
-    fit_params = dict(
-        sparsity_H=sparsity_H,
-        inhibition_strength=inhibition_strength,
-        cross_atom_inhibition_strength=cross_atom_inhibition_strength,
-    )
+    if not minibatch_updates:
+        fit_params = dict(
+            n_iterations=n_iterations,
+            sparsity_H=sparsity_H,
+            inhibition_strength=inhibition_strength,
+            cross_atom_inhibition_strength=cross_atom_inhibition_strength,
+        )
+    else:
+        fit_params = dict(
+            algorithm=algorithm,
+            n_epochs=n_epochs,
+            batch_size=batch_size,
+            sag_lambda=sag_lambda,
+            sparsity_H=sparsity_H,
+            inhibition_strength=inhibition_strength,
+            cross_atom_inhibition_strength=cross_atom_inhibition_strength,
+        )
 
     return nmf_params, fit_params
 
@@ -508,3 +554,13 @@ class SignalTool2D(SignalTool):
         plt.imshow(signals[0].transpose((1, 2, 0)) / signals[0].max())
         plt.title(opts.get('title'))
         st.pyplot(fig)
+
+
+# TODO: replace st.cache with st.memo + remove deepcopies when called
+# currently this is not possible because the experimental memo function fails at hashing MiniBatchAlgorithm Enum instances
+@st.cache(hash_funcs={DeltaGenerator: lambda _: None}, allow_output_mutation=True)
+def fit_nmf_model(V, nmf_params, fit_params, progress_bar):
+    nmf = TransformInvariantNMF(**nmf_params)
+    n_steps = fit_params['n_iterations'] if 'n_iterations' in fit_params else fit_params['n_epochs']
+    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / n_steps), **fit_params)
+    return nmf

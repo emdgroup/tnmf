@@ -34,3 +34,9 @@ jobs:
       run: |
         coverage combine
         coverage report
+        coverage html
+    - name: Upload code coverage report
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report.${{ matrix.python-version }}
+        path: htmlcov

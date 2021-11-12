@@ -18,12 +18,12 @@ expected_energies = {
     'valid': 268.14423,
     'full': 345.82498,
     'circular': 265.35091,
-    'reflect': 272.13762,  # TODO: needs to be verified against another backend
+    # 'reflect': 272.13762,  # TODO: needs to be verified against another backend
 }
 
 # define all test settings
 backends = ['numpy', 'numpy_fft', 'numpy_caching_fft', 'pytorch', 'pytorch_fft']
-reconstruction_modes = ['valid', 'full', 'circular', ]  # 'reflect']
+reconstruction_modes = list(expected_energies.keys())
 
 # temporarily ignore failed tests due to unimplemented features
 raise_not_implemented_errors = False
@@ -41,12 +41,11 @@ def fit_nmf(backend, reconstruction_mode):
     nmf = TransformInvariantNMF(
         n_atoms=10,
         atom_shape=(7, 7),
-        n_iterations=10,
         backend=backend,
         verbose=3,
         reconstruction_mode=reconstruction_mode,
     )
-    nmf.fit(V, sparsity_H=0.1)
+    nmf.fit(V, sparsity_H=0.1, n_iterations=10)
 
     return nmf
 
@@ -74,7 +73,7 @@ def test_expected_energy(backend: str, reconstruction_mode: str, expected_factor
         return
 
     # check if the expected energy level is reached
-    assert np.isclose(nmf._energy_function(V), expected_energy)  # pylint: disable=protected-access
+    assert np.isclose(nmf._energy_function(), expected_energy)  # pylint: disable=protected-access
 
     # check if the expected factorization is obtained
     assert np.allclose(nmf.W, W)

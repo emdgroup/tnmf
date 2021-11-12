@@ -64,16 +64,15 @@ def _do_test(backend, params):
     nmf = TransformInvariantNMF(
         n_atoms=10,
         atom_shape=(7, 7),
-        n_iterations=25,
         backend=backend,
         verbose=3,
         **params['nmf']
     )
-    nmf.fit(V, **params['fit'])
+    nmf.fit(V, n_iterations=25, **params['fit'])
 
     H = nmf.H
 
-    energy = nmf._energy_function(V)  # pylint: disable=protected-access
+    energy = nmf._energy_function()  # pylint: disable=protected-access
     norm_H_1 = np.sum(np.abs(H))
     norm_H_0 = np.sum(H/H.max() > 1e-7)
 

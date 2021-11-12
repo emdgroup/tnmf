@@ -5,7 +5,6 @@
 from itertools import product, zip_longest
 from typing import Optional, List, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 from more_itertools import chunked
 from numpy.linalg import norm
@@ -203,39 +202,3 @@ def generate_block_image(
     image = np.block(list(chunked(patches, n_symbols)))
 
     return image, W
-
-
-if __name__ == '__main__':
-
-    plt.style.use('seaborn')
-
-    # ---------- 1-D example ---------- #
-
-    # specify pulse properties
-    n_pulses = 6
-    pulse_length = 100
-
-    # generate the pulse signal
-    signal, _ = generate_pulse_train(pulse_length=pulse_length, n_pulses=n_pulses)
-
-    # visualize the signal and highlight the individual pulses
-    fig, axs = plt.subplots(nrows=signal.shape[1])
-    for channel, ax in enumerate(axs):
-        for p in range(n_pulses):
-            x = range(p * pulse_length, p * pulse_length + pulse_length)
-            ax.plot(x, signal[x, channel])
-    plt.show()
-
-    # ---------- 2-D example ---------- #
-
-    # specify image patch properties
-    symbol_size = 11
-    n_symbols = 10
-
-    # generate and visualize the image
-    im, _ = generate_block_image(symbol_size=symbol_size, n_symbols=n_symbols)
-    plt.imshow(im)
-    plt.axis('off')
-    plt.grid(False)
-    plt.tight_layout()
-    plt.show()

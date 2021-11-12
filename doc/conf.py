@@ -40,6 +40,7 @@ autoapi_options = ['members', 'undoc-members', 'no-private-members', 'show-inher
                    'show-module-summary', 'special-members', 'imported-members', ]
 
 napoleon_attr_annotations = True
+napoleon_preprocess_types = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = False
 

@@ -34,7 +34,7 @@ def test_example(example: str):
         with os.fdopen(fd, 'w') as tmp:
             tmp.write(EXAMPLE_FRAME.format(example))
 
-        with subprocess.Popen([sys.executable, '-m', 'coverage', 'run', path],  # noqa: S603
+        with subprocess.Popen([sys.executable, '-m', 'coverage', 'run', path],  # noqa: S603, DUO106
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE) as example_run:
             stdout, stderr = example_run.communicate()

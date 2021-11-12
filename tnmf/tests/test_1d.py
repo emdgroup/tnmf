@@ -44,12 +44,11 @@ def fit_nmf(backend, reconstruction_mode):
     nmf = TransformInvariantNMF(
         n_atoms=3,
         atom_shape=(5, ),
-        n_iterations=10,
         backend=backend,
         verbose=3,
         reconstruction_mode=reconstruction_mode,
     )
-    nmf.fit(V, inhibition_strength=0.1)
+    nmf.fit(V, inhibition_strength=0.1, n_iterations=10)
 
     return nmf
 
@@ -81,7 +80,7 @@ def test_expected_energy(backend: str, reconstruction_mode: str, expected_factor
     nmf._logger.debug(f'R:\n{nmf.R}')  # pylint: disable=protected-access
 
     # check if the expected energy level is reached
-    assert np.isclose(nmf._energy_function(V), expected_energy)  # pylint: disable=protected-access
+    assert np.isclose(nmf._energy_function(), expected_energy)  # pylint: disable=protected-access
 
     # check if the expected factorization is obtained
     assert np.allclose(nmf.W, W)

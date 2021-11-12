@@ -1,22 +1,14 @@
+from copy import deepcopy
 from itertools import cycle
 from typing import Callable, Tuple
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import streamlit as st
-from streamlit.delta_generator import DeltaGenerator
 
-from tnmf.utils.demo import st_define_nmf_params
 from tnmf.TransformInvariantNMF import TransformInvariantNMF
 from tnmf.utils.data_loading import racoon_image
-
-
-@st.cache(hash_funcs={DeltaGenerator: lambda _: None})
-def fit_nmf_model(V, nmf_params, fit_params, progress_bar):
-    nmf = TransformInvariantNMF(**nmf_params)
-    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / nmf_params['n_iterations']), **fit_params)
-    assert nmf.R.ndim > 0  # dummy code to ensure R is up to date to avoid streamlit caching issues
-    return nmf
+from tnmf.utils.demo import st_define_nmf_params, fit_nmf_model
 
 
 def st_define_sample_params(verbose: bool = True) -> Tuple[dict, float]:
@@ -132,7 +124,7 @@ def main(progress_bar, verbose: bool = True):
     # define the NMF parameters and fit the model
     default_nmf_params = {'n_atoms': 25, 'atom_shape': (10, 10)}
     nmf_params, fit_params = st_define_nmf_params(default_nmf_params, have_ground_truth=False, verbose=verbose)
-    nmf = fit_nmf_model(V, nmf_params, fit_params, progress_bar)
+    nmf = deepcopy(fit_nmf_model(V, nmf_params, fit_params, progress_bar))
 
     # visualize the results
     st_visualize_results(V, nmf, channel_mode['restore'], verbose)

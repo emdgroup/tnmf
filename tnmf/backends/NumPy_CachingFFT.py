@@ -7,15 +7,15 @@ and :func:`scipy.fft.irfftn` with additional caching of the Fourier transformed 
 # TODO: this backend has a logger member but the other backends don't
 
 import logging
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, Union
 from copy import copy
 
 import numpy as np
-from opt_einsum import contract_expression
 from opt_einsum.contract import ContractExpression
-from scipy.fft import next_fast_len, rfftn, irfftn
+from scipy.fft import rfftn, irfftn
 from scipy.ndimage import convolve1d
 
+from ._Backend import sliceNone
 from ._NumPyFFTBackend import NumPyFFTBackend
 
 
@@ -27,11 +27,12 @@ class CachingFFT:
     def __init__(
         self,
         field_name: str,
+        c: Optional[np.ndarray] = None,
         fft_axes: Optional[Tuple[int, ...]] = None,
         fft_shape: Optional[Tuple[int, ...]] = None,
         logger: Optional[logging.Logger] = None,
     ):
-        self._c: np.ndarray = None  # field in coordinate space
+        self._c: np.ndarray = c  # field in coordinate space
         self._f: np.ndarray = None  # field in fourier space
         self._f_padded: np.ndarray = None  # fourier transform of padded field
         self._f_reversed: np.ndarray = None  # time-reversed field in fourier space
@@ -41,12 +42,24 @@ class CachingFFT:
         self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
         self._field_name = field_name
 
+    def invalidate_f(self, also_c: bool = False):
+        if also_c:
+            self._c = None
+        self._f = None
+        self._f_padded = None
+        self._f_reversed = None
+
+    def __getitem__(self, s):
+        return CachingFFT_Sliced(self, s)
+
     def __imul__(self, other):
-        self.c *= other.c if isinstance(other, CachingFFT) else other
+        self.c *= other.c if hasattr(other, 'c') else other
+        self.invalidate_f()
         return self
 
-    def __isub__(self, other):
-        self.c -= other.c if isinstance(other, CachingFFT) else other
+    def __itruediv__(self, other):
+        self.c /= other.c if hasattr(other, 'c') else other
+        self.invalidate_f()
         return self
 
     def __neg__(self) -> np.ndarray:
@@ -56,22 +69,12 @@ class CachingFFT:
     def __sub__(self, other) -> np.ndarray:
         return self.c - other
 
-    def __iadd__(self, other):
-        self.c += other.c if isinstance(other, CachingFFT) else other
-        return self
-
-    def __itruediv__(self, other):
-        self.c /= other.c if isinstance(other, CachingFFT) else other
-        return self
-
     def sum(self, *args, **kwargs):
         return self.c.sum(*args, **kwargs)
 
-    def _invalidate(self):
-        self._c = None
-        self._f = None
-        self._f_padded = None
-        self._f_reversed = None
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        return self.c.shape
 
     @property
     def has_c(self) -> bool:
@@ -96,8 +99,8 @@ class CachingFFT:
     def c(self, c: np.ndarray):
         """Setter for field in coordinate space"""
         self._logger.debug(f'{"Setting" if c is not None else "Clearing"} {self._field_name}(x)')
-        self._invalidate()
         self._c = c
+        self.invalidate_f()
 
     @property
     def f(self) -> np.ndarray:
@@ -108,7 +111,7 @@ class CachingFFT:
             self._f = rfftn(self._c, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
         return self._f
 
-    def f_padded(self, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], ...] = None,) -> np.ndarray:
+    def f_padded(self, pad_mode: Dict = None, pad_width: Tuple[Tuple[int, int], ...] = None) -> np.ndarray:
         """Getter for padded field in fourier space"""
         if self._f_padded is None:
             self._logger.debug(f'Computing {self._field_name}_padded(f) = FFT[ {self._field_name}_padded(x) ]')
@@ -123,7 +126,7 @@ class CachingFFT:
     def f(self, f: np.ndarray):
         """Setter for field in fourier space"""
         self._logger.debug(f'{"Setting" if f is not None else "Clearing"} {self._field_name}(f)')
-        self._invalidate()
+        self.invalidate_f(also_c=True)
         self._f = f
 
     @property
@@ -135,6 +138,24 @@ class CachingFFT:
             c_reversed = np.flip(self._c, axis=self._fft_axes)
             self._f_reversed = rfftn(c_reversed, axes=self._fft_axes, s=self._fft_shape, workers=self._fft_workers)
         return self._f_reversed
+
+
+class CachingFFT_Sliced(CachingFFT):
+    """
+    Proxy class for CachingFFT that provides access to array slices of the original object
+    and keeps the caching logic intact
+    """
+    def __init__(self, parent: CachingFFT, s: slice):
+        super().__init__(
+            field_name=parent._field_name + '_sliced', c=parent._c[s],
+            fft_axes=parent._fft_axes, fft_shape=parent._fft_shape,
+            logger=parent._logger)
+        self._parent = parent
+
+    def invalidate_f(self, also_c: bool = False):
+        assert not also_c  # clearing c in sliced objects is not supported
+        super().invalidate_f(also_c)
+        self._parent.invalidate_f(also_c)
 
 
 class NumPy_CachingFFT_Backend(NumPyFFTBackend):
@@ -160,46 +181,26 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[np.ndarray] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
-        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
-        # fft shape and functions
-        fft_axes = self._shift_dimensions
-        fft_shape = np.array(self._sample_shape) + np.array(self._transform_shape) - 1
-        if self._pad_mode is not None:
-            fft_shape += np.asarray(self._padding_right).sum(axis=1)
-        fft_shape = tuple(next_fast_len(s) for s in np.array(self._sample_shape) + np.array(self._transform_shape) - 1)
+        self._V = CachingFFT(
+            field_name='V', c=V,
+            fft_axes=self._shift_dimensions, fft_shape=self.fft_params['reconstruct']['fft_shape'],
+            logger=self._logger)
 
-        self._V = CachingFFT('V', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
-        self._V.c = V
-
-        H = CachingFFT('H', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
-        H.c = h
+        H = CachingFFT(
+            field_name='H', c=h,
+            fft_axes=self._shift_dimensions, fft_shape=self.fft_params['grad_H']['fft_shape'],
+            logger=self._logger)
 
         if W is None:
-            W = CachingFFT('W', fft_axes=fft_axes, fft_shape=fft_shape, logger=self._logger)
-            W.c = w
-
-        # add unpadded and unsliced axes and the necessary fft_shape param
-        unpadded = ((0, 0), ) * (V.ndim - len(self._shift_dimensions))
-        unsliced = (slice(None), ) * (V.ndim - len(self._shift_dimensions))
-        for key in self.fft_params:
-            self.fft_params[key]['pad_width'] = unpadded + self.fft_params[key]['pad_width']
-            self.fft_params[key]['slices'] = unsliced + self.fft_params[key]['slices']
-            self.fft_params[key]['fft_shape'] = fft_shape
-
-        # sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
-        self.fft_params['reconstruct']['contraction'] = contract_expression(
-            'nm...,mc...->nc...', H.f.shape, W.f.shape)
-
-        # sum_c V|R[n, c, ... ] * W[m , c, ...] --> dR / dH[n, m, ...]
-        self.fft_params['grad_H']['contraction'] = contract_expression(
-            'nc...,mc...->nm...', self._V.f.shape, W.f_reversed.shape)
-
-        # sum_n V|R[n, c, ... ] * H[n, m, ...]   --> dR / dW[m, c, ...]
-        self.fft_params['grad_W']['contraction'] = contract_expression(  # TODO: why is the pylint annotation necessary?
-            'nc...,nm...->mc...', self._V.f.shape, H.f_reversed.shape)   # pylint: disable=no-member
+            W = CachingFFT(
+                field_name='W', c=w,
+                fft_axes=self._shift_dimensions, fft_shape=self.fft_params['grad_W']['fft_shape'],
+                logger=self._logger)
 
         return W, H
 
@@ -241,21 +242,39 @@ class NumPy_CachingFFT_Backend(NumPyFFTBackend):
 
         ret = tuple()
         for a, n in zip(arr1_fft, name):
-            result = CachingFFT(n, fft_axes=fft_axes, fft_shape=fft_shape)
+            result = CachingFFT(field_name=n, fft_axes=fft_axes, fft_shape=fft_shape)
             result.f = contraction(a[arr1_slice], arr2_fft[arr2_slice])
             result.c = result.c[slices]
             ret += (result, )
         return ret
 
-    def reconstruction_gradient_W(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
-        R = self.reconstruct(W, H)
-        assert R.c.shape == V.shape
-        return self._fft_convolve(('neg_W', 'pos_W'), (self._V, R), H, **self.fft_params['grad_W'])
+    def reconstruction_gradient_W(
+        self,
+        V: np.ndarray,
+        W: CachingFFT,
+        H: CachingFFT,
+        s: slice = sliceNone
+    ) -> Tuple[CachingFFT, CachingFFT]:
 
-    def reconstruction_gradient_H(self, V: np.ndarray, W: CachingFFT, H: CachingFFT) -> Tuple[CachingFFT, CachingFFT]:
-        R = self.reconstruct(W, H)
-        assert R.c.shape == V.shape
-        return self._fft_convolve(('neg_H', 'pos_H'), (self._V, R), W, **self.fft_params['grad_H'])
+        H_, V_ = H[s], self._V[s]
+        R = self.reconstruct(W, H_)
+        assert R.c.shape == V_.c.shape
+        neg, pos = self._fft_convolve(('neg_W', 'pos_W'), (V_, R), H_, **self.fft_params['grad_W'])
+        return neg.c, pos.c
+
+    def reconstruction_gradient_H(
+        self,
+        V: np.ndarray,
+        W: CachingFFT,
+        H: CachingFFT,
+        s: slice = sliceNone
+    ) -> Tuple[CachingFFT, CachingFFT]:
+
+        H_, V_ = H[s], self._V[s]
+        R = self.reconstruct(W, H_)
+        assert R.c.shape == V_.c.shape
+        neg, pos = self._fft_convolve(('neg_H', 'pos_H'), (V_, R), W, **self.fft_params['grad_H'])
+        return neg.c, pos.c
 
     def reconstruct(self, W: CachingFFT, H: CachingFFT) -> CachingFFT:
         R, = self._fft_convolve(('R', ), (H, ), W, **self.fft_params['reconstruct'])

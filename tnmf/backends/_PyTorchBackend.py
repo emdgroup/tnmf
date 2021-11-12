@@ -15,7 +15,7 @@ import torch
 from torch import Tensor
 from torch.nn.functional import conv1d
 
-from ._Backend import Backend
+from ._Backend import Backend, sliceNone
 
 
 # pylint: disable=abstract-method
@@ -36,6 +36,7 @@ class PyTorchBackend(Backend):
         atom_shape: Tuple[int, ...],
         n_atoms: int,
         W: Optional[Tensor] = None,
+        axes_W_normalization: Optional[Union[int, Tuple[int, ...]]] = None,
     ) -> Tuple[Tensor, Tensor]:
 
         if self._reconstruction_mode == 'valid':
@@ -50,7 +51,7 @@ class PyTorchBackend(Backend):
             raise ValueError(f'Unsupported reconstruction mode "{self._reconstruction_mode}".'
                              f'Please choose "valid", "full", "circular", or "reflect".')
 
-        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W)
+        w, h = super()._initialize_matrices(V, atom_shape, n_atoms, W, axes_W_normalization)
 
         H = torch.from_numpy(h)
         if W is None:
@@ -87,16 +88,16 @@ class PyTorchBackend(Backend):
     def normalize(arr: Tensor, axis: Optional[Union[int, Tuple[int, ...]]] = None):
         arr.divide_(arr.sum(dim=axis, keepdim=True))
 
-    def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
+    def reconstruction_gradient_W(self, V: np.ndarray, W: Tensor, H: Tensor, s: slice = sliceNone) -> Tuple[Tensor, Tensor]:
         W_grad = W.detach().requires_grad_()
-        neg_energy, pos_energy = self._energy_terms(V, W_grad, H)
+        neg_energy, pos_energy = self._energy_terms(V[s], W_grad, H[s])
         neg = torch.autograd.grad(neg_energy, W_grad, retain_graph=True)[0]
         pos = torch.autograd.grad(pos_energy, W_grad)[0]
         return neg.detach(), pos.detach()
 
-    def reconstruction_gradient_H(self, V: np.ndarray, W: Tensor, H: Tensor) -> Tuple[Tensor, Tensor]:
-        H_grad = H.detach().requires_grad_()
-        neg_energy, pos_energy = self._energy_terms(V, W, H_grad)
+    def reconstruction_gradient_H(self, V: np.ndarray, W: Tensor, H: Tensor, s: slice = sliceNone) -> Tuple[Tensor, Tensor]:
+        H_grad = H[s].detach().requires_grad_()
+        neg_energy, pos_energy = self._energy_terms(V[s], W, H_grad)
         neg = torch.autograd.grad(neg_energy, H_grad, retain_graph=True)[0]
         pos = torch.autograd.grad(pos_energy, H_grad)[0]
         return neg.detach(), pos.detach()
