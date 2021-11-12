@@ -103,42 +103,40 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
     explanation(help_cross_atom_inhibition_strength, verbose)
 
     help_minibatch = \
-        '''Process the samples in batches instead of the full data set at once.'''
-    minibatch_updates = st.sidebar.checkbox('Minibatch Updates', value=False, help=help_minibatch)
+        '''Process the samples in **minibatches** instead of the full data set at once.'''
+    minibatch_updates = st.sidebar.checkbox('Minibatch updates', value=True, help=help_minibatch)
     explanation(help_minibatch, verbose)
     if not minibatch_updates:
         help_n_iterations = '''The **number of multiplicative updates** to the atom dictionary and activation tensors.'''
         n_iterations = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_n_iterations)
         explanation(help_n_iterations, verbose)
     else:
-        help_algorithm = '''The MiniBatch update algorithm to be used.'''
-        algorithm = st.sidebar.radio('# Algorithm', ['3 - Basic alternating scheme for MU rules',
-                                                     '4 - Cyclic MiniBatch for MU rules',
-                                                     '5 - Asymmetric SG MiniBatch MU rules (ASG-MU)',
-                                                     '6 - Greedy SG MiniBatch MU rules (GSG-MU)',
-                                                     '7 - Asymmetric SAG MiniBatch MU rules (ASAG-MU)',
-                                                     '8 - Greedy SAG MiniBatch MU rules (GSAG-MU)'],
-                                     0, help=help_algorithm)
+        help_algorithm = '''The **minibatch update algorithm** to be used.'''
+        algorithm = st.sidebar.radio('Minibatch algorithm', [
+            '4 - Cyclic MiniBatch for MU rules',
+            '5 - Asymmetric SG MiniBatch MU rules (ASG-MU)',
+            '6 - Greedy SG MiniBatch MU rules (GSG-MU)',
+            '7 - Asymmetric SAG MiniBatch MU rules (ASAG-MU)',
+            '8 - Greedy SAG MiniBatch MU rules (GSAG-MU)'],
+                                     1, help=help_algorithm)
         algorithm = MiniBatchAlgorithm(int(algorithm[0]))
         explanation(help_algorithm, verbose)
 
-        help_epoch = '''Number of passes through the whole data set.'''
-        if algorithm == MiniBatchAlgorithm.Basic_MU:
-            n_epochs = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_epoch)
-        else:
-            n_epochs = st.sidebar.number_input('# Epochs', value=100, min_value=1, help=help_epoch)
+        help_epoch = '''The number of **passes through the whole data set**.'''
+        n_epochs = st.sidebar.number_input('# Epochs', value=100, min_value=1, help=help_epoch)
         explanation(help_epoch, verbose)
 
-        help_batch_size = '''Number of samples per batch.'''
-        batch_size = None
-        if algorithm != MiniBatchAlgorithm.Basic_MU:
-            batch_size = st.sidebar.number_input('# Batch Size', value=3, min_value=1, help=help_batch_size)
-            explanation(help_batch_size, verbose)
+        help_batch_size = '''The number of **samples per batch**.'''
+        batch_size = st.sidebar.number_input('# Batch size', value=3, min_value=1, help=help_batch_size)
+        explanation(help_batch_size, verbose)
 
         sag_lambda = None
         if algorithm in (MiniBatchAlgorithm.ASAG_MU, MiniBatchAlgorithm.GSAG_MU):
-            help_sag_lambda = '''Exponential forgetting factor for for the stocahstic **average** gradient updates.'''
-            sag_lambda = st.sidebar.number_input('Lambda', min_value=0.0, max_value=1., value=0.9, step=0.01,
+            help_sag_lambda = \
+                '''The **exponential forgetting factor** for for the stochastic **average** gradient updates. A value of 1.0
+                means that only the latest minibatch is used for the update. The smaller the value, the more weight is put on
+                older minibatches.'''
+            sag_lambda = st.sidebar.number_input('Lambda', min_value=0.0, max_value=1., value=0.2, step=0.01,
                                                  help=help_sag_lambda)
             explanation(help_sag_lambda, verbose)
 
