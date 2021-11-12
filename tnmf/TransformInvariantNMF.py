@@ -328,7 +328,6 @@ class TransformInvariantNMF:
         assert sparsity_H >= 0
         assert inhibition_strength >= 0
         assert cross_atom_inhibition_strength >= 0
-        keep_W = False
 
         self._initialize_matrices(V, keep_W)
 
