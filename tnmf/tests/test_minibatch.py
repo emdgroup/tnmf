@@ -57,7 +57,7 @@ def fit_nmf(backend, algorithm):
         verbose=3,
         reconstruction_mode='valid',
     )
-    nmf.fit_minibatch(
+    nmf.fit_minibatches(
         V,
         sparsity_H=0.1,
         algorithm=algorithm,

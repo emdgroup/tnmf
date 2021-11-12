@@ -279,7 +279,7 @@ class TransformInvariantNMF:
             self._V, self.atom_shape, self.n_atoms, self._W if keep_W else None,
             self._axes_W_normalization)
 
-    def fit_basic(
+    def fit_batch(
             self,
             V: np.ndarray,
             n_iterations: int = 1000,
@@ -347,7 +347,7 @@ class TransformInvariantNMF:
 
         self._logger.info("TNMF finished.")
 
-    def fit_minibatch(
+    def fit_minibatches(
             self,
             V: np.ndarray,
             algorithm: MiniBatchAlgorithm = MiniBatchAlgorithm.Basic_MU,
@@ -513,7 +513,7 @@ class TransformInvariantNMF:
         self._multiplicative_update(self._W, *inner_stat, normalization_axes=self._axes_W_normalization)
         return inner_stat
 
-    def fit_subsamples(
+    def fit_stream(
             self,
             V: Iterator[np.ndarray],
             subsample_size: int = 3,
@@ -534,8 +534,8 @@ class TransformInvariantNMF:
 
     def fit(self, V: np.ndarray, **kwargs):
         if 'subsample_size' in kwargs or 'max_subsamples' in kwargs:
-            self.fit_subsamples(iter(V), **kwargs)
+            self.fit_stream(iter(V), **kwargs)
         elif 'batch_size' in kwargs or 'algorithm' in kwargs:
-            self.fit_minibatch(V, **kwargs)
+            self.fit_minibatches(V, **kwargs)
         else:
-            self.fit_basic(V, **kwargs)
+            self.fit_batch(V, **kwargs)
