@@ -18,6 +18,7 @@ from enum import Enum
 
 import numpy as np
 
+from .backends._Backend import sliceNone
 from .backends.NumPy import NumPy_Backend
 from .backends.NumPy_FFT import NumPy_FFT_Backend
 from .backends.PyTorch import PyTorch_Backend
@@ -27,7 +28,7 @@ from .backends.NumPy_CachingFFT import NumPy_CachingFFT_Backend
 
 def _compute_sequential_minibatches(length: int, batch_size: int) -> Iterable[slice]:
     if batch_size is None:
-        yield slice(None)
+        yield sliceNone
     else:
         start = 0
         while start < length:
@@ -237,13 +238,13 @@ class TransformInvariantNMF:
         if normalization_axes is not None:
             self._backend.normalize(arr, axis=normalization_axes)
 
-    def _update_W(self, s: slice):
+    def _update_W(self, s: slice = sliceNone):
         neg, pos = self._backend.reconstruction_gradient_W(self._V, self._W, self._H, s)
         assert neg.shape == self._W.shape
         assert pos.shape == self._W.shape
         self._multiplicative_update(self._W, neg, pos, normalization_axes=self._axes_W_normalization)
 
-    def _update_H(self, s: slice, sparsity: float = 0., inhibition: float = 0., cross_inhibition: float = 0):
+    def _update_H(self, s: slice = sliceNone, sparsity: float = 0., inhibition: float = 0., cross_inhibition: float = 0):
         # TODO: sparsity and inhibition computation should be handled by the backends
         neg, pos = self._backend.reconstruction_gradient_H(self._V, self._W, self._H, s)
         assert neg.shape == self._H[s].shape
@@ -334,10 +335,11 @@ class TransformInvariantNMF:
 
         for iteration in range(n_iterations):
             if update_H:
-                self._update_H(slice(None), sparsity_H, inhibition_strength, cross_atom_inhibition_strength)
+                self._update_H(sparsity=sparsity_H, inhibition=inhibition_strength,
+                               cross_inhibition=cross_atom_inhibition_strength)
 
             if update_W:
-                self._update_W(slice(None))
+                self._update_W()
 
             if progress_callback is not None:
                 if not progress_callback(self, iteration):
@@ -459,9 +461,9 @@ class TransformInvariantNMF:
 
     def _epoch_update_algorithm_3(self, _, ___, args_update_H, __):
         # update H for all samples
-        self._update_H(slice(None), **args_update_H)
+        self._update_H(**args_update_H)
         # update W after processing all batches using all samples
-        self._update_W(slice(None))
+        self._update_W()
 
     def _epoch_update_algorithm_4(self, _, batches, args_update_H, __):
         gradW_neg, gradW_pos = 0, 0
