@@ -472,7 +472,6 @@ class TransformInvariantNMF:
             self._update_W(batch)
 
     def _epoch_update_algorithm_6(self, _, batches, args_update_H, __):
-        batch = slice(0, 0)  # initialize to an empty slice as we use it after the loop (just in case batches is empty)
         for batch in _random_shuffle(batches):
             # update H for every batch
             self._update_H(batch, **args_update_H)
