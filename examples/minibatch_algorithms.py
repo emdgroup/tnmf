@@ -98,7 +98,6 @@ axes[1].set_xlabel('Time / s')
 for params in (
     dict(),
     #
-    dict(algorithm=MiniBatchAlgorithm.Basic_MU, batch_size=10),
     dict(algorithm=MiniBatchAlgorithm.Cyclic_MU, batch_size=10),
     dict(algorithm=MiniBatchAlgorithm.ASG_MU, batch_size=10),
     dict(algorithm=MiniBatchAlgorithm.GSG_MU, batch_size=10),

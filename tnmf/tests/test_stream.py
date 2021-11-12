@@ -19,7 +19,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(m
 # hard-coded expected energy levels for the different algorithms
 expected_energies = {
     # no need to test all algorithms here
-    MiniBatchAlgorithm.Basic_MU: 136.84096550,
     # MiniBatchAlgorithm.Cyclic_MU: 136.8409655,
     # MiniBatchAlgorithm.ASG_MU: 97.0072791,
     # MiniBatchAlgorithm.GSG_MU: 136.43285833,
@@ -98,7 +97,7 @@ def test_with_generator_limited():
     nmf.fit(
         V,
         sparsity_H=0.1,
-        algorithm=MiniBatchAlgorithm.Basic_MU,
+        algorithm=MiniBatchAlgorithm.Cyclic_MU,
         subsample_size=50,
         max_subsamples=5,
         batch_size=3,

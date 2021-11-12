@@ -48,7 +48,6 @@ class MiniBatchAlgorithm(Enum):
     r"""
     MiniBatch algorithms that can be used with :meth:`.TransformInvariantNMF.fit_minibatch`.
     """
-    Basic_MU = 3   # Algorithm 3 Basic alternating scheme for MU rules
     Cyclic_MU = 4  # Algorithm 4 Cyclic mini-batch for MU rules
     ASG_MU = 5     # Algorithm 5 Asymmetric SG mini-batch MU rules (ASG-MU)
     GSG_MU = 6     # Algorithm 6 Greedy SG mini-batch MU rules (GSG-MU)
@@ -352,9 +351,9 @@ class TransformInvariantNMF:
     def fit_minibatches(
             self,
             V: np.ndarray,
-            algorithm: MiniBatchAlgorithm = MiniBatchAlgorithm.Basic_MU,
+            algorithm: MiniBatchAlgorithm = MiniBatchAlgorithm.ASG_MU,
             batch_size: int = 3,
-            n_epochs: int = 1000,   # corresponds to max_iter if algorithm == MiniBatchAlgorithm.Basic_MU
+            n_epochs: int = 1000,
             sag_lambda: float = 0.2,
             keep_W: bool = False,
             sparsity_H: float = 0.,
@@ -375,10 +374,9 @@ class TransformInvariantNMF:
         algorithm: MiniBatchAlgorithm
             MiniBatch update scheme to be used. See :class:`MiniBatchAlgorithm` and [3]_ for the different choices.
         batch_size: int, default = 3
-            Number of samples per mini batch. Ignored if algorithm==MiniBatchAlgorithm.Basic_MU
+            Number of samples per mini batch.
         n_epochs: int, default = 1000
-            Maximum number of epochs (iterations if algorithm==MiniBatchAlgorithm.Basic_MU) across the full
-            sample set to be performed.
+            Maximum number of epochs across the full sample set to be performed.
         sag_lambda: float, default = 0.2
             Exponential forgetting factor for for the stochastic _average_ gradient updates, i.e.
             MiniBatchAlgorithm.ASAG_MU and MiniBatchAlgorithm.GSAG_MU
@@ -416,7 +414,6 @@ class TransformInvariantNMF:
         batches = list(_compute_sequential_minibatches(len(self._V), batch_size))
 
         epoch_update = {
-            MiniBatchAlgorithm.Basic_MU: self._epoch_update_algorithm_3,
             MiniBatchAlgorithm.Cyclic_MU: self._epoch_update_algorithm_4,
             MiniBatchAlgorithm.ASG_MU: self._epoch_update_algorithm_5,
             MiniBatchAlgorithm.GSG_MU: self._epoch_update_algorithm_6,
@@ -441,8 +438,7 @@ class TransformInvariantNMF:
                 if not progress_callback(self, epoch):
                     break
             else:
-                self._logger.info(f"{'Iteration' if algorithm == MiniBatchAlgorithm.Basic_MU else 'Epoch'}: {epoch}\t"
-                                  f"Energy function: {self._energy_function()}")
+                self._logger.info(f"{'Epoch'}: {epoch}\tEnergy function: {self._energy_function()}")
 
         self._logger.info("MiniBatch TNMF finished.")
 
@@ -458,12 +454,6 @@ class TransformInvariantNMF:
             gradW_pos += sag_lambda * pos
 
         return gradW_neg, gradW_pos
-
-    def _epoch_update_algorithm_3(self, _, ___, args_update_H, __):
-        # update H for all samples
-        self._update_H(**args_update_H)
-        # update W after processing all batches using all samples
-        self._update_W()
 
     def _epoch_update_algorithm_4(self, _, batches, args_update_H, __):
         gradW_neg, gradW_pos = 0, 0

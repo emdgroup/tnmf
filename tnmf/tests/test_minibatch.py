@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(m
 
 # hard-coded expected energy levels for the different algorithms
 expected_energies = {
-    MiniBatchAlgorithm.Basic_MU: 14434.02658,
+    'full_batch': 14434.02658,
     MiniBatchAlgorithm.Cyclic_MU: 14434.02658,
     MiniBatchAlgorithm.ASG_MU: 4558.86695,
     MiniBatchAlgorithm.GSG_MU: 14223.14454,
@@ -57,13 +57,20 @@ def fit_nmf(backend, algorithm):
         verbose=3,
         reconstruction_mode='valid',
     )
-    nmf.fit_minibatches(
-        V,
-        sparsity_H=0.1,
-        algorithm=algorithm,
-        batch_size=3,
-        n_epochs=5,
-        sag_lambda=0.8)
+    if isinstance(algorithm, MiniBatchAlgorithm):
+        nmf.fit_minibatches(
+            V,
+            sparsity_H=0.1,
+            algorithm=algorithm,
+            batch_size=3,
+            n_epochs=5,
+            sag_lambda=0.8)
+    else:
+        nmf.fit_batch(
+            V,
+            sparsity_H=0.1,
+            n_iterations=5,
+        )
 
     return nmf
 
