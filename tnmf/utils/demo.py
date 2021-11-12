@@ -124,9 +124,9 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
 
         help_epoch = '''Number of passes through the whole data set.'''
         if algorithm == MiniBatchAlgorithm.Basic_MU:
-            max_epoch = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_epoch)
+            n_epochs = st.sidebar.number_input('# Iterations', value=100, min_value=1, help=help_epoch)
         else:
-            max_epoch = st.sidebar.number_input('# Epochs', value=100, min_value=1, help=help_epoch)
+            n_epochs = st.sidebar.number_input('# Epochs', value=100, min_value=1, help=help_epoch)
         explanation(help_epoch, verbose)
 
         help_batch_size = '''Number of samples per batch.'''
@@ -185,7 +185,7 @@ def st_define_nmf_params(default_params: dict, have_ground_truth: bool = True, v
     else:
         fit_params = dict(
             algorithm=algorithm,
-            max_epoch=max_epoch,
+            n_epochs=n_epochs,
             batch_size=batch_size,
             sag_lambda=sag_lambda,
             sparsity_H=sparsity_H,

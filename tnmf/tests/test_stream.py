@@ -59,7 +59,7 @@ def _do_test(samples, algorithm):
         algorithm=algorithm,
         subsample_size=50,
         batch_size=3,
-        max_epoch=5,
+        n_epochs=5,
         sag_lambda=0.8)
 
     # extract the reconstruction mode dependent expected energy level
@@ -102,7 +102,7 @@ def test_with_generator_limited():
         subsample_size=50,
         max_subsamples=5,
         batch_size=3,
-        max_epoch=5,
+        n_epochs=5,
         sag_lambda=0.8)
 
     # check if the expected energy level is reached

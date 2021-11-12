@@ -14,8 +14,8 @@ from tnmf.utils.data_loading import racoon_image
 @st.cache(hash_funcs={DeltaGenerator: lambda _: None})
 def fit_nmf_model(V, nmf_params, fit_params, progress_bar):
     nmf = TransformInvariantNMF(**nmf_params)
-    max_iter = fit_params['n_iterations'] if 'n_iterations' in fit_params else fit_params['max_epoch']
-    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / max_iter), **fit_params)
+    n_iterations = fit_params['n_iterations'] if 'n_iterations' in fit_params else fit_params['n_epochs']
+    nmf.fit(V, progress_callback=lambda _, x: progress_bar.progress((x + 1) / n_iterations), **fit_params)
     assert nmf.R.ndim > 0  # dummy code to ensure R is up to date to avoid streamlit caching issues
     return nmf
 

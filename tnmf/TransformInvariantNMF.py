@@ -354,7 +354,7 @@ class TransformInvariantNMF:
             V: np.ndarray,
             algorithm: MiniBatchAlgorithm = MiniBatchAlgorithm.Basic_MU,
             batch_size: int = 3,
-            max_epoch: int = 1000,   # corresponds to max_iter if algorithm == MiniBatchAlgorithm.Basic_MU
+            n_epochs: int = 1000,   # corresponds to max_iter if algorithm == MiniBatchAlgorithm.Basic_MU
             sag_lambda: float = 0.2,
             keep_W: bool = False,
             sparsity_H: float = 0.,
@@ -376,7 +376,7 @@ class TransformInvariantNMF:
             MiniBatch update scheme to be used. See :class:`MiniBatchAlgorithm` and [3]_ for the different choices.
         batch_size: int, default = 3
             Number of samples per mini batch. Ignored if algorithm==MiniBatchAlgorithm.Basic_MU
-        max_epoch: int, default = 1000
+        n_epochs: int, default = 1000
             Maximum number of epochs (iterations if algorithm==MiniBatchAlgorithm.Basic_MU) across the full
             sample set to be performed.
         sag_lambda: float, default = 0.2
@@ -431,7 +431,7 @@ class TransformInvariantNMF:
         )
 
         inner_stat = None
-        for epoch in range(max_epoch):
+        for epoch in range(n_epochs):
             inner_stat = epoch_update[algorithm](
                 inner_stat, batches,
                 kwargs_update_H,

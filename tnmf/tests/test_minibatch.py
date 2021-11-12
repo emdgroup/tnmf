@@ -62,7 +62,7 @@ def fit_nmf(backend, algorithm):
         sparsity_H=0.1,
         algorithm=algorithm,
         batch_size=3,
-        max_epoch=5,
+        n_epochs=5,
         sag_lambda=0.8)
 
     return nmf
