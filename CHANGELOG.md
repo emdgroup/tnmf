@@ -4,10 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.2.0] - 2021-11-12
 ### Added
-- Unit test Code Coverage Reporting
-- Demo: Racoon image
+- Unit test code coverage reporting
+- Demo: racoon image
 - Include examples in pytest bench
 - Include demos in pytest bench
 - Citation information via CITATION.cff
@@ -15,12 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 ### Changed
 - Fix internal TODOs to improve code quality
-- Fix partial reconstruction in plain numpy backend
+- Fix partial reconstruction in plain Numpy backend
 - Fix deprecation warning about st.beta_columns
 
 ## [0.1.1] - 2021-07-22
 ### Added
-- Bugfix: added logo to package content
+- Bugfix: add logo to package content
 - Platform and license identifiers in setup.cfg
 
 ## [0.1.0] - 2021-07-12
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for `full` and `circular` convolution in CachingFFT backend
 - Demo: 1-D synthetic signals
 - Demo: 2-D synthetic signals
-- Online Demo via Streamlit Sharing
+- Online demo via Streamlit Sharing
 
 ### Changed (since creation of the changelog)
 - Only upload Sphinx artifacts from GitHub actions that run on the main branch
